@@ -1,0 +1,59 @@
+{
+  "id": "conservative_bootstrapping",
+  "name": "Conservative Bootstrapping (Bear Case)",
+  "description": "Defensive planning scenario with higher churn (5%), lower conversion (15% lead-to-trial, 3.5% trial-to-paid), and trimmed discretionary OPEX.",
+  "created_at": "2026-10-01T12:00:00Z",
+  "updated_at": "2026-10-01T12:00:00Z",
+  "assumptions": {
+    "beginning_customers": 10.0,
+    "monthly_churn": 0.05,
+    "lead_to_trial_conversion": 0.15,
+    "trial_to_paid_conversion": 0.035,
+    "pricing_tiers": {
+      "trial": {
+        "name": "Trial",
+        "price_per_month": 0.0,
+        "customer_pct": 0.65
+      },
+      "pro": {
+        "name": "Pro",
+        "price_per_month": 20.0,
+        "customer_pct": 0.25
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price_per_month": 70.0,
+        "customer_pct": 0.1
+      }
+    },
+    "cogs": {
+      "cloud_hosting_fixed": 45.0,
+      "payment_processing_pct": 0.029,
+      "api_per_customer": 1.0,
+      "other_direct_per_trial": 1.0
+    },
+    "opex": [
+      { "row": 42, "category": "Sales & Marketing", "name": "Customer Acquisition / Marketing", "value": 75.0 },
+      { "row": 43, "category": "Sales & Marketing", "name": "UGC / AI Content", "value": 15.0 },
+      { "row": 44, "category": "Sales & Marketing", "name": "Events", "value": 0.0 },
+      { "row": 45, "category": "Sales & Marketing", "name": "Other S&M / Demos", "value": 15.0 },
+      { "row": 46, "category": "R&D", "name": "Development Software", "value": 20.0 },
+      { "row": 47, "category": "R&D", "name": "Contractors", "value": 0.0 },
+      { "row": 48, "category": "R&D", "name": "Prototypes", "value": 0.0 },
+      { "row": 49, "category": "G&A", "name": "Legal", "value": 20.0 },
+      { "row": 50, "category": "G&A", "name": "Software / Workspace", "value": 15.0 },
+      { "row": 51, "category": "G&A", "name": "Travel", "value": 0.0 },
+      { "row": 52, "category": "G&A", "name": "Other G&A", "value": 5.0 }
+    ],
+    "monthly_leads": {
+      "C": 66.0, "D": 125.0, "E": 145.0, "F": 150.0, "G": 115.0, "H": 200.0, "I": 30.0, "J": 50.0, "K": 45.0, "L": 43.0, "M": 67.0, "N": 867.0, "O": 454.0, "P": 2323.0, "Q": 445.0, "R": 65.0, "S": 54.0, "T": 76.0, "U": 87.0, "V": 45.0, "W": 65.0, "X": 76.0, "Y": 54.0
+    }
+  },
+  "summary_kpis": {
+    "total_customers_sum": 384.0,
+    "total_revenue_sum": 4608.0,
+    "total_ebit_sum": 361.37,
+    "total_cogs_sum": 1698.63,
+    "total_opex_sum": 3795.0
+  }
+}

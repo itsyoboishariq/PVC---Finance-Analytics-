@@ -1,0 +1,1001 @@
+{
+  "periods": [
+    {
+      "index": 0,
+      "column": "C",
+      "date": "2026-07-01",
+      "label": "M1 (Jul 2026)"
+    },
+    {
+      "index": 1,
+      "column": "D",
+      "date": "2026-08-01",
+      "label": "M2 (Aug 2026)"
+    },
+    {
+      "index": 2,
+      "column": "E",
+      "date": "2026-09-01",
+      "label": "M3 (Sep 2026)"
+    },
+    {
+      "index": 3,
+      "column": "F",
+      "date": "2026-10-01",
+      "label": "M4 (Oct 2026)"
+    },
+    {
+      "index": 4,
+      "column": "G",
+      "date": "2026-11-01",
+      "label": "M5 (Nov 2026)"
+    },
+    {
+      "index": 5,
+      "column": "H",
+      "date": "2026-12-01",
+      "label": "M6 (Dec 2026)"
+    },
+    {
+      "index": 6,
+      "column": "I",
+      "date": "2027-01-01",
+      "label": "M7 (Jan 2027)"
+    },
+    {
+      "index": 7,
+      "column": "J",
+      "date": "2027-02-01",
+      "label": "M8 (Feb 2027)"
+    },
+    {
+      "index": 8,
+      "column": "K",
+      "date": "2027-03-01",
+      "label": "M9 (Mar 2027)"
+    },
+    {
+      "index": 9,
+      "column": "L",
+      "date": "2027-04-01",
+      "label": "M10 (Apr 2027)"
+    },
+    {
+      "index": 10,
+      "column": "M",
+      "date": "2027-05-01",
+      "label": "M11 (May 2027)"
+    },
+    {
+      "index": 11,
+      "column": "N",
+      "date": "2027-06-01",
+      "label": "M12 (Jun 2027)"
+    },
+    {
+      "index": 12,
+      "column": "O",
+      "date": "2027-07-01",
+      "label": "M13 (Jul 2027)"
+    },
+    {
+      "index": 13,
+      "column": "P",
+      "date": "2027-08-01",
+      "label": "M14 (Aug 2027)"
+    },
+    {
+      "index": 14,
+      "column": "Q",
+      "date": "2027-09-01",
+      "label": "M15 (Sep 2027)"
+    },
+    {
+      "index": 15,
+      "column": "R",
+      "date": "2027-10-01",
+      "label": "M16 (Oct 2027)"
+    },
+    {
+      "index": 16,
+      "column": "S",
+      "date": "2027-11-01",
+      "label": "M17 (Nov 2027)"
+    },
+    {
+      "index": 17,
+      "column": "T",
+      "date": "2027-12-01",
+      "label": "M18 (Dec 2027)"
+    },
+    {
+      "index": 18,
+      "column": "U",
+      "date": "2028-01-01",
+      "label": "M19 (Jan 2028)"
+    },
+    {
+      "index": 19,
+      "column": "V",
+      "date": "2028-02-01",
+      "label": "M20 (Feb 2028)"
+    },
+    {
+      "index": 20,
+      "column": "W",
+      "date": "2028-03-01",
+      "label": "M21 (Mar 2028)"
+    },
+    {
+      "index": 21,
+      "column": "X",
+      "date": "2028-04-01",
+      "label": "M22 (Apr 2028)"
+    },
+    {
+      "index": 22,
+      "column": "Y",
+      "date": "2028-05-01",
+      "label": "M23 (May 2028)"
+    }
+  ],
+  "monthly_leads": {
+    "C": 66.0,
+    "D": 125.0,
+    "E": 145.0,
+    "F": 150.0,
+    "G": 115.0,
+    "H": 200.0,
+    "I": 30.0,
+    "J": 50.0,
+    "K": 45.0,
+    "L": 43.0,
+    "M": 67.0,
+    "N": 867.0,
+    "O": 454.0,
+    "P": 2323.0,
+    "Q": 445.0,
+    "R": 65.0,
+    "S": 54.0,
+    "T": 76.0,
+    "U": 87.0,
+    "V": 45.0,
+    "W": 65.0,
+    "X": 76.0,
+    "Y": 54.0
+  },
+  "assumptions": {
+    "beginning_customers": {
+      "value": 10.0,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B3"
+      },
+      "unit": "customers",
+      "description": "Beginning active customers in Month 1"
+    },
+    "new_customers_month_1_label": {
+      "value": 2.0,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B4"
+      },
+      "unit": "customers",
+      "description": "Workbook label for Month 1 target new customers"
+    },
+    "monthly_churn": {
+      "value": 0.03,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B5"
+      },
+      "unit": "%",
+      "description": "Monthly customer churn rate"
+    },
+    "free_to_paid_conversion": {
+      "value": 0.1,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B6"
+      },
+      "unit": "%",
+      "description": "Free to paid conversion assumption"
+    },
+    "trial_period_days": {
+      "value": 14,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B7"
+      },
+      "unit": "days",
+      "description": "Trial duration"
+    },
+    "pricing_tiers": {
+      "trial": {
+        "name": "Trial",
+        "price_per_month": 0.0,
+        "customer_pct": 0.6,
+        "source": {
+          "price_cell": "B12",
+          "pct_cell": "C12",
+          "sheet": "Assumptions  "
+        }
+      },
+      "pro": {
+        "name": "Pro",
+        "price_per_month": 20.0,
+        "customer_pct": 0.3,
+        "source": {
+          "price_cell": "B13",
+          "pct_cell": "C13",
+          "sheet": "Assumptions  "
+        }
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price_per_month": 80.0,
+        "customer_pct": 0.1,
+        "source": {
+          "price_cell": "B14",
+          "pct_cell": "C14",
+          "sheet": "Assumptions  "
+        }
+      }
+    },
+    "monthly_marketing_spend": {
+      "value": 100.0,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B17"
+      },
+      "unit": "$/mo",
+      "description": "Monthly marketing budget"
+    },
+    "leads_generated_assumption": {
+      "value": 50.0,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B18"
+      },
+      "unit": "leads",
+      "description": "Baseline leads generated estimate"
+    },
+    "lead_to_trial_conversion": {
+      "value": 0.2,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B19"
+      },
+      "unit": "%",
+      "description": "Conversion rate from Lead to Trial"
+    },
+    "trial_to_paid_conversion": {
+      "value": 0.05,
+      "source": {
+        "sheet": "Assumptions  ",
+        "cell": "B20"
+      },
+      "unit": "%",
+      "description": "Conversion rate from Trial to Paid"
+    },
+    "cogs": {
+      "cloud_hosting_fixed": {
+        "value": 45.0,
+        "source": {
+          "sheet": "Financial Model ",
+          "cell": "C37:Y37"
+        },
+        "unit": "$/mo",
+        "description": "Cloud hosting monthly cost (modeled as fixed $45/mo in financial model)"
+      },
+      "payment_processing_pct": {
+        "value": 0.029,
+        "source": {
+          "sheet": "Assumptions  ",
+          "cell": "B25",
+          "formula_sheet": "Financial Model ",
+          "formula_cells": "C38:Y38"
+        },
+        "unit": "% of revenue",
+        "description": "Payment processing fee percentage"
+      },
+      "api_per_customer": {
+        "value": 1.0,
+        "source": {
+          "sheet": "Assumptions  ",
+          "cell": "B26",
+          "formula_sheet": "Financial Model ",
+          "formula_cells": "C39:Y39"
+        },
+        "unit": "$/customer",
+        "description": "Third-party APIs for customer support ($1 per ending active customer)"
+      },
+      "other_direct_per_trial": {
+        "value": 1.0,
+        "source": {
+          "sheet": "Assumptions  ",
+          "cell": "B27",
+          "formula_sheet": "Financial Model ",
+          "formula_cells": "C40:Y40"
+        },
+        "unit": "$/trial customer",
+        "description": "Other direct costs ($1 per trial customer in model)"
+      }
+    },
+    "opex": [
+      {
+        "row": 42,
+        "category": "Sales & Marketing",
+        "name": "Customer Acquisition / Marketing",
+        "value": 100.0,
+        "source": "Financial Model !C42:Y42"
+      },
+      {
+        "row": 43,
+        "category": "Sales & Marketing",
+        "name": "UGC / AI Content",
+        "value": 25.0,
+        "source": "Financial Model !C43:Y43"
+      },
+      {
+        "row": 44,
+        "category": "Sales & Marketing",
+        "name": "Events",
+        "value": 0.0,
+        "source": "Financial Model !C44:Y44"
+      },
+      {
+        "row": 45,
+        "category": "Sales & Marketing",
+        "name": "Other S&M / Demos",
+        "value": 25.0,
+        "source": "Financial Model !C45:Y45"
+      },
+      {
+        "row": 46,
+        "category": "R&D",
+        "name": "Development Software",
+        "value": 25.0,
+        "source": "Financial Model !C46:Y46"
+      },
+      {
+        "row": 47,
+        "category": "R&D",
+        "name": "Contractors",
+        "value": 10.0,
+        "source": "Financial Model !C47:Y47"
+      },
+      {
+        "row": 48,
+        "category": "R&D",
+        "name": "Prototypes",
+        "value": 0.0,
+        "source": "Financial Model !C48:Y48"
+      },
+      {
+        "row": 49,
+        "category": "G&A",
+        "name": "Legal",
+        "value": 25.0,
+        "source": "Financial Model !C49:Y49"
+      },
+      {
+        "row": 50,
+        "category": "G&A",
+        "name": "Software / Workspace",
+        "value": 20.0,
+        "source": "Financial Model !C50:Y50"
+      },
+      {
+        "row": 51,
+        "category": "G&A",
+        "name": "Travel",
+        "value": 0.0,
+        "source": "Financial Model !C51:Y51"
+      },
+      {
+        "row": 52,
+        "category": "G&A",
+        "name": "Other G&A",
+        "value": 10.0,
+        "source": "Financial Model !C52:Y52"
+      }
+    ]
+  },
+  "leads_list": [
+    {
+      "row": 4,
+      "customer_name": "Apex Manufacturing",
+      "date_found": "2026-05-12",
+      "primary_contact": "Sarah Jenkins",
+      "summary": "Interested in packaging line automation and parts replacement.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 145000.0
+    },
+    {
+      "row": 5,
+      "customer_name": "Summit Logistics",
+      "date_found": "2026-05-18",
+      "primary_contact": "Marcus Vance",
+      "summary": "Requested quote for fleet tracking hardware and IoT integration.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 82000.0
+    },
+    {
+      "row": 6,
+      "customer_name": "Horizon Foods",
+      "date_found": "2026-05-24",
+      "primary_contact": "Elena Rostova",
+      "summary": "Inquired about conveyer belt subassembly and spare parts catalog.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 210000.0
+    },
+    {
+      "row": 7,
+      "customer_name": "Beacon BioTech",
+      "date_found": "2026-06-02",
+      "primary_contact": "David Chen",
+      "summary": "Evaluating high-throughput sorting equipment for lab expansion.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 350000.0
+    },
+    {
+      "row": 8,
+      "customer_name": "Vanguard Energy",
+      "date_found": "2026-06-10",
+      "primary_contact": "Rachel Adams",
+      "summary": "Looking into predictive maintenance software for regional plants.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 65000.0
+    },
+    {
+      "row": 9,
+      "customer_name": "Sterling Industrial",
+      "date_found": "2026-06-15",
+      "primary_contact": "James Miller",
+      "summary": "Bulk order inquiry for custom replacement components and bearings.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 120000.0
+    },
+    {
+      "row": 10,
+      "customer_name": "Nexus Robotics",
+      "date_found": "2026-06-22",
+      "primary_contact": "Amanda Taylor",
+      "summary": "Reviewing cross-selling options for integrated robotic arms.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 480000.0
+    },
+    {
+      "row": 11,
+      "customer_name": "Pioneer Packaging",
+      "date_found": "2026-07-01",
+      "primary_contact": "Robert Martinez",
+      "summary": "Needs quote engine integration for aftermarket parts platform.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 95000.0
+    },
+    {
+      "row": 12,
+      "customer_name": "Crestview Cold Storage",
+      "date_found": "2026-07-09",
+      "primary_contact": "Lisa Thompson",
+      "summary": "Exploring automated palletizing solutions and sensors.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 275000.0
+    },
+    {
+      "row": 13,
+      "customer_name": "Atlas Distribution",
+      "date_found": "2026-07-16",
+      "primary_contact": "Brian Wright",
+      "summary": "Initial call regarding lifecycle service agreements and support.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 50000.0
+    },
+    {
+      "row": 14,
+      "customer_name": "Quantum Dynamics",
+      "date_found": "2026-07-28",
+      "primary_contact": "Megan Foster",
+      "summary": "Request for proposals on custom structural steel subassemblies.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 190000.0
+    },
+    {
+      "row": 15,
+      "customer_name": "Midwest Processing",
+      "date_found": "2026-08-05",
+      "primary_contact": "Kevin O'Brien",
+      "summary": "Scheduling demo for predictive demand forecasting dashboard.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 110000.0
+    },
+    {
+      "row": 16,
+      "customer_name": "Pinnacle Automation",
+      "date_found": "2026-08-12",
+      "primary_contact": "Derek Vance",
+      "summary": "Upgrading packaging sorter lines and conveyor belts.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 210000.0
+    },
+    {
+      "row": 17,
+      "customer_name": "Cascade Fresh Foods",
+      "date_found": "2026-08-19",
+      "primary_contact": "Samantha Cole",
+      "summary": "Inquired about poultry processing sanitation units.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 85000.0
+    },
+    {
+      "row": 18,
+      "customer_name": "Ironclad Logistics",
+      "date_found": "2026-08-27",
+      "primary_contact": "Marcus Brody",
+      "summary": "Full facility aftermarket parts overhaul and audit.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 320000.0
+    },
+    {
+      "row": 19,
+      "customer_name": "Titan Material Handling",
+      "date_found": "2026-09-03",
+      "primary_contact": "Elena Torres",
+      "summary": "Quote request for automated palletizing systems.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 450000.0
+    },
+    {
+      "row": 20,
+      "customer_name": "Northern Grain Co.",
+      "date_found": "2026-09-11",
+      "primary_contact": "Jacob Miller",
+      "summary": "Bulk replacement components for grain elevators.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 60000.0
+    },
+    {
+      "row": 21,
+      "customer_name": "Apex Cold Logistics",
+      "date_found": "2026-09-18",
+      "primary_contact": "Karen Lin",
+      "summary": "Temperature-controlled conveyor drive integrations.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 175000.0
+    },
+    {
+      "row": 22,
+      "customer_name": "Frontier Processing",
+      "date_found": "2026-09-25",
+      "primary_contact": "David Sterling",
+      "summary": "Evaluating predictive maintenance sensors for OCs.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 130000.0
+    },
+    {
+      "row": 23,
+      "customer_name": "Summit Pharma Tech",
+      "date_found": "2026-10-02",
+      "primary_contact": "Rachel Higgins",
+      "summary": "High-precision sorting equipment for cleanrooms.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 290000.0
+    },
+    {
+      "row": 24,
+      "customer_name": "Midwest Meat Crafters",
+      "date_found": "2026-10-10",
+      "primary_contact": "Tom Gallagher",
+      "summary": "Replacing legacy belt systems with round smooth bearings.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 240000.0
+    },
+    {
+      "row": 25,
+      "customer_name": "Blue Wave Bottling",
+      "date_found": "2026-10-16",
+      "primary_contact": "Maria Santos",
+      "summary": "High-speed liquid capping line automation quote.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 380000.0
+    },
+    {
+      "row": 26,
+      "customer_name": "Heartland Energy Ops",
+      "date_found": "2026-10-24",
+      "primary_contact": "Greg Patterson",
+      "summary": "Regional facility lifecycle management agreement.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 110000.0
+    },
+    {
+      "row": 27,
+      "customer_name": "Redwood Packaging",
+      "date_found": "2026-11-01",
+      "primary_contact": "Chloe Bennett",
+      "summary": "End-of-line case packing robotic cells inquiry.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 520000.0
+    },
+    {
+      "row": 28,
+      "customer_name": "Delta Freight Systems",
+      "date_found": "2026-11-09",
+      "primary_contact": "Anthony Reed",
+      "summary": "Warehouse sorting hub software & parts tracking.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 195000.0
+    },
+    {
+      "row": 29,
+      "customer_name": "Prairie Agricultural",
+      "date_found": "2026-11-15",
+      "primary_contact": "Laura Ingalls",
+      "summary": "Heavy-duty bagging and weighing machinery overhaul.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 75000.0
+    },
+    {
+      "row": 30,
+      "customer_name": "Metro Distribution Hub",
+      "date_found": "2026-11-22",
+      "primary_contact": "Victor Vance",
+      "summary": "Automated guided vehicle (AGV) docking integration.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 310000.0
+    },
+    {
+      "row": 31,
+      "customer_name": "Great Lakes Marine Supply",
+      "date_found": "2026-12-03",
+      "primary_contact": "Mark Olson",
+      "summary": "Corrosion-resistant stainless subassembly parts.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 140000.0
+    },
+    {
+      "row": 32,
+      "customer_name": "Horizon BioHealth",
+      "date_found": "2026-12-10",
+      "primary_contact": "Dr. Aris Thorne",
+      "summary": "Automated sterile vial packaging line proposal.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 410000.0
+    },
+    {
+      "row": 33,
+      "customer_name": "Keystone Manufacturing",
+      "date_found": "2026-12-17",
+      "primary_contact": "Brian Cox",
+      "summary": "Multi-site aftermarket quote application rollout.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 260000.0
+    },
+    {
+      "row": 34,
+      "customer_name": "Sunbelt Citrus Pack",
+      "date_found": "2027-01-08",
+      "primary_contact": "Alicia Mendez",
+      "summary": "Fruit sorting optical sensors and replacement belts.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 185000.0
+    },
+    {
+      "row": 35,
+      "customer_name": "NorthStar Storage",
+      "date_found": "2027-01-14",
+      "primary_contact": "Kevin Brooks",
+      "summary": "Cold-storage automated rack and retrieval systems.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 220000.0
+    },
+    {
+      "row": 36,
+      "customer_name": "Vantage Industrial",
+      "date_found": "2027-01-22",
+      "primary_contact": "Diana Prince",
+      "summary": "Custom machinery configuration history tracking tool.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 165000.0
+    },
+    {
+      "row": 37,
+      "customer_name": "Silverline Bakeries",
+      "date_found": "2027-01-29",
+      "primary_contact": "Chef Leo Rossi",
+      "summary": "High-temperature oven conveyor belt assemblies.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 295000.0
+    },
+    {
+      "row": 38,
+      "customer_name": "Wolverine Tool & Die",
+      "date_found": "2027-02-05",
+      "primary_contact": "Scott Summers",
+      "summary": "Precision metal stamping component supply contract.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 90000.0
+    },
+    {
+      "row": 39,
+      "customer_name": "Evergreen Dairy Group",
+      "date_found": "2027-02-12",
+      "primary_contact": "Hannah Abbott",
+      "summary": "Sanitary liquid filling line parts and emergency service.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 340000.0
+    },
+    {
+      "row": 40,
+      "customer_name": "Tri-State Recycling",
+      "date_found": "2027-02-20",
+      "primary_contact": "Ray Stantz",
+      "summary": "Heavy-duty sorting shredders and motor drives.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 480000.0
+    },
+    {
+      "row": 41,
+      "customer_name": "Gateway Logistics",
+      "date_found": "2027-03-02",
+      "primary_contact": "Charles Xavier",
+      "summary": "Cross-docking automated sorting and scanning portal.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 150000.0
+    },
+    {
+      "row": 42,
+      "customer_name": "Anchor Bay Seafood",
+      "date_found": "2027-03-09",
+      "primary_contact": "Captain Dan Taylor",
+      "summary": "Washdown-certified packaging conveyor upgrades.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 215000.0
+    },
+    {
+      "row": 43,
+      "customer_name": "Pacific Rim Commerce",
+      "date_found": "2027-03-17",
+      "primary_contact": "Kenji Sato",
+      "summary": "Automated export pallet wrapping machine line.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 375000.0
+    },
+    {
+      "row": 44,
+      "customer_name": "Liberty Defense Systems",
+      "date_found": "2027-03-26",
+      "primary_contact": "Col. James Rhodes",
+      "summary": "Secure automated parts inventory tracking software.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 550000.0
+    },
+    {
+      "row": 45,
+      "customer_name": "Pioneer Feed & Seed",
+      "date_found": "2027-04-04",
+      "primary_contact": "Arthur Pendelton",
+      "summary": "Bulk seed bagging line automation and spare parts.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 125000.0
+    },
+    {
+      "row": 46,
+      "customer_name": "Golden State Canners",
+      "date_found": "2027-04-12",
+      "primary_contact": "Susan Delgado",
+      "summary": "High-volume canning line synchronization service.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 310000.0
+    },
+    {
+      "row": 47,
+      "customer_name": "Oakridge Timber Products",
+      "date_found": "2027-04-19",
+      "primary_contact": "Hank Lawson",
+      "summary": "Heavy timber conveyance drives and rugged belts.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 105000.0
+    },
+    {
+      "row": 48,
+      "customer_name": "Apex Global Freight",
+      "date_found": "2027-04-27",
+      "primary_contact": "Monica Rambeau",
+      "summary": "Distribution center lifecycle analytics dashboard.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 280000.0
+    },
+    {
+      "row": 49,
+      "customer_name": "Valley Fresh Organics",
+      "date_found": "2027-05-05",
+      "primary_contact": "Oliver Queen",
+      "summary": "Sustainable packaging material handling machinery.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 190000.0
+    },
+    {
+      "row": 50,
+      "customer_name": "Iron Range Minerals",
+      "date_found": "2027-05-14",
+      "primary_contact": "Bruce Wayne",
+      "summary": "Ore sorting heavy conveyor subassemblies.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 620000.0
+    },
+    {
+      "row": 51,
+      "customer_name": "Buckeye Logistics",
+      "date_found": "2027-05-22",
+      "primary_contact": "Barry Allen",
+      "summary": "Rapid parcel sorting hub conveyor replacements.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 410000.0
+    },
+    {
+      "row": 52,
+      "customer_name": "Chesapeake Bay Seafood",
+      "date_found": "2027-06-02",
+      "primary_contact": "Arthur Curry",
+      "summary": "Stainless steel shell-cracking conveyor lines.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 230000.0
+    },
+    {
+      "row": 53,
+      "customer_name": "Empire State Fulfillment",
+      "date_found": "2027-06-10",
+      "primary_contact": "Peter Parker",
+      "summary": "Multi-level warehouse pick-and-pack robotics.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 350000.0
+    },
+    {
+      "row": 54,
+      "customer_name": "Lone Star Bottling",
+      "date_found": "2027-06-18",
+      "primary_contact": "Texas Red",
+      "summary": "High-speed beverage canning and labeling machinery.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 490000.0
+    },
+    {
+      "row": 55,
+      "customer_name": "Cascade Chemical Ops",
+      "date_found": "2027-06-25",
+      "primary_contact": "Pamela Isley",
+      "summary": "Corrosion-proof chemical tote handling lines.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 170000.0
+    },
+    {
+      "row": 56,
+      "customer_name": "Allegheny Steel Works",
+      "date_found": "2027-07-03",
+      "primary_contact": "Tony Stark",
+      "summary": "Heavy furnace automated feed subassemblies.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 800000.0
+    },
+    {
+      "row": 57,
+      "customer_name": "Sun City Produce",
+      "date_found": "2027-07-11",
+      "primary_contact": "Clark Kent",
+      "summary": "Hydro-cooling conveyor line for produce packing.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 205000.0
+    },
+    {
+      "row": 58,
+      "customer_name": "Magnolia Distilling",
+      "date_found": "2027-07-19",
+      "primary_contact": "Remus Lupin",
+      "summary": "Barrel handling and automated bottling conveyors.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 260000.0
+    },
+    {
+      "row": 59,
+      "customer_name": "Prairie State Logistics",
+      "date_found": "2027-07-28",
+      "primary_contact": "Natasha Romanoff",
+      "summary": "Fleet loading dock levelers and automated arms.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 145000.0
+    },
+    {
+      "row": 60,
+      "customer_name": "Gotham Industrial",
+      "date_found": "2027-08-04",
+      "primary_contact": "Harvey Dent",
+      "summary": "Custom gear drive subassembly replacement contract.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 330000.0
+    },
+    {
+      "row": 61,
+      "customer_name": "New England Packers",
+      "date_found": "2027-08-11",
+      "primary_contact": "Steve Rogers",
+      "summary": "Vacuum-seal meat packaging automated line.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 420000.0
+    },
+    {
+      "row": 62,
+      "customer_name": "Wasatch Mining Co.",
+      "date_found": "2027-08-19",
+      "primary_contact": "Logan Howlett",
+      "summary": "Extreme-environment belt drives and bearings.",
+      "customer_converted": "No",
+      "contract_amount_yearly": 275000.0
+    },
+    {
+      "row": 63,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 64,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 65,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 66,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 67,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 68,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    },
+    {
+      "row": 69,
+      "customer_name": "Bay Area Tech Logistics",
+      "date_found": "2027-08-27",
+      "primary_contact": "Barbara Gordon",
+      "summary": "Micro-fulfillment automated sorting system.",
+      "customer_converted": "Yes",
+      "contract_amount_yearly": 510000.0
+    }
+  ]
+}
