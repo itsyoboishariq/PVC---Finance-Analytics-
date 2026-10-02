@@ -103,7 +103,7 @@ Weekly development sprints can be used to reward strong community contributions.
 ### Program Rules
 
 1. **Weekly Prize**
-   - The top contributor or standout Pull Request receives a **$100 gift card**.
+   - The top contributors receive a gift card maybe $100 gift card.
 
 2. **Eligibility**
    - Submit a Pull Request addressing an open roadmap item or approved community suggestion.
@@ -123,10 +123,17 @@ Weekly development sprints can be used to reward strong community contributions.
 
 Have an idea that isn't currently on the roadmap?
 
+For people wanting to build a feature: 
+
 1. Fork the repository and create a new branch.
 2. Add your proposed feature to `SCOPING_DOCUMENT.md`.
-3. Submit a Pull Request titled:
+3. Build your feature on new branch and provide a description of the change in the new branch.
+
+For Non-devs 
+
+update the scoping document based on what new things can be changed 
+Build an excel model in which the financial logic can be implemented into the application. 
 
    `[RFC] Scope Proposal: <Feature Name>`
 
-4. Once reviewed and approved, the feature can be added to the official roadmap and become eligible for future bounties.
+5. Once reviewed and approved, the feature can be added to the official roadmap and become eligible for future bounties.
