@@ -2,91 +2,135 @@
 
 > **Living Document:** Anyone with repository access is encouraged to review, update, and submit Pull Requests to expand or refine this scoping document.
 
----
-
 ## 1. Project Overview & Vision
 
-**Startup Financial Models Platform** is an open-source, local-first executive financial modeling system. Our objective is to replace static, fragile spreadsheets with a responsive, high-precision web application that combines:
-- A rigorous, testable **Python calculation engine** preserving 100% mathematical parity with venture financial models.
-- An intuitive, modern **executive dashboard (React + FastAPI)** for dynamic scenario analysis, sensitivity modeling, and unit economics exploration.
+**Startup Financial Models Platform** is an open-source, local-first financial modeling system designed to turn a static startup financial model into an interactive web application.
+
+The platform combines:
+
+- A **Python calculation engine** based on the logic of the original Excel financial model.
+- A modern **React + FastAPI dashboard** for changing assumptions, comparing scenarios, and analyzing financial performance.
 
 ---
 
-## 2. Current Baseline Scope (v1.0 Implemented)
+## 2. Current Baseline Scope
 
-The project currently provides complete, cell-by-cell fidelity with [Startup_Financial_Models.xlsx](file:///c:/Users/shark/Downloads/Startup%20Financial%20Models/Startup_Financial_Models.xlsx):
+The current version reproduces the core logic and key outputs of `Startup_Financial_Models.xlsx`.
 
 | Domain | Implemented Features |
 | :--- | :--- |
-| **Calculation Engine** | Pure Python 3.11 engine using `decimal.Decimal` for zero floating-point drift; reproduces all 510+ formulas and 23 monthly periods (Jul 2026 – May 2028). |
-| **Baseline Parity** | 100.0% match on Total Revenue ($9,352.00, cell `N10`), Total Customers (668, cell `N4`), and Cumulative EBIT ($1,456.99, cell `S9`). |
-| **API Server** | FastAPI server running locally on `http://127.0.0.1:8000` with endpoints for health checks, default assumptions, on-demand calculations, and scenario persistence. |
-| **User Interface** | Laptop-friendly React dashboard with executive KPI cards, SVG trajectory charts, full 23-month financial statements, interactive assumptions editor, lead generation database (66 records), and live Excel cell inspector. |
-| **Scenario Storage** | Dual persistence support via local JSON files in `scenarios/` and browser `localStorage`. |
-| **One-Click Launch** | Windows [start-demo.bat](file:///c:/Users/shark/Downloads/Startup%20Financial%20Models/start-demo.bat) automated environment setup and browser launch. |
+| **Calculation Engine** | Python 3.11 calculation engine reproducing 510+ formulas across 23 monthly periods (Jul 2026 – May 2028). |
+| **Baseline Validation** | Key outputs match the original Excel model, including Total Revenue ($9,352.00), Total Customers (668), and Cumulative EBIT ($1,456.99). |
+| **API Server** | FastAPI server with endpoints for health checks, assumptions, calculations, and scenario storage. |
+| **User Interface** | React dashboard with KPI cards, financial charts, 23-month financial statements, assumptions editor, and Excel cell inspector. |
+| **Scenario Storage** | Scenarios can be saved and loaded for comparison and future analysis. |
+| **One-Click Launch** | Windows `start-demo.bat` script for environment setup and application launch. |
 
 ---
 
-## 3. Future Scoping: Pillars of Improvement
+## 3. Future Roadmap
 
-We invite contributors across three tracks:
+Contributors can work across three main tracks.
 
-### Track A: Financial Modeling & Quantitative Logic (Finance Minds)
-- [ ] **Cohort-Based Retention & Churn:** Model customer churn by customer age/tenure rather than a flat monthly rate.
-- [ ] **Revenue Expansion & Net Revenue Retention (NRR):** Add expansion, upsell, and contraction ARR alongside new customer acquisition.
-- [ ] **SaaS Unit Economics Dashboard:**
-  - Customer Acquisition Cost (CAC) and CAC Payback Period (months).
-  - Customer Lifetime Value (LTV) and LTV:CAC Ratio.
-  - SaaS "Magic Number" (Sales efficiency).
-  - Rule of 40 tracking (Growth % + Free Cash Flow / EBITDA Margin %).
-- [ ] **Headcount & Hiring Plan:** Expand the placeholder in row 29 into a salary, benefits, and employee ramp schedule.
-- [ ] **Cash Flow Statement & Runway Simulator:** Project cash burn, minimum cash balance, and runway runway date (zero-cash date).
-- [ ] **Sensitivity & Monte Carlo Analysis:** Multi-variable stress testing (e.g., churn +50%, conversion -30%).
+### Track A: Financial Modeling & Quantitative Logic
+
+- [ ] **Cohort-Based Retention & Churn**
+  - Model customer churn based on customer age instead of one flat churn rate.
+
+- [ ] **Revenue Expansion & NRR**
+  - Add upsells, expansion revenue, contraction, and Net Revenue Retention.
+
+- [ ] **SaaS Unit Economics**
+  - Customer Acquisition Cost (CAC)
+  - CAC Payback Period
+  - Customer Lifetime Value (LTV)
+  - LTV:CAC Ratio
+  - SaaS Magic Number
+  - Rule of 40
+
+- [ ] **Headcount & Hiring Plan**
+  - Model salaries, benefits, hiring dates, and employee ramp schedules.
+
+- [ ] **Cash Flow & Runway Simulator**
+  - Track cash burn, minimum cash balance, runway, and projected zero-cash date.
+
+- [ ] **Sensitivity & Monte Carlo Analysis**
+  - Test how changes in assumptions such as churn, conversion, pricing, and costs affect financial results.
 
 ---
 
-### Track B: UI / UX Design & Frontend Engineering (Designers & Devs)
-- [ ] **Interactive Cohort Heatmaps:** Visual grid showing customer retention decay across cohorts.
-- [ ] **Sensitivity Matrix / Heatmap View:** 2D interactive table varying 2 levers (e.g. Price vs. Churn) showing resulting Total Revenue / EBIT.
-- [ ] **Visual Scenario Comparison:** Split-screen side-by-side view with interactive slider for comparing two scenario outcomes.
-- [ ] **Executive Presentation Mode:** High-contrast, clean print/presentation stylesheet or slide-deck view.
-- [ ] **Keyboard Shortcuts & Power-User Editing:** Excel-like cell navigation (`Tab`, `Enter`, arrow keys) inside model tables.
-- [ ] **Light / Dark Mode Theme Switcher:** Polished theme toggles adhering to accessibility and WCAG standards.
+### Track B: UI / UX & Frontend
+
+- [ ] **Cohort Heatmaps**
+  - Visualize customer retention across different customer cohorts.
+
+- [ ] **Sensitivity Matrix**
+  - Compare two assumptions, such as Price vs. Churn, and see the effect on Revenue or EBIT.
+
+- [ ] **Scenario Comparison**
+  - Compare two financial scenarios side-by-side.
+
+- [ ] **Executive Presentation Mode**
+  - Create a clean presentation view for sharing financial results.
+
+- [ ] **Keyboard Shortcuts**
+  - Add Excel-style navigation using `Tab`, `Enter`, and arrow keys.
+
+- [ ] **Light / Dark Mode**
+  - Add accessible light and dark themes.
 
 ---
 
-### Track C: Full-Stack & Systems Architecture (Software Engineers)
-- [ ] **PDF Executive Pitch Deck Generator:** Automated 1-page summary PDF download with key metrics and charts.
-- [ ] **Two-Way Excel / CSV Sync:** Ability to import a modified `.xlsx` workbook or export calculations with living Excel formulas intact.
-- [ ] **Monte Carlo Worker Process:** Offload 1,000+ simulation iterations to Python multiprocessing or background worker.
-- [ ] **Vectorized Engine (NumPy):** Optional high-throughput vectorized engine mode for bulk sensitivity runs.
-- [ ] **Cloud-Ready / Docker Packaging:** Multi-platform `Dockerfile` and `docker-compose.yml` for zero-install deployment.
+### Track C: Full-Stack & Systems
+
+- [ ] **Executive Summary PDF Generator**
+  - Generate a one-page PDF containing key financial metrics and charts.
+
+- [ ] **Excel Import / Export**
+  - Import assumptions from the standard Excel template and export model results back to Excel.
+
+- [ ] **Monte Carlo Processing**
+  - Support large simulation runs without slowing down the main application.
+
+- [ ] **Performance Improvements**
+  - Improve calculation speed for sensitivity analysis and large simulation runs.
+
+- [ ] **Docker Deployment**
+  - Add `Dockerfile` and `docker-compose.yml` support for easier deployment across different operating systems.
 
 ---
 
 ## 4. 🏆 Weekly Bounties ($100 Gift Card)
 
-We run weekly development sprints to incentivize community contributions.
+Weekly development sprints can be used to reward strong community contributions.
 
-### Program Rules:
-1. **Weekly Prize:** Top contributor or standout PR each week receives a **$100 Gift Card** (Amazon, Visa, or custom equivalent).
-2. **Eligibility:**
-   - Any merged Pull Request addressing an open scoped item or verified community suggestion.
-   - Quality criteria: Clean code/design, clear documentation, tests included (if touching calculations).
-3. **How to Claim a Task:**
-   - Review the roadmap above or check repository GitHub Issues tagged `bounty`.
-   - Comment on the Issue or open an RFC with your proposed approach.
-   - Submit your PR with a reference to the task before the weekly Sunday cutoff (11:59 PM EST).
-4. **Judging & Selection:**
-   - Winners are evaluated on impact, user experience, and mathematical precision.
-   - Announcements are posted weekly in the repo discussions/releases.
+### Program Rules
+
+1. **Weekly Prize**
+   - The top contributor or standout Pull Request receives a **$100 gift card**.
+
+2. **Eligibility**
+   - Submit a Pull Request addressing an open roadmap item or approved community suggestion.
+   - Contributions should include clean code, documentation, and tests when modifying financial calculations.
+
+3. **Claiming a Task**
+   - Review the roadmap or GitHub Issues tagged `bounty`.
+   - Comment on the Issue with your proposed approach.
+   - Submit your Pull Request before the weekly Sunday cutoff at **11:59 PM EST**.
+
+4. **Selection**
+   - Contributions are evaluated based on impact, user experience, code quality, and financial accuracy.
 
 ---
 
-## 5. How to Propose Scope Changes
+## 5. Proposing New Features
 
-This document is collaborative. If you have an idea for a new feature or improvement:
-1. Fork the repo and create a branch (`feature/new-scope-item`).
-2. Edit this [SCOPING_DOCUMENT.md](file:///c:/Users/shark/Downloads/Startup%20Financial%20Models/SCOPING_DOCUMENT.md) to add your proposed feature under the appropriate track.
-3. Submit a Pull Request titled `[RFC] Scope Proposal: <Feature Name>`.
-4. Once discussed and approved, the scope item becomes an official bounty candidate!
+Have an idea that isn't currently on the roadmap?
+
+1. Fork the repository and create a new branch.
+2. Add your proposed feature to `SCOPING_DOCUMENT.md`.
+3. Submit a Pull Request titled:
+
+   `[RFC] Scope Proposal: <Feature Name>`
+
+4. Once reviewed and approved, the feature can be added to the official roadmap and become eligible for future bounties.
