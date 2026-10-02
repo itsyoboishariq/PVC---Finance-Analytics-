@@ -28,6 +28,10 @@ The current version reproduces the core logic and key outputs of `Startup_Financ
 
 ---
 
+## 4. 🏆 Weekly Bounties ($100 Gift Card)
+
+Weekly development sprints can be found below based on your interests. 
+
 ## 3. Future Roadmap
 
 Contributors can work across three main tracks.
@@ -93,13 +97,6 @@ Contributors can work across three main tracks.
   - Support large simulation runs without slowing down the main application.
   
 
-
-
-
-## 4. 🏆 Weekly Bounties ($100 Gift Card)
-
-Weekly development sprints can be used to reward strong community contributions.
-
 ### Program Rules
 
 1. **Weekly Prize**
@@ -122,18 +119,13 @@ Weekly development sprints can be used to reward strong community contributions.
 ## 5. Proposing New Features
 
 Have an idea that isn't currently on the roadmap?
+1. Add in your changes to the roadmap so that we can discuss.
+2. If your business oriented build out a financial model and add it to the repo. Document the changes in the scoping document. 
+
 
 For people wanting to build a feature: 
 
 1. Fork the repository and create a new branch.
 2. Add your proposed feature to `SCOPING_DOCUMENT.md`.
-3. Build your feature on new branch and provide a description of the change in the new branch.
-
-For Non-devs 
-
-update the scoping document based on what new things can be changed 
-Build an excel model in which the financial logic can be implemented into the application. 
-
-   `[RFC] Scope Proposal: <Feature Name>`
-
-5. Once reviewed and approved, the feature can be added to the official roadmap and become eligible for future bounties.
+3. Build your feature on new branch and provide a description of the change in the new branch
+4.  Once reviewed and approved, the feature can be added to the official roadmap and be merged to the main branch. 
