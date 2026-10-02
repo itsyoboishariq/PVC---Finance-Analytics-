@@ -89,16 +89,12 @@ Contributors can work across three main tracks.
 - [ ] **Excel Import / Export**
   - Import assumptions from the standard Excel template and export model results back to Excel.
 
-- [ ] **Monte Carlo Processing**
+- [ ] **ML Model for Demand Forecasting - simulate with mock data sets or with startup data**
   - Support large simulation runs without slowing down the main application.
+  
 
-- [ ] **Performance Improvements**
-  - Improve calculation speed for sensitivity analysis and large simulation runs.
 
-- [ ] **Docker Deployment**
-  - Add `Dockerfile` and `docker-compose.yml` support for easier deployment across different operating systems.
 
----
 
 ## 4. 🏆 Weekly Bounties ($100 Gift Card)
 
