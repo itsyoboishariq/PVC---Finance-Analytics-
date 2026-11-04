@@ -1,0 +1,187 @@
+column,definition,unit,candidate_us_gaap_tags,role
+ticker,ticker,,,feature_or_identifier
+company_name,company name,,,feature_or_identifier
+cik,cik,,,feature_or_identifier
+period_start,period start,,,feature_or_identifier
+period_end,"actual fiscal period end; fiscal_end_year is calendar year of period end, not issuer fiscal year label",,,feature_or_identifier
+period_days,period days,,,feature_or_identifier
+fiscal_end_year,fiscal end year,,,feature_or_identifier
+feature_available_date,earliest eligible annual filing date disclosing this annual revenue period,,,feature_or_identifier
+ipo_date,ipo date,,,feature_or_identifier
+years_from_ipo,years from ipo,,,feature_or_identifier
+pre_ipo_period,pre ipo period,,,feature_or_identifier
+currency,currency,,,feature_or_identifier
+unit_scale,unit scale,,,feature_or_identifier
+cash,cash,USD,CashAndCashEquivalentsAtCarryingValue,feature_or_identifier
+accounts_receivable,accounts receivable,USD,AccountsReceivableNetCurrent,feature_or_identifier
+inventory,inventory,USD,InventoryNet,feature_or_identifier
+total_assets,total assets,USD,Assets,feature_or_identifier
+accounts_payable,accounts payable,USD,AccountsPayableCurrent,feature_or_identifier
+current_liabilities,current liabilities,USD,LiabilitiesCurrent,feature_or_identifier
+current_assets,current assets,USD,AssetsCurrent,feature_or_identifier
+retained_earnings,retained earnings,USD,RetainedEarningsAccumulatedDeficit,feature_or_identifier
+equity,equity,USD,StockholdersEquity | StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest,feature_or_identifier
+deferred_revenue,reported total or sum of current/noncurrent contract liabilities; both required,USD,ContractWithCustomerLiability | DeferredRevenue,feature_or_identifier
+deferred_revenue_current,deferred revenue current,USD,ContractWithCustomerLiabilityCurrent | DeferredRevenueCurrent,feature_or_identifier
+deferred_revenue_noncurrent,deferred revenue noncurrent,USD,ContractWithCustomerLiabilityNoncurrent | DeferredRevenueNoncurrent,feature_or_identifier
+debt_current,debt current,USD,LongTermDebtCurrent,feature_or_identifier
+debt_noncurrent,debt noncurrent,USD,LongTermDebtNoncurrent,feature_or_identifier
+short_term_borrowings,Reported short-term borrowed capital; missing is not zero.,USD,ShortTermBorrowings | ShortTermDebtCurrent,feature_or_identifier
+long_term_debt_total,"Reported long-term debt including current maturities, or separately reported current plus noncurrent long-term debt; excludes short-term borrowings and leases.",USD,LongTermDebtCurrentAndNoncurrent,feature_or_identifier
+total_debt,"Reported all-debt total, or long-term debt including current maturities plus separately reported short-term borrowings; never assumes absent short-term borrowings are zero.",USD,DebtCurrentAndNoncurrent,feature_or_identifier
+revenue,revenue,USD,RevenueFromContractWithCustomerExcludingAssessedTax | Revenues | SalesRevenueNet | RevenueFromContractWithCustomerIncludingAssessedTax,feature_or_identifier
+cost_of_revenue,cost of revenue,USD,CostOfRevenue | CostOfGoodsAndServicesSold,feature_or_identifier
+gross_profit,gross profit,USD,GrossProfit,feature_or_identifier
+sales_marketing,sales marketing,USD,SellingAndMarketingExpense,feature_or_identifier
+general_administrative,general administrative,USD,GeneralAndAdministrativeExpense,feature_or_identifier
+research_development,research development,USD,ResearchAndDevelopmentExpense,feature_or_identifier
+operating_income,operating income,USD,OperatingIncomeLoss,feature_or_identifier
+net_income,net income,USD,NetIncomeLoss | ProfitLoss,feature_or_identifier
+da,da,USD,DepreciationDepletionAndAmortization,feature_or_identifier
+operating_cash_flow,operating cash flow,USD,NetCashProvidedByUsedInOperatingActivities,feature_or_identifier
+capex,capex,USD,PaymentsToAcquirePropertyPlantAndEquipment,feature_or_identifier
+financing_cash_flow,financing cash flow,USD,NetCashProvidedByUsedInFinancingActivities,feature_or_identifier
+stock_based_compensation,stock based compensation,USD,ShareBasedCompensation,feature_or_identifier
+capitalized_software_cash,capitalized software cash,USD,PaymentsToDevelopSoftware,feature_or_identifier
+ebitda_reported,ebitda reported,USD,EBITDA | EarningsBeforeInterestTaxesDepreciationAndAmortization,feature_or_identifier
+adjusted_ebitda_reported,Issuer-defined adjusted EBITDA from an exact custom XBRL tag; adjustments vary across issuers. Not interchangeable with EBITDA.,USD,AdjustedEarningsBeforeInterestTaxesDepreciationAndAmortization | AdjustedEBITDA,feature_or_identifier
+fcf,operating cash flow minus cash PPE capex; excludes capitalized software cash,USD,,feature_or_identifier
+ebitda_operating_proxy,"operating income + reported D&A; proxy, not reported or adjusted EBITDA",USD,,feature_or_identifier
+gross_margin,gross_profit / revenue,decimal,,feature_or_identifier
+operating_margin,operating_income / revenue,decimal,,feature_or_identifier
+net_margin,net_income / revenue,decimal,,feature_or_identifier
+fcf_margin,FCF / revenue,decimal,,feature_or_identifier
+cfo_margin,operating_cash_flow / revenue,decimal,,feature_or_identifier
+sales_marketing_ratio,sales_marketing / revenue,decimal,,feature_or_identifier
+ga_ratio,general_administrative / revenue,decimal,,feature_or_identifier
+rd_ratio,research_development / revenue,decimal,,feature_or_identifier
+sbc_ratio,stock_based_compensation / revenue,decimal,,feature_or_identifier
+capex_ratio,capex / revenue,decimal,,feature_or_identifier
+current_ratio,current_assets / current_liabilities,decimal,,feature_or_identifier
+cash_ratio,cash / current_liabilities,decimal,,feature_or_identifier
+debt_assets,total_debt / total_assets,decimal,,feature_or_identifier
+debt_equity,total_debt / equity; blank for nonpositive equity,decimal,,feature_or_identifier
+cash_assets,cash / total_assets,decimal,,feature_or_identifier
+net_debt,total_debt - cash; excludes marketable securities,USD,,feature_or_identifier
+annual_cash_burn,"max(-FCF, 0); 0 only when reported/derived FCF is nonnegative",USD,,feature_or_identifier
+runway_months,"cash / max(-FCF,0) * 12; blank when no cash burn",,,feature_or_identifier
+cash_generating,1 if FCF >= 0; 0 if FCF < 0; blank if FCF unavailable,,,feature_or_identifier
+revenue_growth,revenue_t / revenue_t-1 - 1; adjacent annual periods only,decimal,,feature_or_identifier
+deferred_revenue_growth,deferred_revenue_t / deferred_revenue_t-1 - 1; requires adjacent annual periods and positive prior value,decimal,,feature_or_identifier
+dso,average beginning/end net current AR / annual revenue * fiscal period days,,,feature_or_identifier
+lag_feature_available_date,lag feature available date,,,feature_or_identifier
+rule_of_40_fcf,"revenue growth + FCF margin; decimal units, 0.40 means 40%",decimal,,feature_or_identifier
+rule_of_40_operating,revenue growth + operating margin,decimal,,feature_or_identifier
+selected_source_count,selected source count,,,feature_or_identifier
+source_urls,source urls,,,feature_or_identifier
+cash_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+cash_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+accounts_receivable_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+accounts_receivable_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+inventory_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+inventory_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+total_assets_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+total_assets_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+accounts_payable_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+accounts_payable_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+current_liabilities_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+current_liabilities_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+current_assets_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+current_assets_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+retained_earnings_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+retained_earnings_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+equity_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+equity_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+deferred_revenue_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+deferred_revenue_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+deferred_revenue_current_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+deferred_revenue_current_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+deferred_revenue_noncurrent_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+deferred_revenue_noncurrent_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+debt_current_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+debt_current_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+debt_noncurrent_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+debt_noncurrent_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+short_term_borrowings_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+short_term_borrowings_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+long_term_debt_total_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+long_term_debt_total_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+total_debt_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+total_debt_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+revenue_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+revenue_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+cost_of_revenue_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+cost_of_revenue_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+gross_profit_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+gross_profit_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+sales_marketing_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+sales_marketing_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+general_administrative_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+general_administrative_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+research_development_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+research_development_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+operating_income_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+operating_income_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+net_income_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+net_income_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+da_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+da_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+operating_cash_flow_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+operating_cash_flow_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+capex_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+capex_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+financing_cash_flow_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+financing_cash_flow_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+stock_based_compensation_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+stock_based_compensation_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+capitalized_software_cash_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+capitalized_software_cash_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+ebitda_reported_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+ebitda_reported_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+adjusted_ebitda_reported_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+adjusted_ebitda_reported_status,"reported, derived, or not_found_at_cutoff",,,feature_or_identifier
+fcf_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+ebitda_operating_proxy_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+revenue_growth_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+dso_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+rule_of_40_fcf_missing,1 if value unavailable; 0 otherwise,,,feature_or_identifier
+target_period_end,target period end,,,label_or_label_metadata_DO_NOT_USE_AS_FEATURE
+target_revenue_growth,next adjacent annual revenue / current revenue - 1,decimal,,label_or_label_metadata_DO_NOT_USE_AS_FEATURE
+target_operating_margin,next adjacent annual operating income / revenue,decimal,,label_or_label_metadata_DO_NOT_USE_AS_FEATURE
+target_available_date,first annual revenue disclosure date for target period; label inputs may share that filing,,,label_or_label_metadata_DO_NOT_USE_AS_FEATURE
+training_eligible,both labels present and feature availability precedes target period end; further split purging required,,,eligibility_DO_NOT_USE_AS_FEATURE
+target_missing,1 if value unavailable; 0 otherwise,,,label_or_label_metadata_DO_NOT_USE_AS_FEATURE
+gross_margin_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+operating_margin_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+net_margin_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+fcf_margin_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+cfo_margin_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+sales_marketing_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+ga_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+rd_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+sbc_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+capex_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+current_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+cash_ratio_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+debt_assets_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+debt_equity_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+cash_assets_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+net_debt_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+annual_cash_burn_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+runway_months_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+cash_generating_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+deferred_revenue_growth_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+rule_of_40_operating_missing,1 if corresponding value is missing; 0 if present.,binary,,feature
+strict_cohort_include,"US recurring B2B software cohort with supported IPO year; adjacent, legacy-license-transition, foreign and repeat-listing cases excluded. Exact IPO day can be unverified in the earlier expansion.",binary,,selection_not_feature
+strict_training_eligible,Chronology-eligible labeled row within strict cohort.,binary,,selection_not_feature
+suggested_split,Train decisions and labels before 2023; validate 2023-2024 decisions with labels before 2025; test decisions from 2025; purge boundary-crossing labels.,category,,split_metadata_not_feature
+company_holdout_fold,"SHA256(ticker) deterministic 5-fold grouping, use only for company generalization validation.",integer,,split_metadata_not_feature
+cohort_tier,"Screening category: core_us_subscription, adjacent_model, foreign_issuer or repeat_ipo.",category,,selection_not_feature
+cohort_group,"Original 2020-2025 IPO screen versus earlier 2000-2019 expansion. Selection metadata, not a feature.",,,selection_or_source_metadata_not_feature
+cohort_ipo_year,IPO calendar year; year-level confirmation is allowed for expansion rows with day-unverified flag.,,,selection_or_source_metadata_not_feature
+ipo_calendar_age,Calendar year of fiscal period end minus IPO calendar year; not exact elapsed years.,,,selection_or_source_metadata_not_feature
+growth_stage_period,"1 for IPO calendar year through IPO year plus five, inclusive. This is a stage proxy, not a growth-rate screen.",,,selection_or_source_metadata_not_feature
+growth_stage_training_eligible,Strict eligible labeled observation within the first six IPO-calendar years.,,,selection_or_source_metadata_not_feature
+original_cohort_member,1 for the original screened 2020-2025 IPO cohort; 0 for expansion.,,,selection_or_source_metadata_not_feature
+cost_of_revenue_reported_subtotal,RealPage reported cost subtotal excluding separately displayed product-technology amortization; not normalized total cost.,USD,,selection_or_source_metadata_not_feature
+cost_of_revenue_basis,Explanation of RealPage cost normalization and missing values.,,,selection_or_source_metadata_not_feature

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+*.building.sqlite3
+ai.local.json
+.env
+.env.*
+!.env.example
+*.log
+.pytest_cache/
+data/*.sqlite3

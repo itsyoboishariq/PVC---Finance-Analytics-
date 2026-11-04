@@ -1,0 +1,12 @@
+{
+  "snapshot": "2026-10-23",
+  "sha256": {
+    "cluster_model.json": "12d36a23d15f8591c7d6de50b02b91513ad05ce01e37e8c123ffdd108ff4ae6e",
+    "company_metadata.csv": "62b5d7a39eda50b9634be6665408ae0fb49379d3a08b652bce4386cfe994ee36",
+    "company_year_panel.csv": "fd56e02f5d288594fb78613f9b58c2d48af7e439f02594b27e65673e087ed66c",
+    "data_dictionary.csv": "23e1c0d5a0e7d76c21a124e96eb1ffb23ff7ac97c23bd1810aaae5433b652566",
+    "events.json": "4dac95cdd1d019b07aff50daea3a4986e089aa420d168fa8f8ad63bf25664a73",
+    "financial_sources.csv": "d0eed62f6aad8f6e86b78f545209a49de8f0e360f0e43f6e45ecbd1c95f0964c",
+    "target_labels.csv": "c4a25bc129474547aa59f30b19bdf7877c8e6b7b8ff652d5dd12f269e0d81066"
+  }
+}

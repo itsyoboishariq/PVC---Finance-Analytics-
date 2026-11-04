@@ -1,0 +1,26 @@
+[
+  {
+    "event_id": "pandemic",
+    "name": "Pandemic disruption",
+    "start": "2020-03-11",
+    "end": "2021-12-31",
+    "source_url": "https://www.who.int/news-room/speeches/item/who-director-general-s-opening-remarks-at-the-media-briefing-on-covid-19---11-march-2020",
+    "window_note": "Research window; overlap does not establish company exposure."
+  },
+  {
+    "event_id": "rates",
+    "name": "Rising-rate period",
+    "start": "2022-03-16",
+    "end": "2023-12-31",
+    "source_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm",
+    "window_note": "Research window; overlap does not establish company exposure."
+  },
+  {
+    "event_id": "ai",
+    "name": "After ChatGPT launch",
+    "start": "2022-11-30",
+    "end": "2025-12-31",
+    "source_url": "https://openai.com/index/chatgpt/",
+    "window_note": "Research window; overlap does not establish AI adoption."
+  }
+]
