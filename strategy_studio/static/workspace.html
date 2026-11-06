@@ -1,1 +1,416 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Strategy Studio</title><link rel="stylesheet" href="/static/workspace.css"><script src="/static/analysis-job.js"></script><body><header><a href="/">SAAS / LAB</a><nav><b>Strategy studio</b><a href="/">Research dashboard</a><a href="/advanced">Detailed evidence</a></nav><button id="save">Save flow</button></header><main><div class="intro"><small>BUILD A DECISION. TEST THE EVIDENCE.</small><h1>Your strategy, connected.</h1><p>Build your company profile, add spending decisions, and let the analyst investigate the tradeoffs.</p></div><div class="layout"><form id="editor"><h2>1 · Your starting point</h2><p>These example inputs are editable. Percentages use 40 for 40%.</p><label>Strategy name<input id="name" value="My growth plan" maxlength="100"></label><label>Annual revenue · $ millions<input id="revenue" type="number" value="100" min="0.001" max="1000000" step="any" required></label><div class="two"><label>Revenue growth %<input id="growth" type="number" value="30" min="-100" max="1000" step="any" required></label><label>Operating margin %<input id="margin" type="number" value="-15" min="-500" max="100" step="any" required></label><label>Gross margin %<input id="gross" type="number" value="75" min="0" max="100" step="any" required></label><label>Sales spending %<input id="sales" type="number" value="40" min="0" max="300" step="any" required></label><label>R&D spending %<input id="rd" type="number" value="25" min="0" max="300" step="any" required></label></div><h2>2 · Build the decisions</h2><p>Enable either or both branches. Targets are shares of revenue.</p><label class="check"><input id="salesOn" type="checkbox" checked> Sales & marketing decision</label><label>Proposed sales spending %<input id="salesTarget" type="number" value="45" min="0" max="300" step="any" required></label><label class="check"><input id="rdOn" type="checkbox"> Product development decision</label><label>Proposed R&D spending %<input id="rdTarget" type="number" value="25" min="0" max="300" step="any" required></label><h2>3 · Define the goal</h2><label>Primary objective<select id="objective"><option value="growth">Grow revenue</option><option value="profitability">Improve operating profitability</option></select></label><label>Historical context<select id="context"><option value="all">All available historical periods</option><option value="rates">Interest-rate tightening period</option><option value="pandemic">Pandemic period</option><option value="ai">AI-era calendar period</option></select></label><label>Ask your analyst<textarea id="question" rows="3" maxlength="2000" placeholder="What tradeoffs should I test before increasing spending?"></textarea></label><button type="submit" class="primary">Run evidence →</button><button id="askAnalyst" type="button">Run with AI analyst ✦</button><p>AI sends your profile, decisions, question and computed evidence to OpenAI. API usage applies.</p></form><section><div class="toolbar"><h2 id="flowTitle">My growth plan</h2><span id="state">Draft · not analyzed</span></div><div id="flow" aria-label="Strategy decision flow"></div><p class="caption">Branches are analyzed separately; this flow does not estimate combined causal effects.</p><div id="status" role="status"></div><section id="results"><div class="empty"><h2>Turn a choice into a research question.</h2><p>Run the flow to see financial peers, correlations, adjusted estimates, and historical outcomes for similar starting profiles.</p></div></section></section></div></main><script src="/static/workspace.js"></script><link rel="stylesheet" href="/static/side-agent.css"><script src="/static/side-agent.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Strategy Studio · Startup Decision OS</title>
+  <link rel="stylesheet" href="/static/workspace.css">
+  <script src="/static/analysis-job.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <a href="/strategy" class="brand">
+      <div class="brand-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        STRATEGY STUDIO
+      </div>
+      <span class="brand-pill">Startup Edition</span>
+    </a>
+    <nav>
+      <a href="/strategy" class="active">Strategy Studio</a>
+      <a href="/">Research Dashboard</a>
+      <a href="/docs" target="_blank">API Docs</a>
+    </nav>
+    <div class="header-actions">
+      <button id="save" class="btn" title="Save strategy in this browser">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Save Strategy
+      </button>
+      <button id="exportJson" class="btn" type="button" title="Export full strategy JSON">Export JSON</button>
+    </div>
+  </header>
+
+  <!-- Startup Stage Presets Bar -->
+  <div class="presets-bar">
+    <div class="preset-chips">
+      <span class="preset-label">Startup Archetypes:</span>
+      <button type="button" class="preset-btn active" data-preset="seriesA">Series A Growth ($10M)</button>
+      <button type="button" class="preset-btn" data-preset="seriesB">Series B Scale ($25M)</button>
+      <button type="button" class="preset-btn" data-preset="efficient">Capital-Efficient ($15M)</button>
+      <button type="button" class="preset-btn" data-preset="enterprise">Pre-IPO Scale ($100M)</button>
+    </div>
+    <div id="quickRecTrigger" class="preset-label" style="cursor:pointer; color:#0284c7;">
+      ⚡ 3 Data-Backed Playbooks Available
+    </div>
+  </div>
+
+  <main>
+    <!-- Intro Banner (Preserves test expectation) -->
+    <div class="intro">
+      <small style="color:var(--primary); font-weight:700;">VENTURE STRATEGY & PEER DECISION OS</small>
+      <h1>Your strategy, connected.</h1>
+      <p class="tagline">Ground your strategic plan in actual SEC financials from 100+ B2B SaaS IPOs, empirical regression tradeoffs, and peer founder playbooks.</p>
+    </div>
+
+    <!-- Live Startup Vital KPI Strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Rule of 40 (Current)</span>
+          <span id="r40BadgeCur" class="kpi-tag" style="background:#e0f2fe; color:#0369a1;">Baseline</span>
+        </div>
+        <div id="r40CurrentVal" class="kpi-value">15.0</div>
+        <div class="kpi-sub">Growth % + Operating Margin %</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Rule of 40 (Projected)</span>
+          <span id="r40BadgeProp" class="kpi-tag" style="background:#ecfdf5; color:#059669;">Target</span>
+        </div>
+        <div id="r40ProposedVal" class="kpi-value" style="color:#10b981;">24.2</div>
+        <div id="r40DeltaText" class="kpi-sub">+9.2 pt improvement</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Annual Budget Shift</span>
+          <span id="budgetShiftBadge" class="kpi-tag" style="background:#f1f5f9; color:#475569;">Holding Rev Fixed</span>
+        </div>
+        <div id="budgetDeltaVal" class="kpi-value">$0.0M</div>
+        <div id="runwayImpactText" class="kpi-sub">Neutral runway impact</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Matched Peer Cohort</span>
+          <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">100+ SaaS IPOs</span>
+        </div>
+        <div id="peerCohortSummary" class="kpi-value" style="font-size:18px;">8 Close Peers</div>
+        <div id="peerCohortSub" class="kpi-sub">Datadog, HubSpot, Everbridge</div>
+      </div>
+    </div>
+
+    <!-- Draggable Evidence & Research Shelf -->
+    <section class="evidence-dock">
+      <div class="dock-header">
+        <div class="dock-title">
+          <span>📎 Evidence & Research Shelf</span>
+          <span style="font-weight:normal; text-transform:none; margin-left:8px; color:var(--text-muted);">(Drag and drop evidence onto any Strategy Node below to anchor your plan)</span>
+        </div>
+        <span id="attachedEvidenceCount" style="font-size:11px; font-weight:700; color:#0284c7;">0 evidence cards attached</span>
+      </div>
+      <div id="evidenceCardsDock" class="dock-cards">
+        <!-- Dynamically injected with peer companies, empirical regression facts, and macro cards -->
+      </div>
+    </section>
+
+    <!-- Top View Switcher Tabs -->
+    <div class="tab-nav">
+      <button type="button" class="tab-btn active" data-tab="tab-hierarchy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        1 · Strategy Hierarchy Tree
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-spider">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        2 · Exploded Spider Diagram (Radar)
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-benchmarks">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        3 · Founder Benchmarking Library
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-evidence">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        4 · Deep Empirical Regressions
+      </button>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="workspace-grid">
+      <!-- Left Config Form -->
+      <form id="editor" class="config-panel">
+        <div class="panel-section-title">1 · Strategy Profile</div>
+        <label>
+          Strategy Name
+          <input id="name" value="Series A Growth & Efficiency Plan" maxlength="100">
+        </label>
+        <label>
+          Current Annual Revenue ($ Millions)
+          <input id="revenue" type="number" value="10" min="0.001" max="1000000" step="any" required>
+        </label>
+        <div class="two-col">
+          <label>
+            Revenue Growth %
+            <input id="growth" type="number" value="50" min="-100" max="1000" step="any" required>
+          </label>
+          <label>
+            Operating Margin %
+            <input id="margin" type="number" value="-25" min="-500" max="100" step="any" required>
+          </label>
+          <label>
+            Gross Margin %
+            <input id="gross" type="number" value="75" min="0" max="100" step="any" required>
+          </label>
+          <label>
+            S&M Spending %
+            <input id="sales" type="number" value="48" min="0" max="300" step="any" required>
+          </label>
+          <label>
+            R&D Spending %
+            <input id="rd" type="number" value="26" min="0" max="300" step="any" required>
+          </label>
+        </div>
+
+        <div class="panel-section-title">2 · Strategic Levers</div>
+        <label class="check-label">
+          <input id="salesOn" type="checkbox" checked>
+          <span>Sales & Marketing Rebalance</span>
+        </label>
+        <label style="margin-top:6px;">
+          Proposed S&M % of Revenue
+          <input id="salesTarget" type="number" value="42" min="0" max="300" step="any" required>
+        </label>
+
+        <label class="check-label">
+          <input id="rdOn" type="checkbox" checked>
+          <span>Product / R&D Velocity Shift</span>
+        </label>
+        <label style="margin-top:6px;">
+          Proposed R&D % of Revenue
+          <input id="rdTarget" type="number" value="28" min="0" max="300" step="any" required>
+        </label>
+
+        <div class="panel-section-title">3 · Objective & Context</div>
+        <label>
+          Primary Objective
+          <select id="objective">
+            <option value="growth" selected>Accelerate Revenue Growth</option>
+            <option value="profitability">Improve Operating Profitability / Runway</option>
+          </select>
+        </label>
+        <label>
+          Macro / Historical Context
+          <select id="context">
+            <option value="all" selected>All Available Historical SaaS Periods</option>
+            <option value="rates">Interest-Rate Tightening (2022–2024)</option>
+            <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
+            <option value="ai">AI-Era Calibrated Periods</option>
+          </select>
+        </label>
+
+        <label>
+          Ask AI Analyst (Optional)
+          <textarea id="question" rows="2" maxlength="2000" placeholder="e.g. What happened to peers that trimmed S&M by 6pp at $10M ARR?"></textarea>
+        </label>
+
+        <div class="btn-group">
+          <button type="submit" class="btn primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Run Empirical Evidence →
+          </button>
+          <button id="askAnalyst" type="button" class="btn ai-btn">
+            ✦ Ask Live AI Analyst
+          </button>
+        </div>
+      </form>
+
+      <!-- Center Dynamic Canvas Views -->
+      <div class="canvas-container">
+        <!-- Canvas Toolbar -->
+        <div class="canvas-toolbar">
+          <div class="flow-title-wrap">
+            <h2 id="flowTitle" class="flow-title">Series A Growth & Efficiency Plan</h2>
+            <span id="state" class="flow-status-pill">Ready to analyze</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">
+            Target: <strong id="topTargetSummary">Rule of 40: 24.2</strong>
+          </div>
+        </div>
+
+        <div id="status" style="display:none;"></div>
+
+        <!-- VIEW 1: Hierarchy Tree Builder -->
+        <section id="view-hierarchy" class="view-panel">
+          <!-- Recommendations Carousel -->
+          <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">
+                ⚡ Recommended Playbooks (Grounded by Dataset)
+              </span>
+              <span style="font-size:11px; color:var(--text-muted);">Derived from closest SEC peer trajectories</span>
+            </div>
+            <div id="recommendationsRow" class="recommendations-grid">
+              <!-- Dynamically populated from API -->
+            </div>
+          </div>
+
+          <!-- The Visual Hierarchy Canvas -->
+          <div class="tree-canvas" id="treeCanvas">
+            <!-- Breadcrumbs / Back button (visible in drilldown) -->
+            <div id="drilldownNav" class="tree-breadcrumb" style="display:none;">
+              <button id="backToHierarchyBtn" class="tree-back-btn" type="button">
+                ← Back to Full Strategy Hierarchy
+              </button>
+              <span id="drilldownBreadcrumbText">Deep Analysis: Sales & Marketing Lever</span>
+            </div>
+
+            <!-- Standard Full Hierarchy Tree -->
+            <div id="hierarchyTreeRoot" style="display:flex; flex-direction:column; align-items:center; gap:20px; width:100%;">
+              <!-- Level 1: Objective -->
+              <div class="tree-node root-goal" id="node-root">
+                <div class="node-badge">
+                  <span>Level 1 · Startup Objective</span>
+                  <span id="treeGoalPill" class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Growth & Efficiency</span>
+                </div>
+                <div class="node-title" id="treeGoalTitle">Accelerate Revenue Growth & Expand Rule of 40</div>
+                <p class="node-desc" id="treeGoalDesc">$10.0M ARR at 50.0% Growth → Targeting Rule of 40 improvement</p>
+                <div class="attached-evidence-container" id="attached-root"></div>
+                <div class="node-footer">
+                  <span>Target Outcome</span>
+                  <span class="node-drilldown-hint">Primary Anchor ↓</span>
+                </div>
+              </div>
+
+              <!-- Connecting Branch Down -->
+              <div class="tree-connector">
+                <span>↓</span>
+              </div>
+
+              <!-- Level 2 & 3: Strategic Pillars & Levers -->
+              <div class="tree-branches" id="treeBranchesContainer">
+                <!-- Dynamically rendered branches for S&M, R&D, Gross Margin -->
+              </div>
+            </div>
+
+            <!-- Dedicated Drilldown View Container (Swapped in when clicking Inspect Node) -->
+            <div id="nodeDrilldownContainer" style="display:none; width:100%;"></div>
+          </div>
+
+          <!-- Legacy Flow Container hidden for backward compatibility / tests -->
+          <div id="flow" style="display:none;"></div>
+        </section>
+
+        <!-- VIEW 2: Exploded Spider Diagram (Radar) -->
+        <section id="view-spider" class="view-panel" style="display:none;">
+          <div class="radar-panel">
+            <div style="margin-bottom:16px;">
+              <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Exploded Spider Diagram (Radar Benchmark)</h2>
+              <p style="color:var(--text-muted); font-size:13px; margin:0;">
+                Comprehensive multi-dimensional evaluation of your strategy against current performance, matching SaaS peers, top-quartile winners, and selected founder benchmarks.
+              </p>
+            </div>
+
+            <div class="radar-layout">
+              <!-- SVG Radar Chart Container -->
+              <div class="radar-svg-wrap">
+                <svg id="radarSvg" viewBox="0 0 500 500" style="width:100%; height:auto;">
+                  <!-- Injected via JS -->
+                </svg>
+              </div>
+
+              <!-- Radar Legend & Layer Toggles -->
+              <div class="radar-legend">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px; margin-bottom:4px;">
+                  Active Comparison Layers
+                </div>
+                <div class="legend-item" id="toggle-current">
+                  <div class="legend-left">
+                    <span class="legend-color-dot" style="background:#0284c7;"></span>
+                    <span>Your Current Profile</span>
+                  </div>
+                  <input type="checkbox" checked id="chk-current">
+                </div>
+                <div class="legend-item" id="toggle-proposed">
+                  <div class="legend-left">
+                    <span class="legend-color-dot" style="background:#10b981;"></span>
+                    <span>Proposed Strategy</span>
+                  </div>
+                  <input type="checkbox" checked id="chk-proposed">
+                </div>
+                <div class="legend-item" id="toggle-peers">
+                  <div class="legend-left">
+                    <span class="legend-color-dot" style="background:#8b5cf6;"></span>
+                    <span>Matching Peers Median</span>
+                  </div>
+                  <input type="checkbox" checked id="chk-peers">
+                </div>
+                <div class="legend-item" id="toggle-p75">
+                  <div class="legend-left">
+                    <span class="legend-color-dot" style="background:#f59e0b;"></span>
+                    <span>Top Quartile (P75) Winners</span>
+                  </div>
+                  <input type="checkbox" checked id="chk-p75">
+                </div>
+                <div class="legend-item" id="toggle-benchmark">
+                  <div class="legend-left">
+                    <span class="legend-color-dot" style="background:#06b6d4;"></span>
+                    <span id="legendBenchmarkLabel">Founder Benchmark</span>
+                  </div>
+                  <input type="checkbox" checked id="chk-benchmark">
+                </div>
+
+                <div style="margin-top:10px; padding:12px; border-radius:8px; background:var(--surface-subtle); font-size:11px; color:var(--text-muted);">
+                  💡 <strong>Tip:</strong> S&M Efficiency is inverted so that lower spending ratios map to a higher efficiency score on the perimeter.
+                </div>
+              </div>
+            </div>
+
+            <!-- Exploded Axis Values Grid -->
+            <div class="radar-axis-grid" id="radarStatBoxes">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: Founder Benchmarking Library -->
+        <section id="view-benchmarks" class="view-panel" style="display:none;">
+          <div style="background:#ffffff; border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:var(--shadow-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <div>
+                <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Founder & Team Benchmark Library</h2>
+                <p style="color:var(--text-muted); font-size:13px; margin:0;">
+                  Benchmark your plan directly against battle-tested playbooks created by SaaS founders and operators.
+                </p>
+              </div>
+              <button id="saveToTeamLibraryBtn" type="button" class="btn primary" style="font-size:12px;">
+                + Save My Plan to Team Library
+              </button>
+            </div>
+
+            <div id="benchmarksCardsGrid" class="benchmarks-grid">
+              <!-- Injected via JS -->
+            </div>
+
+            <!-- Side by Side Benchmark Comparison -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+              <h3 style="font-size:15px; font-weight:700; margin:0 0 12px;">Side-by-Side Benchmark Gap Analysis</h3>
+              <div class="scroll">
+                <table id="benchmarkComparisonTable">
+                  <!-- Injected via JS -->
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 4: Deep Evidence & Empirical Regressions -->
+        <section id="view-evidence" class="view-panel" style="display:none;">
+          <div id="results">
+            <div class="empty">
+              <h2>Turn a choice into a research question.</h2>
+              <p>Run the flow to see financial peers, correlations, adjusted estimates, and historical outcomes for similar starting profiles.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Side Agent and Scripts -->
+  <script src="/static/workspace.js"></script>
+  <link rel="stylesheet" href="/static/side-agent.css">
+  <script src="/static/side-agent.js"></script>
+</body>
+</html>
