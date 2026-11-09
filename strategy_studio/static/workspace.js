@@ -51,6 +51,9 @@ function applyPreset(key) {
   document.querySelectorAll('.preset-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.preset === key);
   });
+  document.querySelectorAll('[data-preset-target]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.presetTarget === key);
+  });
   $('name').value = p.name;
   $('revenue').value = p.revenue;
   $('growth').value = p.growth;
@@ -65,6 +68,7 @@ function applyPreset(key) {
   $('objective').value = p.objective;
   $('context').value = p.context;
   updateLocalKPIs();
+  if (typeof toast !== 'undefined') toast.info('Playbook Loaded', p.name);
   run(false);
 }
 
@@ -431,6 +435,11 @@ function renderEvidenceDock(peers) {
       <p style="margin:0; font-size:11px; color:var(--text-muted); line-height:1.3;">${esc(c.desc)}</p>
     </div>
   `).join('');
+
+  if ($('sidebarEvidenceBadge')) {
+    const compCount = peers?.items?.length || 8;
+    $('sidebarEvidenceBadge').textContent = `${compCount} Comps`;
+  }
 }
 
 // Exploded Spider Diagram (Radar Chart) Renderer
@@ -844,11 +853,139 @@ function render(r) {
   }
 }
 
+// ==========================================================================
+// Sonner Toast Notification System (shadcn/ui style)
+// ==========================================================================
+const toast = {
+  container: null,
+  init() {
+    this.container = $('sonnerContainer');
+  },
+  show(title, description = '', type = 'info') {
+    if (!this.container) this.init();
+    if (!this.container) return;
+
+    const el = document.createElement('div');
+    el.className = 'sonner-toast';
+    el.dataset.type = type;
+
+    let iconSvg = '';
+    if (type === 'success') {
+      iconSvg = `<svg class="sonner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    } else if (type === 'error') {
+      iconSvg = `<svg class="sonner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+    } else {
+      iconSvg = `<svg class="sonner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="8"/></svg>`;
+    }
+
+    el.innerHTML = `
+      ${iconSvg}
+      <div class="sonner-content">
+        <div class="sonner-title">${esc(title)}</div>
+        ${description ? `<div class="sonner-description">${esc(description)}</div>` : ''}
+      </div>
+      <button class="sonner-close" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    `;
+
+    el.querySelector('.sonner-close').onclick = () => removeToast(el);
+    this.container.appendChild(el);
+
+    const timer = setTimeout(() => removeToast(el), 4000);
+
+    function removeToast(target) {
+      clearTimeout(timer);
+      target.setAttribute('data-state', 'closing');
+      setTimeout(() => target.remove(), 200);
+    }
+  },
+  success(title, desc) { this.show(title, desc, 'success'); },
+  error(title, desc) { this.show(title, desc, 'error'); },
+  info(title, desc) { this.show(title, desc, 'info'); }
+};
+
+// ==========================================================================
+// Theme Controller (Light / Dark Mode)
+// ==========================================================================
+function initTheme() {
+  const toggleBtn = $('themeToggleBtn');
+  const sunIcon = $('themeIconSun');
+  const moonIcon = $('themeIconMoon');
+
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      if (sunIcon) sunIcon.style.display = 'block';
+      if (moonIcon) moonIcon.style.display = 'none';
+    } else {
+      document.documentElement.classList.remove('dark');
+      if (sunIcon) sunIcon.style.display = 'none';
+      if (moonIcon) moonIcon.style.display = 'block';
+    }
+    localStorage.setItem('shadcn_theme', theme);
+  }
+
+  const savedTheme = localStorage.getItem('shadcn_theme') || 'light';
+  setTheme(savedTheme);
+
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'light' : 'dark');
+      toast.info('Theme Updated', `Switched to ${isDark ? 'light' : 'dark'} mode.`);
+    };
+  }
+}
+
+// ==========================================================================
+// Shadcn Sheet / Drawer for Empirical Evidence
+// ==========================================================================
+function initEvidenceSheet() {
+  const sheet = $('evidenceSheet');
+  const backdrop = $('evidenceSheetBackdrop');
+  const closeBtn = $('closeSheetBtn');
+  const actionCloseBtn = $('sheetCloseActionBtn');
+  const switchTabBtn = $('sheetSwitchTabBtn');
+
+  function closeSheet() {
+    if (sheet) sheet.removeAttribute('data-state');
+    if (backdrop) backdrop.removeAttribute('data-state');
+  }
+
+  if (closeBtn) closeBtn.onclick = closeSheet;
+  if (actionCloseBtn) actionCloseBtn.onclick = closeSheet;
+  if (backdrop) backdrop.onclick = closeSheet;
+  if (switchTabBtn) {
+    switchTabBtn.onclick = () => {
+      closeSheet();
+      switchTab('tab-evidence');
+    };
+  }
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sheet && sheet.getAttribute('data-state') === 'open') {
+      closeSheet();
+    }
+  });
+}
+
+function openEvidenceSheet(title, subtitle, htmlContent) {
+  const sheet = $('evidenceSheet');
+  const backdrop = $('evidenceSheetBackdrop');
+  if ($('sheetTitle')) $('sheetTitle').textContent = title;
+  if ($('sheetSubtitle')) $('sheetSubtitle').textContent = subtitle;
+  if ($('sheetContent')) $('sheetContent').innerHTML = htmlContent;
+
+  if (sheet) sheet.setAttribute('data-state', 'open');
+  if (backdrop) backdrop.setAttribute('data-state', 'open');
+}
+
 async function run(ai) {
   if (busy || !$('editor').reportValidity()) return;
   const body = getRequest(ai);
   if (!body.decisions.length) {
-    alert('Please enable at least one spending decision lever on the left.');
+    toast.error('No Levers Selected', 'Please enable at least one spending decision lever on the left.');
     return;
   }
   const token = revision;
@@ -862,8 +999,9 @@ async function run(ai) {
     render(r);
     $('state').textContent = ai ? 'Analyzed · with AI' : 'Analyzed · empirical data';
     $('state').className = 'flow-status-pill analyzed';
+    toast.success('Empirical Analysis Complete', ai ? 'AI Analyst report generated with 8 peer comps.' : 'Grounded with 100+ SEC peer IPO comps.');
   } catch (e) {
-    alert(e.message || 'Error running analysis');
+    toast.error('Analysis Failed', e.message || 'Error running analysis');
     $('state').textContent = 'Error during analysis';
   } finally {
     busy = false;
@@ -871,25 +1009,42 @@ async function run(ai) {
   }
 }
 
-// Tab navigation
+// Unified Tab Navigation & Breadcrumb Titles
+const TAB_TITLES = {
+  'tab-hierarchy': 'Strategy Hierarchy Tree',
+  'tab-spider': 'Exploded Spider Diagram (Radar)',
+  'tab-benchmarks': 'Founder Benchmarks Library',
+  'tab-evidence': 'Deep Empirical Regressions'
+};
+
+function switchTab(tabId) {
+  activeTab = tabId;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tabId);
+  });
+  document.querySelectorAll('[data-tab-target]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tabTarget === tabId);
+  });
+  document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
+
+  if (tabId === 'tab-hierarchy') $('view-hierarchy').style.display = 'block';
+  if (tabId === 'tab-spider') {
+    $('view-spider').style.display = 'block';
+    if (currentResult) renderRadarChart(currentResult.radar);
+  }
+  if (tabId === 'tab-benchmarks') {
+    $('view-benchmarks').style.display = 'block';
+    if (currentResult) renderBenchmarks(currentResult.benchmarks);
+  }
+  if (tabId === 'tab-evidence') $('view-evidence').style.display = 'block';
+
+  if ($('breadcrumbCurrentView')) {
+    $('breadcrumbCurrentView').textContent = TAB_TITLES[tabId] || 'Strategy Studio';
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tabId = btn.dataset.tab;
-    activeTab = tabId;
-    document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
-    if (tabId === 'tab-hierarchy') $('view-hierarchy').style.display = 'block';
-    if (tabId === 'tab-spider') {
-      $('view-spider').style.display = 'block';
-      if (currentResult) renderRadarChart(currentResult.radar);
-    }
-    if (tabId === 'tab-benchmarks') {
-      $('view-benchmarks').style.display = 'block';
-      if (currentResult) renderBenchmarks(currentResult.benchmarks);
-    }
-    if (tabId === 'tab-evidence') $('view-evidence').style.display = 'block';
-  };
+  btn.onclick = () => switchTab(btn.dataset.tab);
 });
 
 // Preset button clicks
@@ -920,7 +1075,7 @@ $('save').onclick = () => {
     data[e.id] = e.type === 'checkbox' ? e.checked : e.value;
   });
   localStorage.setItem('saas-strategy-flow-v1', JSON.stringify(data));
-  alert('Strategy saved in this browser!');
+  toast.success('Strategy Plan Saved', 'Parameters have been saved locally in this browser.');
 };
 
 $('exportJson').onclick = () => {
@@ -936,6 +1091,7 @@ $('exportJson').onclick = () => {
   a.href = url;
   a.download = `${($('name').value || 'strategy').toLowerCase().replace(/\s+/g, '_')}_plan.json`;
   a.click();
+  toast.success('Executive Plan Exported', `${$('name').value || 'strategy'}_plan.json downloaded.`);
 };
 
 $('saveToTeamLibraryBtn').onclick = () => {
@@ -972,8 +1128,229 @@ $('saveToTeamLibraryBtn').onclick = () => {
   if (!currentResult.benchmarks) currentResult.benchmarks = [];
   currentResult.benchmarks.unshift(newBm);
   selectBenchmark(newBm.id);
-  alert(`Strategy "${name}" saved to Team Benchmark Library!`);
+  toast.success('Saved to Team Library', `"${name}" is now available in the Benchmarking Library.`);
 };
+
+// ==========================================================================
+// Shadcn Sidebar Controller (Inspired by satnaing/shadcn-admin)
+// ==========================================================================
+function initSidebar() {
+  const sidebar = $('appSidebar');
+  const collapseBtn = $('sidebarCollapseBtn');
+  const topbarTrigger = $('topbarSidebarTrigger');
+  const backdrop = $('sidebarBackdrop');
+
+  function setSidebarState(state) {
+    if (!sidebar) return;
+    sidebar.setAttribute('data-state', state);
+    localStorage.setItem('shadcn_sidebar_state', state);
+  }
+
+  function toggleSidebar() {
+    if (!sidebar) return;
+    if (window.innerWidth <= 768) {
+      const isOpen = sidebar.getAttribute('data-mobile-open') === 'true';
+      sidebar.setAttribute('data-mobile-open', !isOpen ? 'true' : 'false');
+      if (backdrop) backdrop.setAttribute('data-visible', !isOpen ? 'true' : 'false');
+    } else {
+      const cur = sidebar.getAttribute('data-state') || 'expanded';
+      setSidebarState(cur === 'expanded' ? 'collapsed' : 'expanded');
+    }
+  }
+
+  const savedState = localStorage.getItem('shadcn_sidebar_state') || 'expanded';
+  setSidebarState(savedState);
+
+  if (collapseBtn) collapseBtn.onclick = toggleSidebar;
+  if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
+  if (backdrop) backdrop.onclick = () => {
+    sidebar.setAttribute('data-mobile-open', 'false');
+    backdrop.setAttribute('data-visible', 'false');
+  };
+
+  // Keyboard shortcut Ctrl+B or Cmd+B to toggle sidebar
+  window.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+    }
+  });
+
+  // Sidebar navigation item clicks
+  document.querySelectorAll('[data-tab-target]').forEach(btn => {
+    btn.onclick = () => {
+      switchTab(btn.dataset.tabTarget);
+      if (window.innerWidth <= 768 && backdrop) {
+        sidebar.setAttribute('data-mobile-open', 'false');
+        backdrop.setAttribute('data-visible', 'false');
+      }
+    };
+  });
+
+  // Sidebar preset clicks
+  document.querySelectorAll('[data-preset-target]').forEach(btn => {
+    btn.onclick = () => {
+      applyPreset(btn.dataset.presetTarget);
+      if (window.innerWidth <= 768 && backdrop) {
+        sidebar.setAttribute('data-mobile-open', 'false');
+        backdrop.setAttribute('data-visible', 'false');
+      }
+    };
+  });
+
+  // Sidebar action links
+  if ($('sidebarAskAnalystBtn')) $('sidebarAskAnalystBtn').onclick = () => run(true);
+  if ($('sidebarRunBtn')) $('sidebarRunBtn').onclick = () => run(false);
+  if ($('sidebarExportBtn')) $('sidebarExportBtn').onclick = () => $('exportJson').click();
+
+  if ($('sidebarToggleShelfBtn')) {
+    $('sidebarToggleShelfBtn').onclick = () => {
+      const dock = $('evidenceDockSection');
+      if (dock) {
+        dock.style.display = dock.style.display === 'none' ? 'block' : 'none';
+      }
+    };
+  }
+  if ($('collapseShelfBtn')) {
+    $('collapseShelfBtn').onclick = () => {
+      const dock = $('evidenceDockSection');
+      if (dock) dock.style.display = 'none';
+    };
+  }
+}
+
+// ==========================================================================
+// Command Palette Modal (Ctrl+K / Cmd+K Search)
+// ==========================================================================
+const COMMAND_ITEMS = [
+  { group: 'Navigation Views', title: 'Strategy Hierarchy Tree', action: () => switchTab('tab-hierarchy'), badge: 'View 1' },
+  { group: 'Navigation Views', title: 'Exploded Spider Diagram (Radar)', action: () => switchTab('tab-spider'), badge: 'View 2' },
+  { group: 'Navigation Views', title: 'Founder Benchmarks Library', action: () => switchTab('tab-benchmarks'), badge: 'View 3' },
+  { group: 'Navigation Views', title: 'Deep Empirical Regressions', action: () => switchTab('tab-evidence'), badge: 'View 4' },
+  { group: 'Startup Archetypes', title: 'Series A Growth ($10M ARR)', action: () => applyPreset('seriesA'), badge: 'Preset' },
+  { group: 'Startup Archetypes', title: 'Series B Scale ($25M ARR)', action: () => applyPreset('seriesB'), badge: 'Preset' },
+  { group: 'Startup Archetypes', title: 'Capital-Efficient ($15M ARR)', action: () => applyPreset('efficient'), badge: 'Preset' },
+  { group: 'Startup Archetypes', title: 'Pre-IPO Scale ($100M ARR)', action: () => applyPreset('enterprise'), badge: 'Preset' },
+  { group: 'Intelligence & Actions', title: 'Ask Live AI Analyst', action: () => run(true), badge: 'GPT-5-mini' },
+  { group: 'Intelligence & Actions', title: 'Run Empirical Evidence Analysis', action: () => run(false), badge: 'SEC Comps' },
+  { group: 'Intelligence & Actions', title: 'Toggle Draggable Evidence Shelf', action: () => $('sidebarToggleShelfBtn')?.click(), badge: 'Toggle' },
+  { group: 'Intelligence & Actions', title: 'Export Full Strategy Plan (JSON)', action: () => $('exportJson')?.click(), badge: 'Export' }
+];
+
+function initCommandPalette() {
+  const modal = $('commandPaletteModal');
+  const input = $('commandPaletteInput');
+  const container = $('commandResultsContainer');
+  const searchBtn = $('sidebarSearchBtn');
+  const closeBtn = $('commandCloseBtn');
+  if (!modal || !input || !container) return;
+
+  let selectedIdx = 0;
+  let filtered = [];
+
+  function openPalette() {
+    modal.style.display = 'flex';
+    input.value = '';
+    renderResults('');
+    input.focus();
+  }
+
+  function closePalette() {
+    modal.style.display = 'none';
+  }
+
+  function renderResults(query) {
+    const q = query.trim().toLowerCase();
+    filtered = COMMAND_ITEMS.filter(item =>
+      !q || item.title.toLowerCase().includes(q) || item.group.toLowerCase().includes(q)
+    );
+    selectedIdx = 0;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No matching playbooks or actions found for "${esc(query)}"</div>`;
+      return;
+    }
+
+    const groups = {};
+    filtered.forEach((it, idx) => {
+      if (!groups[it.group]) groups[it.group] = [];
+      groups[it.group].push({ item: it, originalIndex: idx });
+    });
+
+    let html = '';
+    Object.entries(groups).forEach(([grpName, items]) => {
+      html += `<div class="command-group-title">${esc(grpName)}</div>`;
+      items.forEach(({ item, originalIndex }) => {
+        const isSel = originalIndex === selectedIdx;
+        html += `
+          <div class="command-item ${isSel ? 'selected' : ''}" data-idx="${originalIndex}">
+            <span class="command-item-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+            <span>${esc(item.title)}</span>
+            <span class="command-item-badge">${esc(item.badge)}</span>
+          </div>
+        `;
+      });
+    });
+    container.innerHTML = html;
+
+    container.querySelectorAll('.command-item').forEach(el => {
+      el.onclick = () => {
+        const idx = parseInt(el.dataset.idx, 10);
+        executeItem(idx);
+      };
+    });
+  }
+
+  function executeItem(idx) {
+    const item = filtered[idx];
+    if (item) {
+      closePalette();
+      item.action();
+    }
+  }
+
+  if (searchBtn) searchBtn.onclick = openPalette;
+  if (closeBtn) closeBtn.onclick = closePalette;
+  modal.onclick = e => { if (e.target === modal) closePalette(); };
+
+  input.oninput = () => renderResults(input.value);
+  input.onkeydown = e => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIdx = (selectedIdx + 1) % filtered.length;
+      updateSelection();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIdx = (selectedIdx - 1 + filtered.length) % filtered.length;
+      updateSelection();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      executeItem(selectedIdx);
+    } else if (e.key === 'Escape') {
+      closePalette();
+    }
+  };
+
+  function updateSelection() {
+    container.querySelectorAll('.command-item').forEach(el => {
+      const idx = parseInt(el.dataset.idx, 10);
+      el.classList.toggle('selected', idx === selectedIdx);
+      if (idx === selectedIdx) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  window.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      modal.style.display === 'flex' ? closePalette() : openPalette();
+    }
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closePalette();
+    }
+  });
+}
 
 // Initial boot
 try {
@@ -985,5 +1362,9 @@ try {
   }
 } catch {}
 
+initTheme();
+initSidebar();
+initCommandPalette();
+initEvidenceSheet();
 updateLocalKPIs();
 run(false);

@@ -8,405 +8,733 @@
   <script src="/static/analysis-job.js"></script>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <a href="/strategy" class="brand">
-      <div class="brand-logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
-        STRATEGY STUDIO
+  <!-- Shadcn Admin Layout Container (Inspired by satnaing/shadcn-admin) -->
+  <div class="shadcn-layout" id="shadcnApp">
+    
+    <!-- Collapsible Sidebar -->
+    <aside id="appSidebar" class="shadcn-sidebar" data-state="expanded">
+      
+      <!-- Sidebar Header / Team & Org Switcher -->
+      <div class="sidebar-header">
+        <div class="team-switcher" id="teamSwitcherBtn">
+          <div class="team-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </div>
+          <div class="team-info">
+            <span class="team-name">PVC Finance</span>
+            <span class="team-plan">Strategy Studio Enterprise</span>
+          </div>
+          <button id="sidebarCollapseBtn" class="sidebar-collapse-trigger" type="button" title="Collapse Sidebar (Ctrl+B)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M9 3v18"/>
+              <path d="m14 9-3 3 3 3"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <span class="brand-pill">Startup Edition</span>
-    </a>
-    <nav>
-      <a href="/strategy" class="active">Strategy Studio</a>
-      <a href="/">Research Dashboard</a>
-      <a href="/docs" target="_blank">API Docs</a>
-    </nav>
-    <div class="header-actions">
-      <button id="save" class="btn" title="Save strategy in this browser">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        Save Strategy
-      </button>
-      <button id="exportJson" class="btn" type="button" title="Export full strategy JSON">Export JSON</button>
-    </div>
-  </header>
 
-  <!-- Startup Stage Presets Bar -->
-  <div class="presets-bar">
-    <div class="preset-chips">
-      <span class="preset-label">Startup Archetypes:</span>
-      <button type="button" class="preset-btn active" data-preset="seriesA">Series A Growth ($10M)</button>
-      <button type="button" class="preset-btn" data-preset="seriesB">Series B Scale ($25M)</button>
-      <button type="button" class="preset-btn" data-preset="efficient">Capital-Efficient ($15M)</button>
-      <button type="button" class="preset-btn" data-preset="enterprise">Pre-IPO Scale ($100M)</button>
-    </div>
-    <div id="quickRecTrigger" class="preset-label" style="cursor:pointer; color:#0284c7;">
-      ⚡ 3 Data-Backed Playbooks Available
+      <!-- Quick Command Search Pill -->
+      <div class="sidebar-search-box">
+        <button type="button" class="sidebar-search-btn" id="sidebarSearchBtn" title="Search Levers & Playbooks (Ctrl+K)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <span class="search-text">Search levers & playbooks...</span>
+          <kbd class="search-kbd">⌘K</kbd>
+        </button>
+      </div>
+
+      <!-- Scrollable Navigation Groups -->
+      <div class="sidebar-content">
+        
+        <!-- Group 1: Strategic Decision OS -->
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">STRATEGY OS</div>
+          <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn active" data-tab-target="tab-hierarchy" data-tooltip="Hierarchy Tree">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span class="menu-label">Hierarchy Tree</span>
+                <span class="menu-badge badge-blue">Visual</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-tab-target="tab-spider" data-tooltip="Exploded Spider Diagram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span class="menu-label">Spider Diagram</span>
+                <span class="menu-badge badge-emerald">6-Axis</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-tab-target="tab-benchmarks" data-tooltip="Founder Benchmarks">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span class="menu-label">Founder Benchmarks</span>
+                <span class="menu-badge badge-purple">4 Models</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-tab-target="tab-evidence" data-tooltip="Deep Regressions">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span class="menu-label">Deep Regressions</span>
+                <span class="menu-badge badge-slate">SEC Data</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Group 2: Startup Archetypes & Playbooks -->
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">STARTUP PLAYBOOKS</div>
+          <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn active" data-preset-target="seriesA" data-tooltip="Series A Growth ($10M ARR)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28L12 3z"/>
+                </svg>
+                <span class="menu-label">Series A Growth ($10M)</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-preset-target="seriesB" data-tooltip="Series B Scale ($25M ARR)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                <span class="menu-label">Series B Scale ($25M)</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-preset-target="efficient" data-tooltip="Capital-Efficient ($15M ARR)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+                <span class="menu-label">Capital-Efficient ($15M)</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-preset-target="enterprise" data-tooltip="Pre-IPO Scale ($100M ARR)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/>
+                  <path d="M9 22v-4h6v4"/>
+                  <path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/>
+                </svg>
+                <span class="menu-label">Pre-IPO Scale ($100M)</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Group 3: Intelligence & Actions -->
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">INTELLIGENCE & ACTIONS</div>
+          <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" id="sidebarAskAnalystBtn" data-tooltip="Ask Live AI Analyst">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 8V4H8"/>
+                  <rect width="16" height="12" x="4" y="8" rx="2"/>
+                  <path d="M2 14h2"/><path d="M20 14h2"/>
+                  <path d="M15 13v2"/><path d="M9 13v2"/>
+                </svg>
+                <span class="menu-label">Live AI Analyst</span>
+                <span class="menu-badge badge-amber">GPT-5-mini</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" id="sidebarToggleShelfBtn" data-tooltip="Toggle Evidence Shelf">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <span class="menu-label">Evidence Shelf</span>
+                <span id="sidebarEvidenceBadge" class="menu-badge badge-blue">8 Comps</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" id="sidebarRunBtn" data-tooltip="Run Analysis">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span class="menu-label">Run Analysis</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" id="sidebarExportBtn" data-tooltip="Export Strategy JSON">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" x2="12" y1="15" y2="3"/>
+                </svg>
+                <span class="menu-label">Export Plan (JSON)</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Group 4: Research & Ecosystem -->
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">RESEARCH & DATASET</div>
+          <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+              <a href="/" class="sidebar-menu-btn" data-tooltip="Research Dashboard">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18"/>
+                  <path d="m19 9-5 5-4-4-3 3"/>
+                </svg>
+                <span class="menu-label">Research Comps</span>
+              </a>
+            </li>
+            <li class="sidebar-menu-item">
+              <a href="/docs" target="_blank" class="sidebar-menu-btn" data-tooltip="API Documentation">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                  <path d="M6 6h10"/><path d="M6 10h10"/>
+                </svg>
+                <span class="menu-label">API Documentation</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto; opacity:0.4;">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" x2="21" y1="14" y2="3"/>
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Sidebar Footer / User Profile & Status Strip -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card" id="sidebarUserCard" title="Logged in as Strategy Lead">
+          <div class="user-avatar">FS</div>
+          <div class="user-info">
+            <span class="user-name">Founder / Principal</span>
+            <span class="user-role">strategy@pvc-finance.ai</span>
+          </div>
+          <svg class="user-chevrons" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m7 15 5 5 5-5"/>
+            <path d="m7 9 5-5 5 5"/>
+          </svg>
+        </div>
+        <div class="sidebar-status-strip">
+          <span class="status-indicator-dot"></span>
+          <span class="status-indicator-text">SEC Dataset · Online (100+ IPOs)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Backdrop Overlay for Mobile -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <!-- Main Workspace Container -->
+    <div class="shadcn-main">
+      
+      <!-- Topbar Header with Breadcrumbs, Toggle, Theme Mode & Quick Actions -->
+      <header class="shadcn-topbar">
+        <div class="topbar-left">
+          <button id="topbarSidebarTrigger" class="icon-trigger-btn" type="button" title="Toggle Sidebar (Ctrl+B)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M9 3v18"/>
+            </svg>
+          </button>
+          
+          <div class="topbar-breadcrumb">
+            <span class="breadcrumb-root">PVC Finance</span>
+            <span class="breadcrumb-slash">/</span>
+            <span class="breadcrumb-section">Strategy Studio</span>
+            <span class="breadcrumb-slash">/</span>
+            <span id="breadcrumbCurrentView" class="breadcrumb-active">Strategy Hierarchy Tree</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="topbar-status-badge">
+            <span class="pulse-dot"></span>
+            <span>Cohort: 100+ B2B SaaS IPOs</span>
+          </div>
+
+          <!-- Theme Mode Toggle (Sun/Moon) -->
+          <button id="themeToggleBtn" class="icon-trigger-btn" type="button" title="Toggle Light/Dark Theme">
+            <svg id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+
+          <button id="save" class="btn" title="Save strategy in this browser">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Save Plan
+          </button>
+          <button id="exportJson" class="btn primary" type="button" title="Export full strategy JSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+            Export JSON
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Workspace Body -->
+      <div class="shadcn-body">
+        
+        <!-- Startup Stage Presets Bar -->
+        <div class="presets-bar">
+          <div class="preset-chips">
+            <span class="preset-label">Startup Archetypes:</span>
+            <button type="button" class="preset-btn active" data-preset="seriesA">Series A Growth ($10M)</button>
+            <button type="button" class="preset-btn" data-preset="seriesB">Series B Scale ($25M)</button>
+            <button type="button" class="preset-btn" data-preset="efficient">Capital-Efficient ($15M)</button>
+            <button type="button" class="preset-btn" data-preset="enterprise">Pre-IPO Scale ($100M)</button>
+          </div>
+          <div id="quickRecTrigger" class="preset-label" style="cursor:pointer; color:#0284c7;">
+            ⚡ 3 Data-Backed Playbooks Available
+          </div>
+        </div>
+
+        <main>
+          <!-- Intro Banner (Preserves test expectation) -->
+          <div class="intro">
+            <small style="color:var(--primary); font-weight:700;">VENTURE STRATEGY & PEER DECISION OS</small>
+            <h1>Your strategy, connected.</h1>
+            <p class="tagline">Ground your strategic plan in actual SEC financials from 100+ B2B SaaS IPOs, empirical regression tradeoffs, and peer founder playbooks.</p>
+          </div>
+
+          <!-- Live Startup Vital KPI Strip (Cards with Shadcn Styling) -->
+          <div class="kpi-strip">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Rule of 40 (Current)</span>
+                <span id="r40BadgeCur" class="kpi-tag" style="background:#e0f2fe; color:#0369a1;">Baseline</span>
+              </div>
+              <div id="r40CurrentVal" class="kpi-value">15.0</div>
+              <div class="kpi-sub">Growth % + Operating Margin %</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Rule of 40 (Projected)</span>
+                <span id="r40BadgeProp" class="kpi-tag" style="background:#ecfdf5; color:#059669;">Target</span>
+              </div>
+              <div id="r40ProposedVal" class="kpi-value" style="color:#10b981;">24.2</div>
+              <div id="r40DeltaText" class="kpi-sub">+9.2 pt improvement</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Annual Budget Shift</span>
+                <span id="budgetShiftBadge" class="kpi-tag" style="background:#f1f5f9; color:#475569;">Holding Rev Fixed</span>
+              </div>
+              <div id="budgetDeltaVal" class="kpi-value">$0.0M</div>
+              <div id="runwayImpactText" class="kpi-sub">Neutral runway impact</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Matched Peer Cohort</span>
+                <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">100+ SaaS IPOs</span>
+              </div>
+              <div id="peerCohortSummary" class="kpi-value" style="font-size:18px;">8 Close Peers</div>
+              <div id="peerCohortSub" class="kpi-sub">Datadog, HubSpot, Everbridge</div>
+            </div>
+          </div>
+
+          <!-- Draggable Evidence & Research Shelf -->
+          <section class="evidence-dock" id="evidenceDockSection">
+            <div class="dock-header">
+              <div class="dock-title">
+                <span>📎 Evidence & Research Shelf</span>
+                <span style="font-weight:normal; text-transform:none; margin-left:8px; color:var(--text-muted);">(Drag and drop evidence onto any Strategy Node below to anchor your plan)</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span id="attachedEvidenceCount" style="font-size:11px; font-weight:700; color:#0284c7;">0 evidence cards attached</span>
+                <button type="button" id="collapseShelfBtn" class="tree-back-btn" style="padding:2px 8px; font-size:11px;">Minimize</button>
+              </div>
+            </div>
+            <div id="evidenceCardsDock" class="dock-cards">
+              <!-- Dynamically injected with peer companies, empirical regression facts, and macro cards -->
+            </div>
+          </section>
+
+          <!-- Top View Switcher Tabs (Synchronized with Sidebar) -->
+          <div class="tab-nav">
+            <button type="button" class="tab-btn active" data-tab="tab-hierarchy">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              1 · Strategy Hierarchy Tree
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-spider">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              2 · Exploded Spider Diagram (Radar)
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-benchmarks">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              3 · Founder Benchmarking Library
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-evidence">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              4 · Deep Empirical Regressions
+            </button>
+          </div>
+
+          <!-- Main Workspace Grid -->
+          <div class="workspace-grid">
+            <!-- Left Config Form (Shadcn Form Controls) -->
+            <form id="editor" class="config-panel">
+              <div class="panel-section-title">1 · Strategy Profile</div>
+              <label>
+                Strategy Name
+                <input id="name" value="Series A Growth & Efficiency Plan" maxlength="100">
+              </label>
+              <label>
+                Current Annual Revenue ($ Millions)
+                <input id="revenue" type="number" value="10" min="0.001" max="1000000" step="any" required>
+              </label>
+              <div class="two-col">
+                <label>
+                  Revenue Growth %
+                  <input id="growth" type="number" value="50" min="-100" max="1000" step="any" required>
+                </label>
+                <label>
+                  Operating Margin %
+                  <input id="margin" type="number" value="-25" min="-500" max="100" step="any" required>
+                </label>
+                <label>
+                  Gross Margin %
+                  <input id="gross" type="number" value="75" min="0" max="100" step="any" required>
+                </label>
+                <label>
+                  S&M Spending %
+                  <input id="sales" type="number" value="48" min="0" max="300" step="any" required>
+                </label>
+                <label>
+                  R&D Spending %
+                  <input id="rd" type="number" value="26" min="0" max="300" step="any" required>
+                </label>
+              </div>
+
+              <div class="panel-section-title">2 · Strategic Levers</div>
+              <label class="check-label">
+                <input id="salesOn" type="checkbox" checked>
+                <span>Sales & Marketing Rebalance</span>
+              </label>
+              <label style="margin-top:6px;">
+                Proposed S&M % of Revenue
+                <input id="salesTarget" type="number" value="42" min="0" max="300" step="any" required>
+              </label>
+
+              <label class="check-label">
+                <input id="rdOn" type="checkbox" checked>
+                <span>Product / R&D Velocity Shift</span>
+              </label>
+              <label style="margin-top:6px;">
+                Proposed R&D % of Revenue
+                <input id="rdTarget" type="number" value="28" min="0" max="300" step="any" required>
+              </label>
+
+              <div class="panel-section-title">3 · Objective & Context</div>
+              <label>
+                Primary Objective
+                <select id="objective">
+                  <option value="growth" selected>Accelerate Revenue Growth</option>
+                  <option value="profitability">Improve Operating Profitability / Runway</option>
+                </select>
+              </label>
+              <label>
+                Macro / Historical Context
+                <select id="context">
+                  <option value="all" selected>All Available Historical SaaS Periods</option>
+                  <option value="rates">Interest-Rate Tightening (2022–2024)</option>
+                  <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
+                  <option value="ai">AI-Era Calibrated Periods</option>
+                </select>
+              </label>
+
+              <label>
+                Ask AI Analyst (Optional)
+                <textarea id="question" rows="2" maxlength="2000" placeholder="e.g. What happened to peers that trimmed S&M by 6pp at $10M ARR?"></textarea>
+              </label>
+
+              <div class="btn-group">
+                <button type="submit" class="btn primary">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  Run Empirical Evidence →
+                </button>
+                <button id="askAnalyst" type="button" class="btn ai-btn">
+                  ✦ Ask Live AI Analyst
+                </button>
+              </div>
+            </form>
+
+            <!-- Center Dynamic Canvas Views -->
+            <div class="canvas-container">
+              <!-- Canvas Toolbar -->
+              <div class="canvas-toolbar">
+                <div class="flow-title-wrap">
+                  <h2 id="flowTitle" class="flow-title">Series A Growth & Efficiency Plan</h2>
+                  <span id="state" class="flow-status-pill">Ready to analyze</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted);">
+                  Target: <strong id="topTargetSummary">Rule of 40: 24.2</strong>
+                </div>
+              </div>
+
+              <div id="status" style="display:none;"></div>
+
+              <!-- VIEW 1: Hierarchy Tree Builder -->
+              <section id="view-hierarchy" class="view-panel">
+                <!-- Recommendations Carousel -->
+                <div style="margin-bottom:12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">
+                      ⚡ Recommended Playbooks (Grounded by Dataset)
+                    </span>
+                    <span style="font-size:11px; color:var(--text-muted);">Derived from closest SEC peer trajectories</span>
+                  </div>
+                  <div id="recommendationsRow" class="recommendations-grid">
+                    <!-- Dynamically populated from API -->
+                  </div>
+                </div>
+
+                <!-- The Visual Hierarchy Canvas -->
+                <div class="tree-canvas" id="treeCanvas">
+                  <!-- Breadcrumbs / Back button (visible in drilldown) -->
+                  <div id="drilldownNav" class="tree-breadcrumb" style="display:none;">
+                    <button id="backToHierarchyBtn" class="tree-back-btn" type="button">
+                      ← Back to Full Strategy Hierarchy
+                    </button>
+                    <span id="drilldownBreadcrumbText">Deep Analysis: Sales & Marketing Lever</span>
+                  </div>
+
+                  <!-- Standard Full Hierarchy Tree -->
+                  <div id="hierarchyTreeRoot" style="display:flex; flex-direction:column; align-items:center; gap:20px; width:100%;">
+                    <!-- Level 1: Objective -->
+                    <div class="tree-node root-goal" id="node-root">
+                      <div class="node-badge">
+                        <span>Level 1 · Startup Objective</span>
+                        <span id="treeGoalPill" class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Growth & Efficiency</span>
+                      </div>
+                      <div class="node-title" id="treeGoalTitle">Accelerate Revenue Growth & Expand Rule of 40</div>
+                      <p class="node-desc" id="treeGoalDesc">$10.0M ARR at 50.0% Growth → Targeting Rule of 40 improvement</p>
+                      <div class="attached-evidence-container" id="attached-root"></div>
+                      <div class="node-footer">
+                        <span>Target Outcome</span>
+                        <span class="node-drilldown-hint">Primary Anchor ↓</span>
+                      </div>
+                    </div>
+
+                    <!-- Connecting Branch Down -->
+                    <div class="tree-connector">
+                      <span>↓</span>
+                    </div>
+
+                    <!-- Level 2 & 3: Strategic Pillars & Levers -->
+                    <div class="tree-branches" id="treeBranchesContainer">
+                      <!-- Dynamically rendered branches for S&M, R&D, Gross Margin -->
+                    </div>
+                  </div>
+
+                  <!-- Dedicated Drilldown View Container (Swapped in when clicking Inspect Node) -->
+                  <div id="nodeDrilldownContainer" style="display:none; width:100%;"></div>
+                </div>
+
+                <!-- Legacy Flow Container hidden for backward compatibility / tests -->
+                <div id="flow" style="display:none;"></div>
+              </section>
+
+              <!-- VIEW 2: Exploded Spider Diagram (Radar) -->
+              <section id="view-spider" class="view-panel" style="display:none;">
+                <div class="radar-panel">
+                  <div style="margin-bottom:16px;">
+                    <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Exploded Spider Diagram (Radar Benchmark)</h2>
+                    <p style="color:var(--text-muted); font-size:13px; margin:0;">
+                      Comprehensive multi-dimensional evaluation of your strategy against current performance, matching SaaS peers, top-quartile winners, and selected founder benchmarks.
+                    </p>
+                  </div>
+
+                  <div class="radar-layout">
+                    <!-- SVG Radar Chart Container -->
+                    <div class="radar-svg-wrap">
+                      <svg id="radarSvg" viewBox="0 0 500 500" style="width:100%; height:auto;">
+                        <!-- Injected via JS -->
+                      </svg>
+                    </div>
+
+                    <!-- Radar Legend & Layer Toggles -->
+                    <div class="radar-legend">
+                      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px; margin-bottom:4px;">
+                        Active Comparison Layers
+                      </div>
+                      <div class="legend-item" id="toggle-current">
+                        <div class="legend-left">
+                          <span class="legend-color-dot" style="background:#0284c7;"></span>
+                          <span>Your Current Profile</span>
+                        </div>
+                        <input type="checkbox" checked id="chk-current">
+                      </div>
+                      <div class="legend-item" id="toggle-proposed">
+                        <div class="legend-left">
+                          <span class="legend-color-dot" style="background:#10b981;"></span>
+                          <span>Proposed Strategy</span>
+                        </div>
+                        <input type="checkbox" checked id="chk-proposed">
+                      </div>
+                      <div class="legend-item" id="toggle-peers">
+                        <div class="legend-left">
+                          <span class="legend-color-dot" style="background:#8b5cf6;"></span>
+                          <span>Matching Peers Median</span>
+                        </div>
+                        <input type="checkbox" checked id="chk-peers">
+                      </div>
+                      <div class="legend-item" id="toggle-p75">
+                        <div class="legend-left">
+                          <span class="legend-color-dot" style="background:#f59e0b;"></span>
+                          <span>Top Quartile (P75) Winners</span>
+                        </div>
+                        <input type="checkbox" checked id="chk-p75">
+                      </div>
+                      <div class="legend-item" id="toggle-benchmark">
+                        <div class="legend-left">
+                          <span class="legend-color-dot" style="background:#06b6d4;"></span>
+                          <span id="legendBenchmarkLabel">Founder Benchmark</span>
+                        </div>
+                        <input type="checkbox" checked id="chk-benchmark">
+                      </div>
+
+                      <div style="margin-top:10px; padding:12px; border-radius:8px; background:var(--surface-subtle); font-size:11px; color:var(--text-muted);">
+                        💡 <strong>Tip:</strong> S&M Efficiency is inverted so that lower spending ratios map to a higher efficiency score on the perimeter.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Exploded Axis Values Grid -->
+                  <div class="radar-axis-grid" id="radarStatBoxes">
+                    <!-- Injected via JS -->
+                  </div>
+                </div>
+              </section>
+
+              <!-- VIEW 3: Founder Benchmarking Library -->
+              <section id="view-benchmarks" class="view-panel" style="display:none;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:var(--shadow-sm);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <div>
+                      <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Founder & Team Benchmark Library</h2>
+                      <p style="color:var(--text-muted); font-size:13px; margin:0;">
+                        Benchmark your plan directly against battle-tested playbooks created by SaaS founders and operators.
+                      </p>
+                    </div>
+                    <button id="saveToTeamLibraryBtn" type="button" class="btn primary" style="font-size:12px;">
+                      + Save My Plan to Team Library
+                    </button>
+                  </div>
+
+                  <div id="benchmarksCardsGrid" class="benchmarks-grid">
+                    <!-- Injected via JS -->
+                  </div>
+
+                  <!-- Side by Side Benchmark Comparison -->
+                  <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+                    <h3 style="font-size:15px; font-weight:700; margin:0 0 12px;">Side-by-Side Benchmark Gap Analysis</h3>
+                    <div class="scroll">
+                      <table id="benchmarkComparisonTable">
+                        <!-- Injected via JS -->
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- VIEW 4: Deep Evidence & Empirical Regressions -->
+              <section id="view-evidence" class="view-panel" style="display:none;">
+                <div id="results">
+                  <div class="empty">
+                    <h2>Turn a choice into a research question.</h2>
+                    <p>Run the flow to see financial peers, correlations, adjusted estimates, and historical outcomes for similar starting profiles.</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </main>
+
+      </div>
     </div>
   </div>
 
-  <main>
-    <!-- Intro Banner (Preserves test expectation) -->
-    <div class="intro">
-      <small style="color:var(--primary); font-weight:700;">VENTURE STRATEGY & PEER DECISION OS</small>
-      <h1>Your strategy, connected.</h1>
-      <p class="tagline">Ground your strategic plan in actual SEC financials from 100+ B2B SaaS IPOs, empirical regression tradeoffs, and peer founder playbooks.</p>
-    </div>
-
-    <!-- Live Startup Vital KPI Strip -->
-    <div class="kpi-strip">
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-title">Rule of 40 (Current)</span>
-          <span id="r40BadgeCur" class="kpi-tag" style="background:#e0f2fe; color:#0369a1;">Baseline</span>
-        </div>
-        <div id="r40CurrentVal" class="kpi-value">15.0</div>
-        <div class="kpi-sub">Growth % + Operating Margin %</div>
+  <!-- Command Palette Modal (Inspired by satnaing/shadcn-admin) -->
+  <div id="commandPaletteModal" class="command-modal-backdrop" style="display:none;">
+    <div class="command-dialog">
+      <div class="command-search-header">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="text" id="commandPaletteInput" placeholder="Type a command or search levers, playbooks, tabs..." autocomplete="off">
+        <kbd class="command-esc-badge" id="commandCloseBtn">ESC</kbd>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-title">Rule of 40 (Projected)</span>
-          <span id="r40BadgeProp" class="kpi-tag" style="background:#ecfdf5; color:#059669;">Target</span>
-        </div>
-        <div id="r40ProposedVal" class="kpi-value" style="color:#10b981;">24.2</div>
-        <div id="r40DeltaText" class="kpi-sub">+9.2 pt improvement</div>
+      <div class="command-results-body" id="commandResultsContainer">
+        <!-- Injected via JS -->
       </div>
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-title">Annual Budget Shift</span>
-          <span id="budgetShiftBadge" class="kpi-tag" style="background:#f1f5f9; color:#475569;">Holding Rev Fixed</span>
-        </div>
-        <div id="budgetDeltaVal" class="kpi-value">$0.0M</div>
-        <div id="runwayImpactText" class="kpi-sub">Neutral runway impact</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-title">Matched Peer Cohort</span>
-          <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">100+ SaaS IPOs</span>
-        </div>
-        <div id="peerCohortSummary" class="kpi-value" style="font-size:18px;">8 Close Peers</div>
-        <div id="peerCohortSub" class="kpi-sub">Datadog, HubSpot, Everbridge</div>
+      <div class="command-dialog-footer">
+        <span>Use <kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+        <span><kbd>↵</kbd> to select</span>
+        <span><kbd>ESC</kbd> to dismiss</span>
       </div>
     </div>
+  </div>
 
-    <!-- Draggable Evidence & Research Shelf -->
-    <section class="evidence-dock">
-      <div class="dock-header">
-        <div class="dock-title">
-          <span>📎 Evidence & Research Shelf</span>
-          <span style="font-weight:normal; text-transform:none; margin-left:8px; color:var(--text-muted);">(Drag and drop evidence onto any Strategy Node below to anchor your plan)</span>
-        </div>
-        <span id="attachedEvidenceCount" style="font-size:11px; font-weight:700; color:#0284c7;">0 evidence cards attached</span>
+  <!-- Shadcn Sheet / Drawer for Deep Empirical Inspection -->
+  <div id="evidenceSheetBackdrop" class="shadcn-sheet-backdrop"></div>
+  <div id="evidenceSheet" class="shadcn-sheet" aria-modal="true" role="dialog">
+    <div class="shadcn-sheet-header">
+      <div>
+        <h3 class="shadcn-sheet-title" id="sheetTitle">Empirical Lever Evidence</h3>
+        <p class="shadcn-sheet-description" id="sheetSubtitle">Peer cohort comps & regression confidence bounds</p>
       </div>
-      <div id="evidenceCardsDock" class="dock-cards">
-        <!-- Dynamically injected with peer companies, empirical regression facts, and macro cards -->
-      </div>
-    </section>
-
-    <!-- Top View Switcher Tabs -->
-    <div class="tab-nav">
-      <button type="button" class="tab-btn active" data-tab="tab-hierarchy">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        1 · Strategy Hierarchy Tree
-      </button>
-      <button type="button" class="tab-btn" data-tab="tab-spider">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        2 · Exploded Spider Diagram (Radar)
-      </button>
-      <button type="button" class="tab-btn" data-tab="tab-benchmarks">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        3 · Founder Benchmarking Library
-      </button>
-      <button type="button" class="tab-btn" data-tab="tab-evidence">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        4 · Deep Empirical Regressions
+      <button id="closeSheetBtn" type="button" class="icon-trigger-btn" title="Close Drawer (ESC)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-
-    <!-- Main Workspace Grid -->
-    <div class="workspace-grid">
-      <!-- Left Config Form -->
-      <form id="editor" class="config-panel">
-        <div class="panel-section-title">1 · Strategy Profile</div>
-        <label>
-          Strategy Name
-          <input id="name" value="Series A Growth & Efficiency Plan" maxlength="100">
-        </label>
-        <label>
-          Current Annual Revenue ($ Millions)
-          <input id="revenue" type="number" value="10" min="0.001" max="1000000" step="any" required>
-        </label>
-        <div class="two-col">
-          <label>
-            Revenue Growth %
-            <input id="growth" type="number" value="50" min="-100" max="1000" step="any" required>
-          </label>
-          <label>
-            Operating Margin %
-            <input id="margin" type="number" value="-25" min="-500" max="100" step="any" required>
-          </label>
-          <label>
-            Gross Margin %
-            <input id="gross" type="number" value="75" min="0" max="100" step="any" required>
-          </label>
-          <label>
-            S&M Spending %
-            <input id="sales" type="number" value="48" min="0" max="300" step="any" required>
-          </label>
-          <label>
-            R&D Spending %
-            <input id="rd" type="number" value="26" min="0" max="300" step="any" required>
-          </label>
-        </div>
-
-        <div class="panel-section-title">2 · Strategic Levers</div>
-        <label class="check-label">
-          <input id="salesOn" type="checkbox" checked>
-          <span>Sales & Marketing Rebalance</span>
-        </label>
-        <label style="margin-top:6px;">
-          Proposed S&M % of Revenue
-          <input id="salesTarget" type="number" value="42" min="0" max="300" step="any" required>
-        </label>
-
-        <label class="check-label">
-          <input id="rdOn" type="checkbox" checked>
-          <span>Product / R&D Velocity Shift</span>
-        </label>
-        <label style="margin-top:6px;">
-          Proposed R&D % of Revenue
-          <input id="rdTarget" type="number" value="28" min="0" max="300" step="any" required>
-        </label>
-
-        <div class="panel-section-title">3 · Objective & Context</div>
-        <label>
-          Primary Objective
-          <select id="objective">
-            <option value="growth" selected>Accelerate Revenue Growth</option>
-            <option value="profitability">Improve Operating Profitability / Runway</option>
-          </select>
-        </label>
-        <label>
-          Macro / Historical Context
-          <select id="context">
-            <option value="all" selected>All Available Historical SaaS Periods</option>
-            <option value="rates">Interest-Rate Tightening (2022–2024)</option>
-            <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
-            <option value="ai">AI-Era Calibrated Periods</option>
-          </select>
-        </label>
-
-        <label>
-          Ask AI Analyst (Optional)
-          <textarea id="question" rows="2" maxlength="2000" placeholder="e.g. What happened to peers that trimmed S&M by 6pp at $10M ARR?"></textarea>
-        </label>
-
-        <div class="btn-group">
-          <button type="submit" class="btn primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            Run Empirical Evidence →
-          </button>
-          <button id="askAnalyst" type="button" class="btn ai-btn">
-            ✦ Ask Live AI Analyst
-          </button>
-        </div>
-      </form>
-
-      <!-- Center Dynamic Canvas Views -->
-      <div class="canvas-container">
-        <!-- Canvas Toolbar -->
-        <div class="canvas-toolbar">
-          <div class="flow-title-wrap">
-            <h2 id="flowTitle" class="flow-title">Series A Growth & Efficiency Plan</h2>
-            <span id="state" class="flow-status-pill">Ready to analyze</span>
-          </div>
-          <div style="font-size:12px; color:var(--text-muted);">
-            Target: <strong id="topTargetSummary">Rule of 40: 24.2</strong>
-          </div>
-        </div>
-
-        <div id="status" style="display:none;"></div>
-
-        <!-- VIEW 1: Hierarchy Tree Builder -->
-        <section id="view-hierarchy" class="view-panel">
-          <!-- Recommendations Carousel -->
-          <div style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">
-                ⚡ Recommended Playbooks (Grounded by Dataset)
-              </span>
-              <span style="font-size:11px; color:var(--text-muted);">Derived from closest SEC peer trajectories</span>
-            </div>
-            <div id="recommendationsRow" class="recommendations-grid">
-              <!-- Dynamically populated from API -->
-            </div>
-          </div>
-
-          <!-- The Visual Hierarchy Canvas -->
-          <div class="tree-canvas" id="treeCanvas">
-            <!-- Breadcrumbs / Back button (visible in drilldown) -->
-            <div id="drilldownNav" class="tree-breadcrumb" style="display:none;">
-              <button id="backToHierarchyBtn" class="tree-back-btn" type="button">
-                ← Back to Full Strategy Hierarchy
-              </button>
-              <span id="drilldownBreadcrumbText">Deep Analysis: Sales & Marketing Lever</span>
-            </div>
-
-            <!-- Standard Full Hierarchy Tree -->
-            <div id="hierarchyTreeRoot" style="display:flex; flex-direction:column; align-items:center; gap:20px; width:100%;">
-              <!-- Level 1: Objective -->
-              <div class="tree-node root-goal" id="node-root">
-                <div class="node-badge">
-                  <span>Level 1 · Startup Objective</span>
-                  <span id="treeGoalPill" class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Growth & Efficiency</span>
-                </div>
-                <div class="node-title" id="treeGoalTitle">Accelerate Revenue Growth & Expand Rule of 40</div>
-                <p class="node-desc" id="treeGoalDesc">$10.0M ARR at 50.0% Growth → Targeting Rule of 40 improvement</p>
-                <div class="attached-evidence-container" id="attached-root"></div>
-                <div class="node-footer">
-                  <span>Target Outcome</span>
-                  <span class="node-drilldown-hint">Primary Anchor ↓</span>
-                </div>
-              </div>
-
-              <!-- Connecting Branch Down -->
-              <div class="tree-connector">
-                <span>↓</span>
-              </div>
-
-              <!-- Level 2 & 3: Strategic Pillars & Levers -->
-              <div class="tree-branches" id="treeBranchesContainer">
-                <!-- Dynamically rendered branches for S&M, R&D, Gross Margin -->
-              </div>
-            </div>
-
-            <!-- Dedicated Drilldown View Container (Swapped in when clicking Inspect Node) -->
-            <div id="nodeDrilldownContainer" style="display:none; width:100%;"></div>
-          </div>
-
-          <!-- Legacy Flow Container hidden for backward compatibility / tests -->
-          <div id="flow" style="display:none;"></div>
-        </section>
-
-        <!-- VIEW 2: Exploded Spider Diagram (Radar) -->
-        <section id="view-spider" class="view-panel" style="display:none;">
-          <div class="radar-panel">
-            <div style="margin-bottom:16px;">
-              <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Exploded Spider Diagram (Radar Benchmark)</h2>
-              <p style="color:var(--text-muted); font-size:13px; margin:0;">
-                Comprehensive multi-dimensional evaluation of your strategy against current performance, matching SaaS peers, top-quartile winners, and selected founder benchmarks.
-              </p>
-            </div>
-
-            <div class="radar-layout">
-              <!-- SVG Radar Chart Container -->
-              <div class="radar-svg-wrap">
-                <svg id="radarSvg" viewBox="0 0 500 500" style="width:100%; height:auto;">
-                  <!-- Injected via JS -->
-                </svg>
-              </div>
-
-              <!-- Radar Legend & Layer Toggles -->
-              <div class="radar-legend">
-                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px; margin-bottom:4px;">
-                  Active Comparison Layers
-                </div>
-                <div class="legend-item" id="toggle-current">
-                  <div class="legend-left">
-                    <span class="legend-color-dot" style="background:#0284c7;"></span>
-                    <span>Your Current Profile</span>
-                  </div>
-                  <input type="checkbox" checked id="chk-current">
-                </div>
-                <div class="legend-item" id="toggle-proposed">
-                  <div class="legend-left">
-                    <span class="legend-color-dot" style="background:#10b981;"></span>
-                    <span>Proposed Strategy</span>
-                  </div>
-                  <input type="checkbox" checked id="chk-proposed">
-                </div>
-                <div class="legend-item" id="toggle-peers">
-                  <div class="legend-left">
-                    <span class="legend-color-dot" style="background:#8b5cf6;"></span>
-                    <span>Matching Peers Median</span>
-                  </div>
-                  <input type="checkbox" checked id="chk-peers">
-                </div>
-                <div class="legend-item" id="toggle-p75">
-                  <div class="legend-left">
-                    <span class="legend-color-dot" style="background:#f59e0b;"></span>
-                    <span>Top Quartile (P75) Winners</span>
-                  </div>
-                  <input type="checkbox" checked id="chk-p75">
-                </div>
-                <div class="legend-item" id="toggle-benchmark">
-                  <div class="legend-left">
-                    <span class="legend-color-dot" style="background:#06b6d4;"></span>
-                    <span id="legendBenchmarkLabel">Founder Benchmark</span>
-                  </div>
-                  <input type="checkbox" checked id="chk-benchmark">
-                </div>
-
-                <div style="margin-top:10px; padding:12px; border-radius:8px; background:var(--surface-subtle); font-size:11px; color:var(--text-muted);">
-                  💡 <strong>Tip:</strong> S&M Efficiency is inverted so that lower spending ratios map to a higher efficiency score on the perimeter.
-                </div>
-              </div>
-            </div>
-
-            <!-- Exploded Axis Values Grid -->
-            <div class="radar-axis-grid" id="radarStatBoxes">
-              <!-- Injected via JS -->
-            </div>
-          </div>
-        </section>
-
-        <!-- VIEW 3: Founder Benchmarking Library -->
-        <section id="view-benchmarks" class="view-panel" style="display:none;">
-          <div style="background:#ffffff; border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:var(--shadow-sm);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-              <div>
-                <h2 style="font-size:18px; font-weight:800; margin:0 0 4px;">Founder & Team Benchmark Library</h2>
-                <p style="color:var(--text-muted); font-size:13px; margin:0;">
-                  Benchmark your plan directly against battle-tested playbooks created by SaaS founders and operators.
-                </p>
-              </div>
-              <button id="saveToTeamLibraryBtn" type="button" class="btn primary" style="font-size:12px;">
-                + Save My Plan to Team Library
-              </button>
-            </div>
-
-            <div id="benchmarksCardsGrid" class="benchmarks-grid">
-              <!-- Injected via JS -->
-            </div>
-
-            <!-- Side by Side Benchmark Comparison -->
-            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
-              <h3 style="font-size:15px; font-weight:700; margin:0 0 12px;">Side-by-Side Benchmark Gap Analysis</h3>
-              <div class="scroll">
-                <table id="benchmarkComparisonTable">
-                  <!-- Injected via JS -->
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- VIEW 4: Deep Evidence & Empirical Regressions -->
-        <section id="view-evidence" class="view-panel" style="display:none;">
-          <div id="results">
-            <div class="empty">
-              <h2>Turn a choice into a research question.</h2>
-              <p>Run the flow to see financial peers, correlations, adjusted estimates, and historical outcomes for similar starting profiles.</p>
-            </div>
-          </div>
-        </section>
-      </div>
+    <div class="shadcn-sheet-body" id="sheetContent">
+      <!-- Injected dynamically via JS -->
     </div>
-  </main>
+    <div class="shadcn-sheet-footer">
+      <button id="sheetCloseActionBtn" type="button" class="btn">Close</button>
+      <button id="sheetSwitchTabBtn" type="button" class="btn primary">View Full Regression Matrix →</button>
+    </div>
+  </div>
+
+  <!-- Sonner Toast Container -->
+  <div id="sonnerContainer" class="sonner-toast-container"></div>
 
   <!-- Side Agent and Scripts -->
   <script src="/static/workspace.js"></script>
