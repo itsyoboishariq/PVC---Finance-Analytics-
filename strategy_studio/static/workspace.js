@@ -1520,6 +1520,10 @@ async function renderMermaidDiagram(data) {
   const container = $('companyFlowMermaid');
   if (!container) return;
 
+  // Render high-res SVG flow immediately so user never sees a blank container
+  container.innerHTML = renderNativeSvgFlowchart(data.stages);
+
+  // If Mermaid is loaded, upgrade to Mermaid diagram
   if (typeof mermaid !== 'undefined' && mermaid.render) {
     try {
       const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
@@ -1531,14 +1535,10 @@ async function renderMermaidDiagram(data) {
       }
       const { svg } = await mermaid.render(renderId, code);
       container.innerHTML = svg;
-      return;
     } catch (err) {
-      console.warn('Mermaid rendering issue, falling back to native SVG:', err);
+      console.warn('Mermaid rendering issue, keeping native SVG:', err);
     }
   }
-
-  // Native SVG Fallback
-  container.innerHTML = renderNativeSvgFlowchart(data.stages);
 }
 
 function renderFlowComparison(comp) {

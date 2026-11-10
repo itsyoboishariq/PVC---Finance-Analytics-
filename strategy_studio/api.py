@@ -148,7 +148,8 @@ def make_app(db_path=DB):
         except RuntimeError as exc:raise HTTPException(502,str(exc)) from exc
 
     @app.get('/strategy')
-    def strategy_workspace():return FileResponse(ROOT/'static/workspace.html')
+    def strategy_workspace():
+        return FileResponse(ROOT/'static/workspace.html', headers={'Cache-Control': 'no-cache, no-store, must-revalidate'})
 
     @app.post('/api/agent/chat')
     def agent_chat(request:AgentRequest):
