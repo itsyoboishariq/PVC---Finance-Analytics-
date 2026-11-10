@@ -2009,3 +2009,396 @@ main {
   color: #fbbf24;
 }
 
+/* ==========================================================================
+   Mermaid-Centric Interactive Strategy Flowchart & Deep-Dive Inspector
+   ========================================================================== */
+.mermaid-centric-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.flowchart-hero-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flowchart-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.flowchart-company-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flowchart-company-name {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.flowchart-interactive-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: var(--sky-bg);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  color: var(--sky);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dark .flowchart-interactive-hint {
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--primary);
+}
+
+.flowchart-viewport {
+  width: 100%;
+  overflow-x: auto;
+  min-height: 250px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flowchart-viewport svg {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+/* Hover and active effects on Mermaid / SVG nodes */
+.flowchart-viewport .node,
+.flowchart-viewport .flow-svg-node {
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.flowchart-viewport .node:hover,
+.flowchart-viewport .flow-svg-node:hover {
+  filter: drop-shadow(0 4px 8px rgba(2, 132, 199, 0.3));
+  transform: translateY(-2px);
+}
+
+.flowchart-viewport .node.active-stage rect,
+.flowchart-viewport .flow-svg-node.active-stage rect {
+  stroke: #7c3aed !important;
+  stroke-width: 3px !important;
+}
+
+/* Strategic Why & Financial Intelligence Inspector Panel */
+.stage-inspector-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: all 0.2s ease;
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-badge-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.inspector-phase-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #334155;
+  text-transform: uppercase;
+}
+.dark .inspector-phase-badge {
+  background: #27272a;
+  color: #f1f5f9;
+}
+
+.inspector-kpi-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.inspector-kpi-badge.badge-green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.inspector-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.inspector-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  overflow-x: auto;
+}
+
+.insp-tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.insp-tab-btn:hover {
+  background: var(--surface-subtle);
+  color: var(--text-main);
+}
+
+.insp-tab-btn.active {
+  background: var(--surface-subtle);
+  color: var(--primary);
+  border-color: var(--border);
+  font-weight: 700;
+}
+
+.insp-narrative-box {
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: var(--sky-bg);
+  border-left: 4px solid var(--sky);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.dark .insp-narrative-box {
+  background: rgba(2, 132, 199, 0.1);
+  border-left-color: var(--primary);
+}
+
+.insp-why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.insp-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insp-card h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.insp-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Products and Frameworks */
+.insp-subtitle {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+}
+
+.insp-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.insp-product-chip-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.insp-product-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.insp-product-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.insp-product-tier {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.insp-product-horizon {
+  background: var(--surface-subtle);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.insp-product-role {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.insp-frameworks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.insp-framework-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insp-framework-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.insp-framework-content {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.insp-framework-content ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.insp-framework-content li {
+  margin-bottom: 4px;
+}
+
+/* Vitals & SEC Links */
+.insp-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.insp-vital-box {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.insp-vital-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.insp-vital-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.insp-sec-link-box {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.insp-sec-link-box a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.insp-sec-link-box a:hover {
+  text-decoration: underline;
+}
+

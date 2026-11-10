@@ -278,6 +278,14 @@ def make_app(db_path=DB):
             raise HTTPException(404, res['error'])
         return res
 
+    @app.get('/api/strategy/phase-deepdive/{identifier}/{stage}')
+    def phase_deepdive(identifier: str, stage: str):
+        import strategic_intelligence
+        res = strategic_intelligence.get_phase_deepdive(identifier, stage, path=db_path)
+        if 'error' in res:
+            raise HTTPException(404, res['error'])
+        return res
+
     @app.get('/advanced')
     def advanced():return FileResponse(ROOT/'static/index.html')
 

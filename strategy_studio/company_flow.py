@@ -176,6 +176,7 @@ def get_company_flow(identifier, startup_profile=None, path=DB):
             # Node label text
             node_label = f"\"<b>{s['year']} · {s['phase_title']}</b><br/>ARR: {s['revenue_formatted']}<br/>S&M: {s['sales_marketing_formatted']} | R&D: {s['rd_formatted']}<br/>Growth: {s['growth_formatted']}{' | R40: ' + str(s['rule_of_40']) if s['rule_of_40'] else ''}\""
             mermaid_lines.append(f"  {node_id}[{node_label}]:::{cls}")
+            mermaid_lines.append(f"  click {node_id} selectFlowPhase \"Inspect {s['year']} Strategic Why & Frameworks\"")
             
             if i > 0:
                 prev_id = f"S{i}"

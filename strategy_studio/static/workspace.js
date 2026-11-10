@@ -1361,14 +1361,22 @@ function initCommandPalette() {
 }
 
 // ==========================================================================
-// AI Company Strategy Flowcharts & Trajectory Comparison Engine
+// Mermaid-Centric Interactive Strategy Flowchart & Deep-Dive Inspector
 // ==========================================================================
 let currentCompanyFlowData = null;
+let currentDeepdiveData = null;
+let activeInspTab = 'insp-why';
+
+// Global callback for Mermaid click binding
+window.selectFlowPhase = function(nodeId) {
+  const stageIdx = parseInt(String(nodeId).replace(/\D/g, ''), 10) || 1;
+  loadPhaseDeepdive(stageIdx);
+};
 
 async function initCompanyFlow() {
   const select = $('companyFlowSelect');
-  const refreshBtn = $('refreshCompanyFlowBtn');
   const toggleBtn = $('toggleMermaidCodeBtn');
+  const askAnalystBtn = $('askAnalyst');
 
   // Load companies list from API
   try {
@@ -1387,7 +1395,7 @@ async function initCompanyFlow() {
     console.error('Failed to load company flow list:', err);
   }
 
-  // Handle select change
+  // Handle company select change
   if (select) {
     select.onchange = () => {
       const val = select.value;
@@ -1406,25 +1414,49 @@ async function initCompanyFlow() {
     };
   });
 
-  // Handle refresh
-  if (refreshBtn) {
-    refreshBtn.onclick = () => {
-      const val = select ? select.value : 'DDOG';
-      loadCompanyFlow(val);
-    };
-  }
-
-  // Handle toggle code
+  // Handle syntax toggle
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       const raw = $('companyFlowRawCode');
       if (raw) {
         const isShown = raw.style.display === 'block';
         raw.style.display = isShown ? 'none' : 'block';
-        toggleBtn.textContent = isShown ? 'Toggle Syntax' : 'Hide Syntax';
+        toggleBtn.textContent = isShown ? 'Syntax' : 'Hide Syntax';
       }
     };
   }
+
+  // Handle Ask Live AI Analyst
+  if (askAnalystBtn) {
+    askAnalystBtn.onclick = async () => {
+      const curComp = select?.value || 'DDOG';
+      const curStage = currentDeepdiveData?.stage_index || 3;
+      toast.info('AI Strategic Reasoning', `Synthesizing ${curComp} FY${currentDeepdiveData?.year || ''} with gpt-5-mini...`);
+      try {
+        await loadPhaseDeepdive(curStage);
+        toast.success('Strategic Reasoning Ready', `Analyzed strategic shift and product lines for ${curComp}.`);
+      } catch (e) {
+        toast.error('AI Reasoning', e.message);
+      }
+    };
+  }
+
+  // Initialize Inspector Sub-Tabs
+  document.querySelectorAll('.insp-tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      const targetId = btn.dataset.inspTarget;
+      if (!targetId) return;
+      activeInspTab = targetId;
+
+      document.querySelectorAll('.insp-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.insp-tab-panel').forEach(p => {
+        p.style.display = p.id === targetId ? 'block' : 'none';
+      });
+    };
+  });
+
+  // Pre-load default company flow
+  loadCompanyFlow('DDOG');
 }
 
 function updateQuickChipHighlight(ticker) {
@@ -1450,6 +1482,14 @@ async function loadCompanyFlow(identifier) {
     const data = await res.json();
     currentCompanyFlowData = data;
     renderCompanyFlow(data);
+
+    // Auto-select initial stage (e.g. stage closest to user ARR or Stage 3)
+    let bestStage = 3;
+    if (data.comparison && data.comparison.benchmark_stage) {
+      const match = data.stages.find(s => s.year === data.comparison.benchmark_stage);
+      if (match) bestStage = match.index;
+    }
+    loadPhaseDeepdive(Math.min(bestStage, data.stages_count));
   } catch (err) {
     console.error('Failed to load company strategy flow:', err);
     if (typeof toast !== 'undefined') toast.error('Flowchart Error', `Could not load flow for ${identifier}`);
@@ -1458,29 +1498,175 @@ async function loadCompanyFlow(identifier) {
   }
 }
 
-function copyStageLevers(payload) {
-  if (!payload) return;
-  if (payload.sales_marketing_ratio != null) {
-    $('salesTarget').value = payload.sales_marketing_ratio;
-    $('salesOn').checked = true;
+async function loadPhaseDeepdive(stageIdxOrYear) {
+  const currentCompany = $('companyFlowSelect')?.value || 'DDOG';
+  const inspector = $('stageInspectorSection');
+  if (inspector) inspector.style.opacity = '0.7';
+
+  try {
+    const res = await fetch(`/api/strategy/phase-deepdive/${encodeURIComponent(currentCompany)}/${encodeURIComponent(stageIdxOrYear)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentDeepdiveData = data;
+    renderPhaseDeepdive(data);
+    highlightFlowchartNode(data.stage_index);
+  } catch (err) {
+    console.error('Failed to load phase deepdive:', err);
+  } finally {
+    if (inspector) inspector.style.opacity = '1';
   }
-  if (payload.rd_ratio != null) {
-    $('rdTarget').value = payload.rd_ratio;
-    $('rdOn').checked = true;
+}
+
+function highlightFlowchartNode(stageIndex) {
+  // Highlight in Mermaid or native SVG
+  document.querySelectorAll('.flowchart-viewport .node, .flowchart-viewport .flow-svg-node').forEach((el, idx) => {
+    el.classList.toggle('active-stage', idx === (stageIndex - 1));
+  });
+}
+
+function renderPhaseDeepdive(data) {
+  if (!data) return;
+  const comp = data.company || {};
+  const why = data.strategic_why || {};
+  const fin = data.financial_strategy || {};
+  const fw = data.frameworks || {};
+  const deltas = why.deltas || {};
+
+  // Badges & Header
+  if ($('inspStageBadge')) $('inspStageBadge').textContent = `STAGE ${data.stage_index} · ${data.year}`;
+  if ($('inspRevBadge')) $('inspRevBadge').textContent = `ARR: ${fin.revenue} (${fin.revenue_growth})`;
+  if ($('inspR40Badge')) {
+    $('inspR40Badge').textContent = `Rule of 40: ${fin.rule_of_40 ?? 'N/A'}`;
+    $('inspR40Badge').className = (fin.rule_of_40 >= 40) ? 'inspector-kpi-badge badge-green' : 'inspector-kpi-badge';
   }
-  if (payload.objective) {
-    $('objective').value = payload.objective;
+  if ($('inspStageTitle')) {
+    $('inspStageTitle').textContent = `${data.year} · ${comp.name} Strategic Milestone`;
+  }
+  if ($('inspAdoptBtn')) {
+    $('inspAdoptBtn').textContent = `📋 Copy ${data.year} Levers (${data.copy_payload.sales_marketing_ratio}% S&M, ${data.copy_payload.rd_ratio}% R&D)`;
+    $('inspAdoptBtn').onclick = () => copyStageLevers(data.copy_payload);
   }
 
-  updateLocalKPIs();
-  run(false);
-
-  if (typeof toast !== 'undefined') {
-    toast.success(
-      'Strategy Levers Copied!',
-      `Adopted ${payload.strategy_name || 'phase'}: Target S&M set to ${payload.sales_marketing_ratio}%, R&D set to ${payload.rd_ratio}%.`
-    );
+  // 1. Strategic Why Panel
+  if ($('inspExecutiveSummary')) {
+    const smShift = deltas.sm_pp != null ? (deltas.sm_pp >= 0 ? `+${deltas.sm_pp}pp` : `${deltas.sm_pp}pp`) : '0pp';
+    const rdShift = deltas.rd_pp != null ? (deltas.rd_pp >= 0 ? `+${deltas.rd_pp}pp` : `${deltas.rd_pp}pp`) : '0pp';
+    $('inspExecutiveSummary').innerHTML = `
+      <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--primary); letter-spacing:0.5px; margin-bottom:4px;">
+        EXECUTIVE STRATEGY SYNTHESIS (${data.year})
+      </div>
+      <div style="font-weight:700; font-size:15px; margin-bottom:6px;">${esc(why.executive_summary)}</div>
+      <div style="display:flex; gap:10px; font-size:12px; margin-top:8px;">
+        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">S&M Delta: <strong>${smShift}</strong></span>
+        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">R&D Delta: <strong>${rdShift}</strong></span>
+        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">Free Cash Flow: <strong>${deltas.fcf_dollars || 'N/A'}</strong></span>
+      </div>
+    `;
   }
+  if ($('inspSmWhy')) $('inspSmWhy').textContent = why.sm_why || 'Steady GTM execution.';
+  if ($('inspRdWhy')) $('inspRdWhy').textContent = why.rd_why || 'Continuous release cadence.';
+  if ($('inspMarginWhy')) $('inspMarginWhy').textContent = why.margin_why || 'Margin stability.';
+  if ($('inspCapitalWhy')) $('inspCapitalWhy').textContent = why.capital_allocation || 'Cash preservation.';
+
+  // 2. Product Lines & Frameworks Panel
+  if ($('inspProductsGrid')) {
+    const prods = data.product_lines || [];
+    $('inspProductsGrid').innerHTML = prods.map(p => `
+      <div class="insp-product-chip-card">
+        <div class="insp-product-name">${esc(p.name)}</div>
+        <div class="insp-product-meta">
+          <span class="insp-product-tier">${esc(p.tier)}</span>
+          <span class="insp-product-horizon">${esc(p.horizon || 'H1')}</span>
+        </div>
+        <div class="insp-product-role">${esc(p.role)}</div>
+      </div>
+    `).join('') || '<p style="font-size:12px; color:var(--text-muted);">Product lines expanding natively on platform.</p>';
+  }
+
+  // Frameworks: Ansoff Matrix
+  if ($('inspAnsoffContent') && fw.ansoff) {
+    const a = fw.ansoff;
+    $('inspAnsoffContent').innerHTML = `
+      <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">1. Market Penetration (${a.market_penetration.posture})</div>
+      <ul>${a.market_penetration.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
+      <div style="font-weight:700; color:var(--text-main); margin:8px 0 4px;">2. Product Development (${a.product_development.posture})</div>
+      <ul>${a.product_development.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
+      <div style="font-weight:700; color:var(--text-main); margin:8px 0 4px;">3. Market Development & Global (${a.market_development.posture})</div>
+      <ul>${a.market_development.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
+    `;
+  }
+
+  // Frameworks: McKinsey 3 Horizons
+  if ($('inspMcKinseyContent') && fw.mckinsey) {
+    const m = fw.mckinsey;
+    $('inspMcKinseyContent').innerHTML = `
+      <div style="font-weight:700; color:var(--text-main);">${m.horizon_1.title} (${m.horizon_1.revenue_share})</div>
+      <p style="font-size:11px; margin:2px 0 6px;">${esc(m.horizon_1.focus)}</p>
+      <div style="font-weight:700; color:var(--text-main);">${m.horizon_2.title} (${m.horizon_2.revenue_share})</div>
+      <p style="font-size:11px; margin:2px 0 6px;">${esc(m.horizon_2.focus)}</p>
+      <div style="font-weight:700; color:var(--text-main);">${m.horizon_3.title} (${m.horizon_3.revenue_share})</div>
+      <p style="font-size:11px; margin:2px 0 0;">${esc(m.horizon_3.focus)}</p>
+    `;
+  }
+
+  // Frameworks: BCG Matrix
+  if ($('inspBcgContent') && fw.bcg) {
+    const b = fw.bcg;
+    $('inspBcgContent').innerHTML = `
+      <div style="font-weight:700; color:#10b981;">${b.stars.label}</div>
+      <p style="font-size:11px; margin:2px 0 6px;">Products: <strong>${b.stars.items.join(', ')}</strong></p>
+      <div style="font-weight:700; color:#0284c7;">${b.cash_cows.label}</div>
+      <p style="font-size:11px; margin:2px 0 6px;">Core: <strong>${b.cash_cows.items.join(', ')}</strong></p>
+      <div style="font-weight:700; color:#f59e0b;">${b.question_marks.label}</div>
+      <p style="font-size:11px; margin:2px 0 0;">Emerging: <strong>${b.question_marks.items.join(', ')}</strong></p>
+    `;
+  }
+
+  // Frameworks: Porter's Moats
+  if ($('inspPortersContent') && fw.porters) {
+    $('inspPortersContent').innerHTML = fw.porters.map(p => `
+      <div style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:var(--text-main); font-size:12px;">${esc(p.moat)}</strong>
+          <span style="font-size:11px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:4px;">${p.score}/10 Moat</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${esc(p.rationale)}</div>
+      </div>
+    `).join('');
+  }
+
+  // 3. Financial Strategy Vitals
+  if ($('inspVitalsGrid')) {
+    const vitals = [
+      { label: 'Annual Revenue', val: fin.revenue },
+      { label: 'YoY Growth', val: fin.revenue_growth },
+      { label: 'S&M Ratio', val: fin.sales_marketing_ratio },
+      { label: 'R&D Ratio', val: fin.rd_ratio },
+      { label: 'Gross Margin', val: fin.gross_margin },
+      { label: 'Operating Margin', val: fin.operating_margin },
+      { label: 'Free Cash Flow', val: fin.fcf },
+      { label: 'FCF Margin', val: fin.fcf_margin },
+      { label: 'Cash & Short-Term Inv', val: fin.cash },
+      { label: 'Total Debt', val: fin.debt },
+      { label: 'Rule of 40', val: fin.rule_of_40 != null ? fin.rule_of_40 : 'N/A' },
+      { label: 'Runway Months', val: fin.runway_months != null ? `${fin.runway_months} mos` : 'Profitable' }
+    ];
+
+    $('inspVitalsGrid').innerHTML = vitals.map(v => `
+      <div class="insp-vital-box">
+        <span class="insp-vital-label">${esc(v.label)}</span>
+        <span class="insp-vital-value">${esc(v.val)}</span>
+      </div>
+    `).join('');
+  }
+
+  if ($('inspSecUrl') && fin.source_urls && fin.source_urls[0]) {
+    $('inspSecUrl').href = fin.source_urls[0];
+    $('inspSecUrl').textContent = `View Official SEC 10-K (${data.year}) Disclosures ↗`;
+  }
+
+  // 4. Peer Contrast Card
+  renderFlowComparison(currentCompanyFlowData?.comparison);
 }
 
 function renderCompanyFlow(data) {
@@ -1497,23 +1683,16 @@ function renderCompanyFlow(data) {
     const lastStage = data.stages[data.stages.length - 1];
     $('flowchartSubtitle').textContent = `Tracking strategic scaling from ${firstStage.revenue_formatted} (${firstStage.year}) to ${lastStage.revenue_formatted} ARR (${lastStage.year}) based on SEC 10-K filings.`;
   }
-  if ($('stageCountBadge')) {
-    $('stageCountBadge').textContent = `${data.stages_count} Strategic Phases`;
-  }
 
-  // Raw Mermaid code
   if ($('companyFlowRawCode')) {
     $('companyFlowRawCode').textContent = data.mermaid_code || '';
   }
 
-  // Render Mermaid Flowchart diagram
+  // Render Mermaid Diagram with interactive click binding
   renderMermaidDiagram(data);
 
   // Render Comparison Card
   renderFlowComparison(data.comparison);
-
-  // Render Stages Grid
-  renderFlowStagesGrid(data.stages);
 }
 
 async function renderMermaidDiagram(data) {
@@ -1522,6 +1701,7 @@ async function renderMermaidDiagram(data) {
 
   // Render high-res SVG flow immediately so user never sees a blank container
   container.innerHTML = renderNativeSvgFlowchart(data.stages);
+  bindSvgNodeClicks();
 
   // If Mermaid is loaded, upgrade to Mermaid diagram
   if (typeof mermaid !== 'undefined' && mermaid.render) {
@@ -1535,17 +1715,51 @@ async function renderMermaidDiagram(data) {
       }
       const { svg } = await mermaid.render(renderId, code);
       container.innerHTML = svg;
+      bindMermaidNodeClicks();
     } catch (err) {
       console.warn('Mermaid rendering issue, keeping native SVG:', err);
     }
   }
 }
 
+function bindMermaidNodeClicks() {
+  const container = $('companyFlowMermaid');
+  if (!container) return;
+
+  // Direct click bindings on all Mermaid flowchart nodes
+  container.querySelectorAll('g.node').forEach((nodeEl, idx) => {
+    nodeEl.style.cursor = 'pointer';
+    nodeEl.onclick = () => {
+      loadPhaseDeepdive(idx + 1);
+    };
+  });
+
+  // Direct click bindings on edge labels
+  container.querySelectorAll('.edgeLabel').forEach((edgeEl, idx) => {
+    edgeEl.style.cursor = 'pointer';
+    edgeEl.onclick = () => {
+      loadPhaseDeepdive(idx + 2);
+    };
+  });
+}
+
+function bindSvgNodeClicks() {
+  const container = $('companyFlowMermaid');
+  if (!container) return;
+
+  container.querySelectorAll('.flow-svg-node').forEach((nodeEl, idx) => {
+    nodeEl.style.cursor = 'pointer';
+    nodeEl.onclick = () => {
+      loadPhaseDeepdive(idx + 1);
+    };
+  });
+}
+
 function renderFlowComparison(comp) {
   const card = $('companyFlowComparisonCard');
   if (!card) return;
   if (!comp) {
-    card.innerHTML = `<div style="color:var(--text-muted); font-size:13px;">Set your startup revenue profile on the left to see strategic gap analysis against this peer.</div>`;
+    card.innerHTML = `<div style="color:var(--text-muted); font-size:13px; padding:16px;">Set your startup revenue profile in the drawer to see strategic gap analysis against this peer.</div>`;
     return;
   }
 
@@ -1564,7 +1778,7 @@ function renderFlowComparison(comp) {
   }
 
   card.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
       <div>
         <div class="contrast-badge-strip">
           <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">STRATEGIC CONTRAST</span>
@@ -1634,73 +1848,29 @@ function renderFlowComparison(comp) {
   }
 }
 
-function renderFlowStagesGrid(stages) {
-  const container = $('companyFlowStagesGrid');
-  if (!container) return;
-  if (!stages || !stages.length) {
-    container.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No lifecycle stages available.</p>';
-    return;
+function copyStageLevers(payload) {
+  if (!payload) return;
+  if ($('salesTarget') && payload.sales_marketing_ratio != null) {
+    $('salesTarget').value = payload.sales_marketing_ratio;
+    if ($('salesOn')) $('salesOn').checked = true;
+  }
+  if ($('rdTarget') && payload.rd_ratio != null) {
+    $('rdTarget').value = payload.rd_ratio;
+    if ($('rdOn')) $('rdOn').checked = true;
+  }
+  if ($('objective') && payload.objective) {
+    $('objective').value = payload.objective;
   }
 
-  container.innerHTML = stages.map(s => {
-    const smDelta = s.deltas?.sm_pp != null ? (s.deltas.sm_pp >= 0 ? `+${s.deltas.sm_pp}pp` : `${s.deltas.sm_pp}pp`) : null;
-    const r40Cls = s.rule_of_40 >= 40 ? 'color:#10b981;' : (s.rule_of_40 >= 20 ? 'color:#0284c7;' : 'color:var(--text-main);');
+  updateLocalKPIs();
+  run(false);
 
-    return `
-      <div class="flow-stage-card">
-        <div>
-          <div class="stage-card-header">
-            <span class="stage-year-pill">${esc(s.year)}</span>
-            <span class="kpi-tag" style="background:#f1f5f9; color:#475569;">Stage ${s.index}</span>
-          </div>
-          <div class="stage-phase-title">${esc(s.phase_title)}</div>
-          <p class="stage-phase-desc">${esc(s.phase_desc)}</p>
-        </div>
-
-        <div class="stage-stats-table">
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">Revenue:</span>
-            <span class="stage-stat-val">${esc(s.revenue_formatted)}</span>
-          </div>
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">Growth:</span>
-            <span class="stage-stat-val" style="color:#10b981;">${esc(s.growth_formatted)}</span>
-          </div>
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">S&M Ratio:</span>
-            <span class="stage-stat-val">${esc(s.sales_marketing_formatted)} ${smDelta ? `<small style="font-weight:normal; color:var(--text-muted);">(${smDelta})</small>` : ''}</span>
-          </div>
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">R&D Ratio:</span>
-            <span class="stage-stat-val">${esc(s.rd_formatted)}</span>
-          </div>
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">Op Margin:</span>
-            <span class="stage-stat-val">${esc(s.operating_margin_formatted)}</span>
-          </div>
-          <div class="stage-stat-row">
-            <span class="stage-stat-lbl">Rule of 40:</span>
-            <span class="stage-stat-val" style="${r40Cls}">${s.rule_of_40 != null ? s.rule_of_40 : 'N/A'}</span>
-          </div>
-        </div>
-
-        <button type="button" class="stage-copy-btn" data-copy-stage="${s.index}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          📋 Copy Levers to My Strategy
-        </button>
-      </div>
-    `;
-  }).join('');
-
-  container.querySelectorAll('[data-copy-stage]').forEach(btn => {
-    btn.onclick = () => {
-      const stageIdx = parseInt(btn.dataset.copyStage, 10);
-      const stage = stages.find(s => s.index === stageIdx);
-      if (stage && stage.copy_payload) {
-        copyStageLevers(stage.copy_payload);
-      }
-    };
-  });
+  if (typeof toast !== 'undefined') {
+    toast.success(
+      'Strategy Levers Adopted!',
+      `Injected ${payload.strategy_name || 'phase'}: Target S&M set to ${payload.sales_marketing_ratio}%, R&D set to ${payload.rd_ratio}%.`
+    );
+  }
 }
 
 function renderNativeSvgFlowchart(stages) {
@@ -1736,7 +1906,7 @@ function renderNativeSvgFlowchart(stages) {
     const r40Color = isElite ? '#10b981' : textSub;
 
     nodesHtml += `
-      <g class="flow-svg-node" transform="translate(${x}, ${y})">
+      <g class="flow-svg-node" transform="translate(${x}, ${y})" onclick="selectFlowPhase('S${i+1}')">
         <rect width="${nodeW}" height="${nodeH}" rx="8" fill="${nodeBg}" stroke="${nodeStroke}" stroke-width="2"/>
         <text x="12" y="22" font-size="11" font-weight="700" fill="${textTitle}">${esc(s.year)} · ${esc(s.phase_title.length > 16 ? s.phase_title.slice(0, 15) + '…' : s.phase_title)}</text>
         <text x="12" y="42" font-size="12" font-weight="800" fill="${borderNormal}">ARR: ${esc(s.revenue_formatted)} (${esc(s.growth_formatted)})</text>
@@ -1753,8 +1923,8 @@ function renderNativeSvgFlowchart(stages) {
       const deltaLabel = smDelta != null ? `${smDelta >= 0 ? '+' : ''}${smDelta}pp S&M` : '';
 
       nodesHtml += `
-        <line x1="${prevX}" y1="${arrowY}" x2="${curX - 4}" y2="${arrowY}" stroke="${arrowCol}" stroke-width="2" marker-end="url(#flowArrow)"/>
-        ${deltaLabel ? `<text x="${(prevX + curX) / 2}" y="${arrowY - 6}" font-size="10" font-weight="700" fill="${arrowCol}" text-anchor="middle">${deltaLabel}</text>` : ''}
+        <line x1="${prevX}" y1="${arrowY}" x2="${curX - 4}" y2="${arrowY}" stroke="${arrowCol}" stroke-width="2" marker-end="url(#flowArrow)" onclick="selectFlowPhase('S${i+1}')" style="cursor:pointer;"/>
+        ${deltaLabel ? `<text x="${(prevX + curX) / 2}" y="${arrowY - 6}" font-size="10" font-weight="700" fill="${arrowCol}" text-anchor="middle" onclick="selectFlowPhase('S${i+1}')" style="cursor:pointer;">${deltaLabel}</text>` : ''}
       `;
     }
   });
@@ -1774,8 +1944,8 @@ try {
 
 initTheme();
 initSidebar();
-initCommandPalette();
 initEvidenceSheet();
 initCompanyFlow();
 updateLocalKPIs();
 run(false);
+
