@@ -240,7 +240,7 @@ function renderHierarchyTree(req, res) {
         </div>`).join('') || '<div class="node">Enable a spending decision on the left.</div>'}
     </div>
     <div class="arrow">↓</div>
-    <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context')?.selectedOptions?.[0]?.text || $('context')?.value || 'Historical SaaS Periods')}</strong><span>Match starting profiles → compare actions</span></div>
+    <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context').selectedOptions[0].text)}</strong><span>Match starting profiles → compare actions</span></div>
     <div class="arrow">↓</div>
     <div class="node goal"><small>YOUR OBJECTIVE</small><strong>${req.objective === 'growth' ? 'Grow revenue' : 'Improve operating profitability'}</strong><span>Financial peers + adjusted regression</span></div>
   `;
@@ -339,7 +339,7 @@ function backToHierarchy() {
   $('drilldownNav').style.display = 'none';
   $('hierarchyTreeRoot').style.display = 'flex';
 }
-if ($('backToHierarchyBtn')) $('backToHierarchyBtn').onclick = backToHierarchy;
+$('backToHierarchyBtn').onclick = backToHierarchy;
 
 // Drag and Drop Evidence System
 function setupDropTargets() {
@@ -923,20 +923,17 @@ function initTheme() {
       if (sunIcon) sunIcon.style.display = 'none';
       if (moonIcon) moonIcon.style.display = 'block';
     }
-    localStorage.setItem('athena_theme', theme);
-    if (typeof currentCompanyFlowData !== 'undefined' && currentCompanyFlowData) {
-      renderMermaidDiagram(currentCompanyFlowData);
-    }
+    localStorage.setItem('shadcn_theme', theme);
   }
 
-  const savedTheme = localStorage.getItem('athena_theme') || 'dark';
+  const savedTheme = localStorage.getItem('shadcn_theme') || 'light';
   setTheme(savedTheme);
 
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setTheme(isDark ? 'light' : 'dark');
-      toast.info('Theme Updated', `Switched to ${isDark ? 'Ivory Crimson' : 'Athena Darkish Red'} mode.`);
+      toast.info('Theme Updated', `Switched to ${isDark ? 'light' : 'dark'} mode.`);
     };
   }
 }
@@ -1069,51 +1066,42 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 // Input listeners
-if ($('editor')) {
-  $('editor').addEventListener('input', () => {
-    revision++;
-    updateLocalKPIs();
-    if ($('state')) {
-      $('state').textContent = 'Draft · changes unanalyzed';
-      $('state').className = 'flow-status-pill';
-    }
+$('editor').addEventListener('input', () => {
+  revision++;
+  updateLocalKPIs();
+  $('state').textContent = 'Draft · changes unanalyzed';
+  $('state').className = 'flow-status-pill';
+});
+
+$('editor').onsubmit = e => { e.preventDefault(); run(false); };
+$('askAnalyst').onclick = () => run(true);
+
+$('save').onclick = () => {
+  const data = {};
+  document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(e => {
+    data[e.id] = e.type === 'checkbox' ? e.checked : e.value;
   });
-}
+  localStorage.setItem('saas-strategy-flow-v1', JSON.stringify(data));
+  toast.success('Strategy Plan Saved', 'Parameters have been saved locally in this browser.');
+};
 
-if ($('editor')) $('editor').onsubmit = e => { e.preventDefault(); run(false); };
-if ($('askAnalyst')) $('askAnalyst').onclick = () => run(true);
-
-if ($('save')) {
-  $('save').onclick = () => {
-    const data = {};
-    document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(e => {
-      data[e.id] = e.type === 'checkbox' ? e.checked : e.value;
-    });
-    localStorage.setItem('saas-strategy-flow-v1', JSON.stringify(data));
-    toast.success('Strategy Plan Saved', 'Parameters have been saved locally in this browser.');
+$('exportJson').onclick = () => {
+  const payload = {
+    request: getRequest(),
+    results: currentResult,
+    attached_evidence: attachedEvidence,
+    exported_at: new Date().toISOString()
   };
-}
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${($('name').value || 'strategy').toLowerCase().replace(/\s+/g, '_')}_plan.json`;
+  a.click();
+  toast.success('Executive Plan Exported', `${$('name').value || 'strategy'}_plan.json downloaded.`);
+};
 
-if ($('exportJson')) {
-  $('exportJson').onclick = () => {
-    const payload = {
-      request: getRequest(),
-      results: currentResult,
-      attached_evidence: attachedEvidence,
-      exported_at: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${($('name').value || 'strategy').toLowerCase().replace(/\s+/g, '_')}_plan.json`;
-    a.click();
-    toast.success('Executive Plan Exported', `${$('name').value || 'strategy'}_plan.json downloaded.`);
-  };
-}
-
-if ($('saveToTeamLibraryBtn')) {
-  $('saveToTeamLibraryBtn').onclick = () => {
+$('saveToTeamLibraryBtn').onclick = () => {
   const name = prompt('Enter a name for this founder strategy:', $('name').value);
   if (!name) return;
   const author = prompt('Enter author name or team role:', 'Founder & CEO') || 'Founder';
@@ -1148,8 +1136,7 @@ if ($('saveToTeamLibraryBtn')) {
   currentResult.benchmarks.unshift(newBm);
   selectBenchmark(newBm.id);
   toast.success('Saved to Team Library', `"${name}" is now available in the Benchmarking Library.`);
-  };
-}
+};
 
 // ==========================================================================
 // Shadcn Sidebar Controller (Inspired by satnaing/shadcn-admin)
@@ -1163,43 +1150,38 @@ function initSidebar() {
   function setSidebarState(state) {
     if (!sidebar) return;
     sidebar.setAttribute('data-state', state);
-    if (backdrop) {
-      if (state === 'expanded') {
-        backdrop.setAttribute('data-state', 'open');
-        backdrop.setAttribute('data-visible', 'true');
-        backdrop.classList.add('active');
-      } else {
-        backdrop.removeAttribute('data-state');
-        backdrop.setAttribute('data-visible', 'false');
-        backdrop.classList.remove('active');
-      }
-    }
     localStorage.setItem('shadcn_sidebar_state', state);
   }
 
   function toggleSidebar() {
     if (!sidebar) return;
-    const cur = sidebar.getAttribute('data-state') || 'collapsed';
-    setSidebarState(cur === 'expanded' ? 'collapsed' : 'expanded');
+    if (window.innerWidth <= 768) {
+      const isOpen = sidebar.getAttribute('data-mobile-open') === 'true';
+      sidebar.setAttribute('data-mobile-open', !isOpen ? 'true' : 'false');
+      if (backdrop) backdrop.setAttribute('data-visible', !isOpen ? 'true' : 'false');
+    } else {
+      const cur = sidebar.getAttribute('data-state') || 'expanded';
+      setSidebarState(cur === 'expanded' ? 'collapsed' : 'expanded');
+    }
   }
 
-  if (collapseBtn) collapseBtn.onclick = () => setSidebarState('collapsed');
-  if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
-  if (backdrop) backdrop.onclick = () => setSidebarState('collapsed');
+  const savedState = localStorage.getItem('shadcn_sidebar_state') || 'expanded';
+  setSidebarState(savedState);
 
-  // Keyboard shortcuts
+  if (collapseBtn) collapseBtn.onclick = toggleSidebar;
+  if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
+  if (backdrop) backdrop.onclick = () => {
+    sidebar.setAttribute('data-mobile-open', 'false');
+    backdrop.setAttribute('data-visible', 'false');
+  };
+
+  // Keyboard shortcut Ctrl+B or Cmd+B to toggle sidebar
   window.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && sidebar && sidebar.getAttribute('data-state') === 'expanded') {
-      setSidebarState('collapsed');
-    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
       e.preventDefault();
       toggleSidebar();
     }
   });
-
-  // Flowchart is the centerpiece: default to clean collapsed drawer
-  setSidebarState('collapsed');
 
   // Sidebar navigation item clicks
   document.querySelectorAll('[data-tab-target]').forEach(btn => {
@@ -1379,22 +1361,14 @@ function initCommandPalette() {
 }
 
 // ==========================================================================
-// Mermaid-Centric Interactive Strategy Flowchart & Deep-Dive Inspector
+// AI Company Strategy Flowcharts & Trajectory Comparison Engine
 // ==========================================================================
 let currentCompanyFlowData = null;
-let currentDeepdiveData = null;
-let activeInspTab = 'insp-why';
-
-// Global callback for Mermaid click binding
-window.selectFlowPhase = function(nodeId) {
-  const stageIdx = parseInt(String(nodeId).replace(/\D/g, ''), 10) || 1;
-  loadPhaseDeepdive(stageIdx);
-};
 
 async function initCompanyFlow() {
   const select = $('companyFlowSelect');
+  const refreshBtn = $('refreshCompanyFlowBtn');
   const toggleBtn = $('toggleMermaidCodeBtn');
-  const askAnalystBtn = $('askAnalyst');
 
   // Load companies list from API
   try {
@@ -1413,7 +1387,7 @@ async function initCompanyFlow() {
     console.error('Failed to load company flow list:', err);
   }
 
-  // Handle company select change
+  // Handle select change
   if (select) {
     select.onchange = () => {
       const val = select.value;
@@ -1432,49 +1406,25 @@ async function initCompanyFlow() {
     };
   });
 
-  // Handle syntax toggle
+  // Handle refresh
+  if (refreshBtn) {
+    refreshBtn.onclick = () => {
+      const val = select ? select.value : 'DDOG';
+      loadCompanyFlow(val);
+    };
+  }
+
+  // Handle toggle code
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       const raw = $('companyFlowRawCode');
       if (raw) {
         const isShown = raw.style.display === 'block';
         raw.style.display = isShown ? 'none' : 'block';
-        toggleBtn.textContent = isShown ? 'Syntax' : 'Hide Syntax';
+        toggleBtn.textContent = isShown ? 'Toggle Syntax' : 'Hide Syntax';
       }
     };
   }
-
-  // Handle Ask Live AI Analyst
-  if (askAnalystBtn) {
-    askAnalystBtn.onclick = async () => {
-      const curComp = select?.value || 'DDOG';
-      const curStage = currentDeepdiveData?.stage_index || 3;
-      toast.info('AI Strategic Reasoning', `Synthesizing ${curComp} FY${currentDeepdiveData?.year || ''} with gpt-5-mini...`);
-      try {
-        await loadPhaseDeepdive(curStage);
-        toast.success('Strategic Reasoning Ready', `Analyzed strategic shift and product lines for ${curComp}.`);
-      } catch (e) {
-        toast.error('AI Reasoning', e.message);
-      }
-    };
-  }
-
-  // Initialize Inspector Sub-Tabs
-  document.querySelectorAll('.insp-tab-btn').forEach(btn => {
-    btn.onclick = () => {
-      const targetId = btn.dataset.inspTarget;
-      if (!targetId) return;
-      activeInspTab = targetId;
-
-      document.querySelectorAll('.insp-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.insp-tab-panel').forEach(p => {
-        p.style.display = p.id === targetId ? 'block' : 'none';
-      });
-    };
-  });
-
-  // Pre-load default company flow
-  loadCompanyFlow('DDOG');
 }
 
 function updateQuickChipHighlight(ticker) {
@@ -1500,14 +1450,6 @@ async function loadCompanyFlow(identifier) {
     const data = await res.json();
     currentCompanyFlowData = data;
     renderCompanyFlow(data);
-
-    // Auto-select initial stage (e.g. stage closest to user ARR or Stage 3)
-    let bestStage = 3;
-    if (data.comparison && data.comparison.benchmark_stage) {
-      const match = data.stages.find(s => s.year === data.comparison.benchmark_stage);
-      if (match) bestStage = match.index;
-    }
-    loadPhaseDeepdive(Math.min(bestStage, data.stages_count));
   } catch (err) {
     console.error('Failed to load company strategy flow:', err);
     if (typeof toast !== 'undefined') toast.error('Flowchart Error', `Could not load flow for ${identifier}`);
@@ -1516,177 +1458,29 @@ async function loadCompanyFlow(identifier) {
   }
 }
 
-async function loadPhaseDeepdive(stageIdxOrYear) {
-  const currentCompany = $('companyFlowSelect')?.value || 'DDOG';
-  const inspector = $('stageInspectorSection');
-  if (inspector) inspector.style.opacity = '0.7';
-
-  try {
-    const res = await fetch(`/api/strategy/phase-deepdive/${encodeURIComponent(currentCompany)}/${encodeURIComponent(stageIdxOrYear)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    currentDeepdiveData = data;
-    renderPhaseDeepdive(data);
-    highlightFlowchartNode(data.stage_index);
-  } catch (err) {
-    console.error('Failed to load phase deepdive:', err);
-  } finally {
-    if (inspector) inspector.style.opacity = '1';
+function copyStageLevers(payload) {
+  if (!payload) return;
+  if (payload.sales_marketing_ratio != null) {
+    $('salesTarget').value = payload.sales_marketing_ratio;
+    $('salesOn').checked = true;
   }
-}
-
-function highlightFlowchartNode(stageIndex) {
-  // Highlight in Mermaid or native SVG
-  document.querySelectorAll('.flowchart-viewport .node, .flowchart-viewport .flow-svg-node').forEach((el, idx) => {
-    const isTarget = (el.dataset && el.dataset.stage && parseInt(el.dataset.stage, 10) === stageIndex) || idx === (stageIndex - 1);
-    el.classList.toggle('active-stage', isTarget);
-  });
-}
-
-function renderPhaseDeepdive(data) {
-  if (!data) return;
-  const comp = data.company || {};
-  const why = data.strategic_why || {};
-  const fin = data.financial_strategy || {};
-  const fw = data.frameworks || {};
-  const deltas = why.deltas || {};
-
-  // Badges & Header
-  if ($('inspStageBadge')) $('inspStageBadge').textContent = `STAGE ${data.stage_index} · ${data.year}`;
-  if ($('inspRevBadge')) $('inspRevBadge').textContent = `ARR: ${fin.revenue} (${fin.revenue_growth})`;
-  if ($('inspR40Badge')) {
-    $('inspR40Badge').textContent = `Rule of 40: ${fin.rule_of_40 ?? 'N/A'}`;
-    $('inspR40Badge').className = (fin.rule_of_40 >= 40) ? 'inspector-kpi-badge badge-green' : 'inspector-kpi-badge';
+  if (payload.rd_ratio != null) {
+    $('rdTarget').value = payload.rd_ratio;
+    $('rdOn').checked = true;
   }
-  if ($('inspStageTitle')) {
-    $('inspStageTitle').textContent = `${data.year} · ${comp.name} Strategic Milestone`;
-  }
-  if ($('inspAdoptBtn')) {
-    const cp = data.copy_payload || {};
-    $('inspAdoptBtn').textContent = `📋 Copy ${data.year} Levers (${cp.sales_marketing_ratio ?? 40}% S&M, ${cp.rd_ratio ?? 25}% R&D)`;
-    $('inspAdoptBtn').onclick = () => copyStageLevers(cp);
+  if (payload.objective) {
+    $('objective').value = payload.objective;
   }
 
-  // 1. Strategic Why Panel
-  if ($('inspExecutiveSummary')) {
-    const smShift = deltas.sm_pp != null ? (deltas.sm_pp >= 0 ? `+${deltas.sm_pp}pp` : `${deltas.sm_pp}pp`) : '0pp';
-    const rdShift = deltas.rd_pp != null ? (deltas.rd_pp >= 0 ? `+${deltas.rd_pp}pp` : `${deltas.rd_pp}pp`) : '0pp';
-    $('inspExecutiveSummary').innerHTML = `
-      <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--primary); letter-spacing:0.5px; margin-bottom:4px;">
-        EXECUTIVE STRATEGY SYNTHESIS (${data.year})
-      </div>
-      <div style="font-weight:700; font-size:15px; margin-bottom:6px;">${esc(why.executive_summary)}</div>
-      <div style="display:flex; gap:10px; font-size:12px; margin-top:8px;">
-        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">S&M Delta: <strong>${smShift}</strong></span>
-        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">R&D Delta: <strong>${rdShift}</strong></span>
-        <span style="background:var(--surface); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">Free Cash Flow: <strong>${deltas.fcf_dollars || 'N/A'}</strong></span>
-      </div>
-    `;
+  updateLocalKPIs();
+  run(false);
+
+  if (typeof toast !== 'undefined') {
+    toast.success(
+      'Strategy Levers Copied!',
+      `Adopted ${payload.strategy_name || 'phase'}: Target S&M set to ${payload.sales_marketing_ratio}%, R&D set to ${payload.rd_ratio}%.`
+    );
   }
-  if ($('inspSmWhy')) $('inspSmWhy').textContent = why.sm_why || 'Steady GTM execution.';
-  if ($('inspRdWhy')) $('inspRdWhy').textContent = why.rd_why || 'Continuous release cadence.';
-  if ($('inspMarginWhy')) $('inspMarginWhy').textContent = why.margin_why || 'Margin stability.';
-  if ($('inspCapitalWhy')) $('inspCapitalWhy').textContent = why.capital_allocation || 'Cash preservation.';
-
-  // 2. Product Lines & Frameworks Panel
-  if ($('inspProductsGrid')) {
-    const prods = data.product_lines || [];
-    $('inspProductsGrid').innerHTML = prods.map(p => `
-      <div class="insp-product-chip-card">
-        <div class="insp-product-name">${esc(p.name)}</div>
-        <div class="insp-product-meta">
-          <span class="insp-product-tier">${esc(p.tier)}</span>
-          <span class="insp-product-horizon">${esc(p.horizon || 'H1')}</span>
-        </div>
-        <div class="insp-product-role">${esc(p.role)}</div>
-      </div>
-    `).join('') || '<p style="font-size:12px; color:var(--text-muted);">Product lines expanding natively on platform.</p>';
-  }
-
-  // Frameworks: Ansoff Matrix
-  if ($('inspAnsoffContent') && fw.ansoff) {
-    const a = fw.ansoff;
-    $('inspAnsoffContent').innerHTML = `
-      <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">1. Market Penetration (${a.market_penetration.posture})</div>
-      <ul>${a.market_penetration.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
-      <div style="font-weight:700; color:var(--text-main); margin:8px 0 4px;">2. Product Development (${a.product_development.posture})</div>
-      <ul>${a.product_development.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
-      <div style="font-weight:700; color:var(--text-main); margin:8px 0 4px;">3. Market Development & Global (${a.market_development.posture})</div>
-      <ul>${a.market_development.initiatives.map(it => `<li>${esc(it)}</li>`).join('')}</ul>
-    `;
-  }
-
-  // Frameworks: McKinsey 3 Horizons
-  if ($('inspMcKinseyContent') && fw.mckinsey) {
-    const m = fw.mckinsey;
-    $('inspMcKinseyContent').innerHTML = `
-      <div style="font-weight:700; color:var(--text-main);">${m.horizon_1.title} (${m.horizon_1.revenue_share})</div>
-      <p style="font-size:11px; margin:2px 0 6px;">${esc(m.horizon_1.focus)}</p>
-      <div style="font-weight:700; color:var(--text-main);">${m.horizon_2.title} (${m.horizon_2.revenue_share})</div>
-      <p style="font-size:11px; margin:2px 0 6px;">${esc(m.horizon_2.focus)}</p>
-      <div style="font-weight:700; color:var(--text-main);">${m.horizon_3.title} (${m.horizon_3.revenue_share})</div>
-      <p style="font-size:11px; margin:2px 0 0;">${esc(m.horizon_3.focus)}</p>
-    `;
-  }
-
-  // Frameworks: BCG Matrix
-  if ($('inspBcgContent') && fw.bcg) {
-    const b = fw.bcg;
-    $('inspBcgContent').innerHTML = `
-      <div style="font-weight:700; color:#10b981;">${b.stars.label}</div>
-      <p style="font-size:11px; margin:2px 0 6px;">Products: <strong>${b.stars.items.join(', ')}</strong></p>
-      <div style="font-weight:700; color:#fb7185;">${b.cash_cows.label}</div>
-      <p style="font-size:11px; margin:2px 0 6px;">Core: <strong>${b.cash_cows.items.join(', ')}</strong></p>
-      <div style="font-weight:700; color:#f59e0b;">${b.question_marks.label}</div>
-      <p style="font-size:11px; margin:2px 0 0;">Emerging: <strong>${b.question_marks.items.join(', ')}</strong></p>
-    `;
-  }
-
-  // Frameworks: Porter's Moats
-  if ($('inspPortersContent') && fw.porters) {
-    $('inspPortersContent').innerHTML = fw.porters.map(p => `
-      <div style="margin-bottom:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <strong style="color:var(--text-main); font-size:12px;">${esc(p.moat)}</strong>
-          <span style="font-size:11px; font-weight:800; background:rgba(190,18,60,0.18); color:#fda4af; border:1px solid rgba(225,29,72,0.3); padding:1px 6px; border-radius:4px;">${p.score}/10 Moat</span>
-        </div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${esc(p.rationale)}</div>
-      </div>
-    `).join('');
-  }
-
-  // 3. Financial Strategy Vitals
-  if ($('inspVitalsGrid')) {
-    const vitals = [
-      { label: 'Annual Revenue', val: fin.revenue },
-      { label: 'YoY Growth', val: fin.revenue_growth },
-      { label: 'S&M Ratio', val: fin.sales_marketing_ratio },
-      { label: 'R&D Ratio', val: fin.rd_ratio },
-      { label: 'Gross Margin', val: fin.gross_margin },
-      { label: 'Operating Margin', val: fin.operating_margin },
-      { label: 'Free Cash Flow', val: fin.fcf },
-      { label: 'FCF Margin', val: fin.fcf_margin },
-      { label: 'Cash & Short-Term Inv', val: fin.cash },
-      { label: 'Total Debt', val: fin.debt },
-      { label: 'Rule of 40', val: fin.rule_of_40 != null ? fin.rule_of_40 : 'N/A' },
-      { label: 'Runway Months', val: fin.runway_months != null ? `${fin.runway_months} mos` : 'Profitable' }
-    ];
-
-    $('inspVitalsGrid').innerHTML = vitals.map(v => `
-      <div class="insp-vital-box">
-        <span class="insp-vital-label">${esc(v.label)}</span>
-        <span class="insp-vital-value">${esc(v.val)}</span>
-      </div>
-    `).join('');
-  }
-
-  if ($('inspSecUrl') && fin.source_urls && fin.source_urls[0]) {
-    $('inspSecUrl').href = fin.source_urls[0];
-    $('inspSecUrl').textContent = `View Official SEC 10-K (${data.year}) Disclosures ↗`;
-  }
-
-  // 4. Peer Contrast Card
-  renderFlowComparison(currentCompanyFlowData?.comparison);
 }
 
 function renderCompanyFlow(data) {
@@ -1703,16 +1497,23 @@ function renderCompanyFlow(data) {
     const lastStage = data.stages[data.stages.length - 1];
     $('flowchartSubtitle').textContent = `Tracking strategic scaling from ${firstStage.revenue_formatted} (${firstStage.year}) to ${lastStage.revenue_formatted} ARR (${lastStage.year}) based on SEC 10-K filings.`;
   }
+  if ($('stageCountBadge')) {
+    $('stageCountBadge').textContent = `${data.stages_count} Strategic Phases`;
+  }
 
+  // Raw Mermaid code
   if ($('companyFlowRawCode')) {
     $('companyFlowRawCode').textContent = data.mermaid_code || '';
   }
 
-  // Render Mermaid Diagram with interactive click binding
+  // Render Mermaid Flowchart diagram
   renderMermaidDiagram(data);
 
   // Render Comparison Card
   renderFlowComparison(data.comparison);
+
+  // Render Stages Grid
+  renderFlowStagesGrid(data.stages);
 }
 
 async function renderMermaidDiagram(data) {
@@ -1721,108 +1522,30 @@ async function renderMermaidDiagram(data) {
 
   // Render high-res SVG flow immediately so user never sees a blank container
   container.innerHTML = renderNativeSvgFlowchart(data.stages);
-  bindSvgNodeClicks();
 
   // If Mermaid is loaded, upgrade to Mermaid diagram
   if (typeof mermaid !== 'undefined' && mermaid.render) {
     try {
-      const isDark = document.documentElement.classList.contains('dark');
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: 'loose',
-        theme: 'base',
-        themeVariables: isDark ? {
-          darkMode: true,
-          background: '#14090c',
-          primaryColor: '#160a0d',
-          primaryTextColor: '#faf4f5',
-          primaryBorderColor: '#be123c',
-          lineColor: '#e11d48',
-          secondaryColor: '#260d13',
-          tertiaryColor: '#1c0e11',
-          edgeLabelBackground: '#14090c',
-          textColor: '#faf4f5',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        } : {
-          background: '#fff5f6',
-          primaryColor: '#ffffff',
-          primaryTextColor: '#4c0519',
-          primaryBorderColor: '#be123c',
-          lineColor: '#be123c',
-          edgeLabelBackground: '#fff1f2',
-          textColor: '#4c0519',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }
-      });
       const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
+      const isDark = document.documentElement.classList.contains('dark');
       let code = data.mermaid_code;
       if (isDark) {
-        code = code.replace(/fill:#ffffff/g, 'fill:#160a0d')
-                   .replace(/stroke:#0284c7/g, 'stroke:#be123c')
-                   .replace(/color:#0f172a/g, 'color:#faf4f5')
-                   .replace(/fill:#ecfdf5/g, 'fill:#0d1a15')
-                   .replace(/color:#065f46/g, 'color:#a7f3d0')
-                   .replace(/fill:#fffbeb/g, 'fill:#1f130b')
-                   .replace(/color:#92400e/g, 'color:#fde68a');
-      } else {
-        code = code.replace(/fill:#160a0d/g, 'fill:#ffffff')
-                   .replace(/color:#faf4f5/g, 'color:#4c0519')
-                   .replace(/fill:#0e1915/g, 'fill:#ecfdf5')
-                   .replace(/color:#ecfdf5/g, 'color:#065f46')
-                   .replace(/fill:#1f130b/g, 'fill:#fffbeb')
-                   .replace(/color:#fef3c7/g, 'color:#92400e');
+        code = code.replace(/fill:#ffffff/g, 'fill:#18181b')
+                   .replace(/color:#0f172a/g, 'color:#f8fafc');
       }
       const { svg } = await mermaid.render(renderId, code);
-      if (svg && svg.includes('<svg')) {
-        container.innerHTML = svg;
-        bindMermaidNodeClicks();
-      }
+      container.innerHTML = svg;
     } catch (err) {
       console.warn('Mermaid rendering issue, keeping native SVG:', err);
-      container.innerHTML = renderNativeSvgFlowchart(data.stages);
-      bindSvgNodeClicks();
     }
   }
-}
-
-function bindMermaidNodeClicks() {
-  const container = $('companyFlowMermaid');
-  if (!container) return;
-
-  // Direct click bindings on all Mermaid flowchart nodes
-  container.querySelectorAll('g.node').forEach((nodeEl, idx) => {
-    nodeEl.style.cursor = 'pointer';
-    nodeEl.onclick = () => {
-      loadPhaseDeepdive(idx + 1);
-    };
-  });
-
-  // Direct click bindings on edge labels
-  container.querySelectorAll('.edgeLabel').forEach((edgeEl, idx) => {
-    edgeEl.style.cursor = 'pointer';
-    edgeEl.onclick = () => {
-      loadPhaseDeepdive(idx + 2);
-    };
-  });
-}
-
-function bindSvgNodeClicks() {
-  const container = $('companyFlowMermaid');
-  if (!container) return;
-
-  container.querySelectorAll('.flow-svg-node').forEach((nodeEl, idx) => {
-    nodeEl.style.cursor = 'pointer';
-    nodeEl.onclick = () => {
-      loadPhaseDeepdive(idx + 1);
-    };
-  });
 }
 
 function renderFlowComparison(comp) {
   const card = $('companyFlowComparisonCard');
   if (!card) return;
   if (!comp) {
-    card.innerHTML = `<div style="color:var(--text-muted); font-size:13px; padding:16px;">Set your startup revenue profile in the drawer to see strategic gap analysis against this peer.</div>`;
+    card.innerHTML = `<div style="color:var(--text-muted); font-size:13px;">Set your startup revenue profile on the left to see strategic gap analysis against this peer.</div>`;
     return;
   }
 
@@ -1841,12 +1564,12 @@ function renderFlowComparison(comp) {
   }
 
   card.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
       <div>
         <div class="contrast-badge-strip">
           <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">STRATEGIC CONTRAST</span>
-          <span class="kpi-tag" style="background:rgba(16,185,129,0.15); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);">Matched Scale: ${esc(comp.benchmark_revenue)} ARR</span>
-          <span class="kpi-tag" style="background:rgba(190,18,60,0.2); color:#fda4af; border:1px solid rgba(225,29,72,0.35);">Peer Period: ${esc(comp.benchmark_stage)}</span>
+          <span class="kpi-tag" style="background:#ecfdf5; color:#059669;">Matched Scale: ${esc(comp.benchmark_revenue)} ARR</span>
+          <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Peer Period: ${esc(comp.benchmark_stage)}</span>
         </div>
         <h3 style="font-size:16px; font-weight:700; margin:6px 0 0;">
           Your Strategy vs. ${esc(comp.benchmark_company)} at Equivalent Revenue Scale
@@ -1911,29 +1634,73 @@ function renderFlowComparison(comp) {
   }
 }
 
-function copyStageLevers(payload) {
-  if (!payload) return;
-  if ($('salesTarget') && payload.sales_marketing_ratio != null) {
-    $('salesTarget').value = payload.sales_marketing_ratio;
-    if ($('salesOn')) $('salesOn').checked = true;
-  }
-  if ($('rdTarget') && payload.rd_ratio != null) {
-    $('rdTarget').value = payload.rd_ratio;
-    if ($('rdOn')) $('rdOn').checked = true;
-  }
-  if ($('objective') && payload.objective) {
-    $('objective').value = payload.objective;
+function renderFlowStagesGrid(stages) {
+  const container = $('companyFlowStagesGrid');
+  if (!container) return;
+  if (!stages || !stages.length) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No lifecycle stages available.</p>';
+    return;
   }
 
-  updateLocalKPIs();
-  run(false);
+  container.innerHTML = stages.map(s => {
+    const smDelta = s.deltas?.sm_pp != null ? (s.deltas.sm_pp >= 0 ? `+${s.deltas.sm_pp}pp` : `${s.deltas.sm_pp}pp`) : null;
+    const r40Cls = s.rule_of_40 >= 40 ? 'color:#10b981;' : (s.rule_of_40 >= 20 ? 'color:#0284c7;' : 'color:var(--text-main);');
 
-  if (typeof toast !== 'undefined') {
-    toast.success(
-      'Strategy Levers Adopted!',
-      `Injected ${payload.strategy_name || 'phase'}: Target S&M set to ${payload.sales_marketing_ratio}%, R&D set to ${payload.rd_ratio}%.`
-    );
-  }
+    return `
+      <div class="flow-stage-card">
+        <div>
+          <div class="stage-card-header">
+            <span class="stage-year-pill">${esc(s.year)}</span>
+            <span class="kpi-tag" style="background:#f1f5f9; color:#475569;">Stage ${s.index}</span>
+          </div>
+          <div class="stage-phase-title">${esc(s.phase_title)}</div>
+          <p class="stage-phase-desc">${esc(s.phase_desc)}</p>
+        </div>
+
+        <div class="stage-stats-table">
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Revenue:</span>
+            <span class="stage-stat-val">${esc(s.revenue_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Growth:</span>
+            <span class="stage-stat-val" style="color:#10b981;">${esc(s.growth_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">S&M Ratio:</span>
+            <span class="stage-stat-val">${esc(s.sales_marketing_formatted)} ${smDelta ? `<small style="font-weight:normal; color:var(--text-muted);">(${smDelta})</small>` : ''}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">R&D Ratio:</span>
+            <span class="stage-stat-val">${esc(s.rd_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Op Margin:</span>
+            <span class="stage-stat-val">${esc(s.operating_margin_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Rule of 40:</span>
+            <span class="stage-stat-val" style="${r40Cls}">${s.rule_of_40 != null ? s.rule_of_40 : 'N/A'}</span>
+          </div>
+        </div>
+
+        <button type="button" class="stage-copy-btn" data-copy-stage="${s.index}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          📋 Copy Levers to My Strategy
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('[data-copy-stage]').forEach(btn => {
+    btn.onclick = () => {
+      const stageIdx = parseInt(btn.dataset.copyStage, 10);
+      const stage = stages.find(s => s.index === stageIdx);
+      if (stage && stage.copy_payload) {
+        copyStageLevers(stage.copy_payload);
+      }
+    };
+  });
 }
 
 function renderNativeSvgFlowchart(stages) {
@@ -1945,11 +1712,11 @@ function renderNativeSvgFlowchart(stages) {
   const totalH = 145;
   const isDark = document.documentElement.classList.contains('dark');
 
-  const bgNormal = isDark ? '#160a0d' : '#ffffff';
-  const textTitle = isDark ? '#faf4f5' : '#4c0519';
-  const textSub = isDark ? '#c4a7ac' : '#881337';
-  const borderNormal = isDark ? '#be123c' : '#be123c';
-  const arrowCol = isDark ? '#e11d48' : '#be123c';
+  const bgNormal = isDark ? '#18181b' : '#ffffff';
+  const textTitle = isDark ? '#f8fafc' : '#0f172a';
+  const textSub = isDark ? '#a1a1aa' : '#64748b';
+  const borderNormal = isDark ? '#38bdf8' : '#0284c7';
+  const arrowCol = isDark ? '#38bdf8' : '#0284c7';
 
   let defs = `
     <defs>
@@ -1969,7 +1736,7 @@ function renderNativeSvgFlowchart(stages) {
     const r40Color = isElite ? '#10b981' : textSub;
 
     nodesHtml += `
-      <g class="flow-svg-node" data-stage="${i+1}" transform="translate(${x}, ${y})" onclick="selectFlowPhase('S${i+1}')">
+      <g class="flow-svg-node" transform="translate(${x}, ${y})">
         <rect width="${nodeW}" height="${nodeH}" rx="8" fill="${nodeBg}" stroke="${nodeStroke}" stroke-width="2"/>
         <text x="12" y="22" font-size="11" font-weight="700" fill="${textTitle}">${esc(s.year)} · ${esc(s.phase_title.length > 16 ? s.phase_title.slice(0, 15) + '…' : s.phase_title)}</text>
         <text x="12" y="42" font-size="12" font-weight="800" fill="${borderNormal}">ARR: ${esc(s.revenue_formatted)} (${esc(s.growth_formatted)})</text>
@@ -1986,8 +1753,8 @@ function renderNativeSvgFlowchart(stages) {
       const deltaLabel = smDelta != null ? `${smDelta >= 0 ? '+' : ''}${smDelta}pp S&M` : '';
 
       nodesHtml += `
-        <line x1="${prevX}" y1="${arrowY}" x2="${curX - 4}" y2="${arrowY}" stroke="${arrowCol}" stroke-width="2" marker-end="url(#flowArrow)" onclick="selectFlowPhase('S${i+1}')" style="cursor:pointer;"/>
-        ${deltaLabel ? `<text x="${(prevX + curX) / 2}" y="${arrowY - 6}" font-size="10" font-weight="700" fill="${arrowCol}" text-anchor="middle" onclick="selectFlowPhase('S${i+1}')" style="cursor:pointer;">${deltaLabel}</text>` : ''}
+        <line x1="${prevX}" y1="${arrowY}" x2="${curX - 4}" y2="${arrowY}" stroke="${arrowCol}" stroke-width="2" marker-end="url(#flowArrow)"/>
+        ${deltaLabel ? `<text x="${(prevX + curX) / 2}" y="${arrowY - 6}" font-size="10" font-weight="700" fill="${arrowCol}" text-anchor="middle">${deltaLabel}</text>` : ''}
       `;
     }
   });
@@ -2007,8 +1774,8 @@ try {
 
 initTheme();
 initSidebar();
+initCommandPalette();
 initEvidenceSheet();
 initCompanyFlow();
 updateLocalKPIs();
 run(false);
-

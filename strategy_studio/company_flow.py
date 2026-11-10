@@ -161,12 +161,12 @@ def get_company_flow(identifier, startup_profile=None, path=DB):
             stages.append(stage_data)
             prev_fields = fields
         
-        # Build Mermaid.js Flowchart syntax (Athena Darkish-Red Theme)
+        # Build Mermaid.js Flowchart syntax
         mermaid_lines = [
             "graph LR",
-            "  classDef normal fill:#160a0d,stroke:#be123c,stroke-width:2px,color:#faf4f5;",
-            "  classDef elite fill:#0e1915,stroke:#10b981,stroke-width:2px,color:#ecfdf5;",
-            "  classDef heavy fill:#1f130b,stroke:#d97706,stroke-width:2px,color:#fef3c7;"
+            "  classDef normal fill:#ffffff,stroke:#0284c7,stroke-width:2px,rx:8px,ry:8px,color:#0f172a;",
+            "  classDef elite fill:#ecfdf5,stroke:#10b981,stroke-width:2px,rx:8px,ry:8px,color:#065f46;",
+            "  classDef heavy fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,rx:8px,ry:8px,color:#92400e;"
         ]
         
         for i, s in enumerate(stages):
@@ -176,7 +176,6 @@ def get_company_flow(identifier, startup_profile=None, path=DB):
             # Node label text
             node_label = f"\"<b>{s['year']} · {s['phase_title']}</b><br/>ARR: {s['revenue_formatted']}<br/>S&M: {s['sales_marketing_formatted']} | R&D: {s['rd_formatted']}<br/>Growth: {s['growth_formatted']}{' | R40: ' + str(s['rule_of_40']) if s['rule_of_40'] else ''}\""
             mermaid_lines.append(f"  {node_id}[{node_label}]:::{cls}")
-            mermaid_lines.append(f"  click {node_id} selectFlowPhase \"Inspect {s['year']} Strategic Why & Frameworks\"")
             
             if i > 0:
                 prev_id = f"S{i}"
