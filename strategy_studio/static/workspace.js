@@ -923,17 +923,20 @@ function initTheme() {
       if (sunIcon) sunIcon.style.display = 'none';
       if (moonIcon) moonIcon.style.display = 'block';
     }
-    localStorage.setItem('shadcn_theme', theme);
+    localStorage.setItem('athena_theme', theme);
+    if (typeof currentCompanyFlowData !== 'undefined' && currentCompanyFlowData) {
+      renderMermaidDiagram(currentCompanyFlowData);
+    }
   }
 
-  const savedTheme = localStorage.getItem('shadcn_theme') || 'light';
+  const savedTheme = localStorage.getItem('athena_theme') || 'dark';
   setTheme(savedTheme);
 
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setTheme(isDark ? 'light' : 'dark');
-      toast.info('Theme Updated', `Switched to ${isDark ? 'light' : 'dark'} mode.`);
+      toast.info('Theme Updated', `Switched to ${isDark ? 'Ivory Crimson' : 'Athena Darkish Red'} mode.`);
     };
   }
 }
@@ -1632,7 +1635,7 @@ function renderPhaseDeepdive(data) {
     $('inspBcgContent').innerHTML = `
       <div style="font-weight:700; color:#10b981;">${b.stars.label}</div>
       <p style="font-size:11px; margin:2px 0 6px;">Products: <strong>${b.stars.items.join(', ')}</strong></p>
-      <div style="font-weight:700; color:#0284c7;">${b.cash_cows.label}</div>
+      <div style="font-weight:700; color:#fb7185;">${b.cash_cows.label}</div>
       <p style="font-size:11px; margin:2px 0 6px;">Core: <strong>${b.cash_cows.items.join(', ')}</strong></p>
       <div style="font-weight:700; color:#f59e0b;">${b.question_marks.label}</div>
       <p style="font-size:11px; margin:2px 0 0;">Emerging: <strong>${b.question_marks.items.join(', ')}</strong></p>
@@ -1645,7 +1648,7 @@ function renderPhaseDeepdive(data) {
       <div style="margin-bottom:8px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong style="color:var(--text-main); font-size:12px;">${esc(p.moat)}</strong>
-          <span style="font-size:11px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:4px;">${p.score}/10 Moat</span>
+          <span style="font-size:11px; font-weight:800; background:rgba(190,18,60,0.18); color:#fda4af; border:1px solid rgba(225,29,72,0.3); padding:1px 6px; border-radius:4px;">${p.score}/10 Moat</span>
         </div>
         <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${esc(p.rationale)}</div>
       </div>
@@ -1723,18 +1726,51 @@ async function renderMermaidDiagram(data) {
   // If Mermaid is loaded, upgrade to Mermaid diagram
   if (typeof mermaid !== 'undefined' && mermaid.render) {
     try {
+      const isDark = document.documentElement.classList.contains('dark');
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'loose',
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        theme: 'base',
+        themeVariables: isDark ? {
+          darkMode: true,
+          background: '#14090c',
+          primaryColor: '#160a0d',
+          primaryTextColor: '#faf4f5',
+          primaryBorderColor: '#be123c',
+          lineColor: '#e11d48',
+          secondaryColor: '#260d13',
+          tertiaryColor: '#1c0e11',
+          edgeLabelBackground: '#14090c',
+          textColor: '#faf4f5',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        } : {
+          background: '#fff5f6',
+          primaryColor: '#ffffff',
+          primaryTextColor: '#4c0519',
+          primaryBorderColor: '#be123c',
+          lineColor: '#be123c',
+          edgeLabelBackground: '#fff1f2',
+          textColor: '#4c0519',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }
       });
       const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
-      const isDark = document.documentElement.classList.contains('dark');
       let code = data.mermaid_code;
       if (isDark) {
-        code = code.replace(/fill:#ffffff/g, 'fill:#18181b')
-                   .replace(/color:#0f172a/g, 'color:#f8fafc');
+        code = code.replace(/fill:#ffffff/g, 'fill:#160a0d')
+                   .replace(/stroke:#0284c7/g, 'stroke:#be123c')
+                   .replace(/color:#0f172a/g, 'color:#faf4f5')
+                   .replace(/fill:#ecfdf5/g, 'fill:#0d1a15')
+                   .replace(/color:#065f46/g, 'color:#a7f3d0')
+                   .replace(/fill:#fffbeb/g, 'fill:#1f130b')
+                   .replace(/color:#92400e/g, 'color:#fde68a');
+      } else {
+        code = code.replace(/fill:#160a0d/g, 'fill:#ffffff')
+                   .replace(/color:#faf4f5/g, 'color:#4c0519')
+                   .replace(/fill:#0e1915/g, 'fill:#ecfdf5')
+                   .replace(/color:#ecfdf5/g, 'color:#065f46')
+                   .replace(/fill:#1f130b/g, 'fill:#fffbeb')
+                   .replace(/color:#fef3c7/g, 'color:#92400e');
       }
       const { svg } = await mermaid.render(renderId, code);
       if (svg && svg.includes('<svg')) {
@@ -1809,8 +1845,8 @@ function renderFlowComparison(comp) {
       <div>
         <div class="contrast-badge-strip">
           <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">STRATEGIC CONTRAST</span>
-          <span class="kpi-tag" style="background:#ecfdf5; color:#059669;">Matched Scale: ${esc(comp.benchmark_revenue)} ARR</span>
-          <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Peer Period: ${esc(comp.benchmark_stage)}</span>
+          <span class="kpi-tag" style="background:rgba(16,185,129,0.15); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);">Matched Scale: ${esc(comp.benchmark_revenue)} ARR</span>
+          <span class="kpi-tag" style="background:rgba(190,18,60,0.2); color:#fda4af; border:1px solid rgba(225,29,72,0.35);">Peer Period: ${esc(comp.benchmark_stage)}</span>
         </div>
         <h3 style="font-size:16px; font-weight:700; margin:6px 0 0;">
           Your Strategy vs. ${esc(comp.benchmark_company)} at Equivalent Revenue Scale
@@ -1909,11 +1945,11 @@ function renderNativeSvgFlowchart(stages) {
   const totalH = 145;
   const isDark = document.documentElement.classList.contains('dark');
 
-  const bgNormal = isDark ? '#18181b' : '#ffffff';
-  const textTitle = isDark ? '#f8fafc' : '#0f172a';
-  const textSub = isDark ? '#a1a1aa' : '#64748b';
-  const borderNormal = isDark ? '#38bdf8' : '#0284c7';
-  const arrowCol = isDark ? '#38bdf8' : '#0284c7';
+  const bgNormal = isDark ? '#160a0d' : '#ffffff';
+  const textTitle = isDark ? '#faf4f5' : '#4c0519';
+  const textSub = isDark ? '#c4a7ac' : '#881337';
+  const borderNormal = isDark ? '#be123c' : '#be123c';
+  const arrowCol = isDark ? '#e11d48' : '#be123c';
 
   let defs = `
     <defs>

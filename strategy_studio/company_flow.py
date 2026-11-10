@@ -161,12 +161,12 @@ def get_company_flow(identifier, startup_profile=None, path=DB):
             stages.append(stage_data)
             prev_fields = fields
         
-        # Build Mermaid.js Flowchart syntax
+        # Build Mermaid.js Flowchart syntax (Athena Darkish-Red Theme)
         mermaid_lines = [
             "graph LR",
-            "  classDef normal fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0f172a;",
-            "  classDef elite fill:#ecfdf5,stroke:#10b981,stroke-width:2px,color:#065f46;",
-            "  classDef heavy fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,color:#92400e;"
+            "  classDef normal fill:#160a0d,stroke:#be123c,stroke-width:2px,color:#faf4f5;",
+            "  classDef elite fill:#0e1915,stroke:#10b981,stroke-width:2px,color:#ecfdf5;",
+            "  classDef heavy fill:#1f130b,stroke:#d97706,stroke-width:2px,color:#fef3c7;"
         ]
         
         for i, s in enumerate(stages):
