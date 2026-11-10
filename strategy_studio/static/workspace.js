@@ -1014,7 +1014,8 @@ const TAB_TITLES = {
   'tab-hierarchy': 'Strategy Hierarchy Tree',
   'tab-spider': 'Exploded Spider Diagram (Radar)',
   'tab-benchmarks': 'Founder Benchmarks Library',
-  'tab-evidence': 'Deep Empirical Regressions'
+  'tab-evidence': 'Deep Empirical Regressions',
+  'tab-company-flow': 'AI Strategy Flowcharts'
 };
 
 function switchTab(tabId) {
@@ -1037,6 +1038,12 @@ function switchTab(tabId) {
     if (currentResult) renderBenchmarks(currentResult.benchmarks);
   }
   if (tabId === 'tab-evidence') $('view-evidence').style.display = 'block';
+  if (tabId === 'tab-company-flow') {
+    $('view-company-flow').style.display = 'block';
+    if (!currentCompanyFlowData) {
+      loadCompanyFlow($('companyFlowSelect')?.value || 'DDOG');
+    }
+  }
 
   if ($('breadcrumbCurrentView')) {
     $('breadcrumbCurrentView').textContent = TAB_TITLES[tabId] || 'Strategy Studio';
@@ -1227,6 +1234,7 @@ const COMMAND_ITEMS = [
   { group: 'Navigation Views', title: 'Exploded Spider Diagram (Radar)', action: () => switchTab('tab-spider'), badge: 'View 2' },
   { group: 'Navigation Views', title: 'Founder Benchmarks Library', action: () => switchTab('tab-benchmarks'), badge: 'View 3' },
   { group: 'Navigation Views', title: 'Deep Empirical Regressions', action: () => switchTab('tab-evidence'), badge: 'View 4' },
+  { group: 'Navigation Views', title: 'AI Company Strategy Flowcharts', action: () => switchTab('tab-company-flow'), badge: 'View 5' },
   { group: 'Startup Archetypes', title: 'Series A Growth ($10M ARR)', action: () => applyPreset('seriesA'), badge: 'Preset' },
   { group: 'Startup Archetypes', title: 'Series B Scale ($25M ARR)', action: () => applyPreset('seriesB'), badge: 'Preset' },
   { group: 'Startup Archetypes', title: 'Capital-Efficient ($15M ARR)', action: () => applyPreset('efficient'), badge: 'Preset' },
@@ -1352,6 +1360,408 @@ function initCommandPalette() {
   });
 }
 
+// ==========================================================================
+// AI Company Strategy Flowcharts & Trajectory Comparison Engine
+// ==========================================================================
+let currentCompanyFlowData = null;
+
+async function initCompanyFlow() {
+  const select = $('companyFlowSelect');
+  const refreshBtn = $('refreshCompanyFlowBtn');
+  const toggleBtn = $('toggleMermaidCodeBtn');
+
+  // Load companies list from API
+  try {
+    const res = await fetch('/api/strategy/company-flow-list');
+    if (res.ok) {
+      const data = await res.json();
+      if (select && data.items && data.items.length) {
+        select.innerHTML = data.items.map(item => `
+          <option value="${esc(item.ticker || item.company_id)}" ${item.ticker === 'DDOG' ? 'selected' : ''}>
+            ${esc(item.name)} (${esc(item.ticker || item.company_id)}) · ${item.period_count} periods (${item.years})
+          </option>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load company flow list:', err);
+  }
+
+  // Handle select change
+  if (select) {
+    select.onchange = () => {
+      const val = select.value;
+      updateQuickChipHighlight(val);
+      loadCompanyFlow(val);
+    };
+  }
+
+  // Handle quick chip clicks
+  document.querySelectorAll('[data-flow-ticker]').forEach(chip => {
+    chip.onclick = () => {
+      const ticker = chip.dataset.flowTicker;
+      if (select) select.value = ticker;
+      updateQuickChipHighlight(ticker);
+      loadCompanyFlow(ticker);
+    };
+  });
+
+  // Handle refresh
+  if (refreshBtn) {
+    refreshBtn.onclick = () => {
+      const val = select ? select.value : 'DDOG';
+      loadCompanyFlow(val);
+    };
+  }
+
+  // Handle toggle code
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      const raw = $('companyFlowRawCode');
+      if (raw) {
+        const isShown = raw.style.display === 'block';
+        raw.style.display = isShown ? 'none' : 'block';
+        toggleBtn.textContent = isShown ? 'Toggle Syntax' : 'Hide Syntax';
+      }
+    };
+  }
+}
+
+function updateQuickChipHighlight(ticker) {
+  document.querySelectorAll('[data-flow-ticker]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.flowTicker === ticker);
+  });
+}
+
+async function loadCompanyFlow(identifier) {
+  if (!identifier) return;
+  const diagramBox = $('companyFlowDiagramBox');
+  if (diagramBox) diagramBox.style.opacity = '0.5';
+
+  try {
+    const profile = getRequest().profile;
+    const res = await fetch(`/api/strategy/company-flow/${encodeURIComponent(identifier)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ startup_profile: profile })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentCompanyFlowData = data;
+    renderCompanyFlow(data);
+  } catch (err) {
+    console.error('Failed to load company strategy flow:', err);
+    if (typeof toast !== 'undefined') toast.error('Flowchart Error', `Could not load flow for ${identifier}`);
+  } finally {
+    if (diagramBox) diagramBox.style.opacity = '1';
+  }
+}
+
+function copyStageLevers(payload) {
+  if (!payload) return;
+  if (payload.sales_marketing_ratio != null) {
+    $('salesTarget').value = payload.sales_marketing_ratio;
+    $('salesOn').checked = true;
+  }
+  if (payload.rd_ratio != null) {
+    $('rdTarget').value = payload.rd_ratio;
+    $('rdOn').checked = true;
+  }
+  if (payload.objective) {
+    $('objective').value = payload.objective;
+  }
+
+  updateLocalKPIs();
+  run(false);
+
+  if (typeof toast !== 'undefined') {
+    toast.success(
+      'Strategy Levers Copied!',
+      `Adopted ${payload.strategy_name || 'phase'}: Target S&M set to ${payload.sales_marketing_ratio}%, R&D set to ${payload.rd_ratio}%.`
+    );
+  }
+}
+
+function renderCompanyFlow(data) {
+  if (!data || !data.stages) return;
+  const comp = data.company || {};
+  if ($('flowchartCompanyTitle')) {
+    $('flowchartCompanyTitle').textContent = `${comp.name} (${comp.ticker}) Multi-Year Strategy Flow`;
+  }
+  if ($('flowchartPeriodCountPill')) {
+    $('flowchartPeriodCountPill').textContent = `${data.stages_count} Annual Periods`;
+  }
+  if ($('flowchartSubtitle')) {
+    const firstStage = data.stages[0];
+    const lastStage = data.stages[data.stages.length - 1];
+    $('flowchartSubtitle').textContent = `Tracking strategic scaling from ${firstStage.revenue_formatted} (${firstStage.year}) to ${lastStage.revenue_formatted} ARR (${lastStage.year}) based on SEC 10-K filings.`;
+  }
+  if ($('stageCountBadge')) {
+    $('stageCountBadge').textContent = `${data.stages_count} Strategic Phases`;
+  }
+
+  // Raw Mermaid code
+  if ($('companyFlowRawCode')) {
+    $('companyFlowRawCode').textContent = data.mermaid_code || '';
+  }
+
+  // Render Mermaid Flowchart diagram
+  renderMermaidDiagram(data);
+
+  // Render Comparison Card
+  renderFlowComparison(data.comparison);
+
+  // Render Stages Grid
+  renderFlowStagesGrid(data.stages);
+}
+
+async function renderMermaidDiagram(data) {
+  const container = $('companyFlowMermaid');
+  if (!container) return;
+
+  if (typeof mermaid !== 'undefined' && mermaid.render) {
+    try {
+      const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
+      const isDark = document.documentElement.classList.contains('dark');
+      let code = data.mermaid_code;
+      if (isDark) {
+        code = code.replace(/fill:#ffffff/g, 'fill:#18181b')
+                   .replace(/color:#0f172a/g, 'color:#f8fafc');
+      }
+      const { svg } = await mermaid.render(renderId, code);
+      container.innerHTML = svg;
+      return;
+    } catch (err) {
+      console.warn('Mermaid rendering issue, falling back to native SVG:', err);
+    }
+  }
+
+  // Native SVG Fallback
+  container.innerHTML = renderNativeSvgFlowchart(data.stages);
+}
+
+function renderFlowComparison(comp) {
+  const card = $('companyFlowComparisonCard');
+  if (!card) return;
+  if (!comp) {
+    card.innerHTML = `<div style="color:var(--text-muted); font-size:13px;">Set your startup revenue profile on the left to see strategic gap analysis against this peer.</div>`;
+    return;
+  }
+
+  const m = comp.metrics || {};
+  const sm = m.sales_marketing || {};
+  const rd = m.rd_ratio || {};
+  const gr = m.growth || {};
+  const mg = m.operating_margin || {};
+  const r40 = m.rule_of_40 || {};
+
+  function formatGapBadge(gap) {
+    if (gap == null) return '';
+    const sign = gap > 0 ? '+' : '';
+    const cls = gap > 0 ? 'gap-positive' : (gap < 0 ? 'gap-negative' : 'gap-neutral');
+    return `<span class="contrast-gap-badge ${cls}">${sign}${gap} pp</span>`;
+  }
+
+  card.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="contrast-badge-strip">
+          <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">STRATEGIC CONTRAST</span>
+          <span class="kpi-tag" style="background:#ecfdf5; color:#059669;">Matched Scale: ${esc(comp.benchmark_revenue)} ARR</span>
+          <span class="kpi-tag" style="background:#f5f3ff; color:#7c3aed;">Peer Period: ${esc(comp.benchmark_stage)}</span>
+        </div>
+        <h3 style="font-size:16px; font-weight:700; margin:6px 0 0;">
+          Your Strategy vs. ${esc(comp.benchmark_company)} at Equivalent Revenue Scale
+        </h3>
+      </div>
+      <button type="button" id="adoptPeerRatiosBtn" class="btn primary" style="font-size:12px;">
+        📋 Adopt ${esc(comp.benchmark_stage)} Strategy Levers
+      </button>
+    </div>
+
+    <div class="contrast-narrative">
+      <strong>Analyst Assessment:</strong> ${esc(comp.posture_summary)}
+    </div>
+
+    <div class="contrast-grid">
+      <div class="contrast-metric-box">
+        <span class="contrast-metric-title">Sales & Marketing Ratio</span>
+        <div class="contrast-metric-values">
+          <span class="contrast-user-val">${esc(sm.user)}</span>
+          <span class="contrast-peer-val">Peer: ${esc(sm.company)}</span>
+        </div>
+        <div>${formatGapBadge(sm.gap_pp)} vs peer</div>
+      </div>
+      <div class="contrast-metric-box">
+        <span class="contrast-metric-title">R&D / Product Ratio</span>
+        <div class="contrast-metric-values">
+          <span class="contrast-user-val">${esc(rd.user)}</span>
+          <span class="contrast-peer-val">Peer: ${esc(rd.company)}</span>
+        </div>
+        <div>${formatGapBadge(rd.gap_pp)} vs peer</div>
+      </div>
+      <div class="contrast-metric-box">
+        <span class="contrast-metric-title">Revenue Growth</span>
+        <div class="contrast-metric-values">
+          <span class="contrast-user-val">${esc(gr.user)}</span>
+          <span class="contrast-peer-val">Peer: ${esc(gr.company)}</span>
+        </div>
+        <div>${formatGapBadge(gr.gap_pp)} vs peer</div>
+      </div>
+      <div class="contrast-metric-box">
+        <span class="contrast-metric-title">Operating Margin</span>
+        <div class="contrast-metric-values">
+          <span class="contrast-user-val">${esc(mg.user)}</span>
+          <span class="contrast-peer-val">Peer: ${esc(mg.company)}</span>
+        </div>
+        <div>${formatGapBadge(mg.gap_pp)} vs peer</div>
+      </div>
+      <div class="contrast-metric-box">
+        <span class="contrast-metric-title">Rule of 40 Score</span>
+        <div class="contrast-metric-values">
+          <span class="contrast-user-val">${esc(r40.user)}</span>
+          <span class="contrast-peer-val">Peer: ${esc(r40.company)}</span>
+        </div>
+        <div>${formatGapBadge(r40.gap)} pts</div>
+      </div>
+    </div>
+  `;
+
+  const adoptBtn = $('adoptPeerRatiosBtn');
+  if (adoptBtn && comp.adopt_lever_payload) {
+    adoptBtn.onclick = () => copyStageLevers(comp.adopt_lever_payload);
+  }
+}
+
+function renderFlowStagesGrid(stages) {
+  const container = $('companyFlowStagesGrid');
+  if (!container) return;
+  if (!stages || !stages.length) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No lifecycle stages available.</p>';
+    return;
+  }
+
+  container.innerHTML = stages.map(s => {
+    const smDelta = s.deltas?.sm_pp != null ? (s.deltas.sm_pp >= 0 ? `+${s.deltas.sm_pp}pp` : `${s.deltas.sm_pp}pp`) : null;
+    const r40Cls = s.rule_of_40 >= 40 ? 'color:#10b981;' : (s.rule_of_40 >= 20 ? 'color:#0284c7;' : 'color:var(--text-main);');
+
+    return `
+      <div class="flow-stage-card">
+        <div>
+          <div class="stage-card-header">
+            <span class="stage-year-pill">${esc(s.year)}</span>
+            <span class="kpi-tag" style="background:#f1f5f9; color:#475569;">Stage ${s.index}</span>
+          </div>
+          <div class="stage-phase-title">${esc(s.phase_title)}</div>
+          <p class="stage-phase-desc">${esc(s.phase_desc)}</p>
+        </div>
+
+        <div class="stage-stats-table">
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Revenue:</span>
+            <span class="stage-stat-val">${esc(s.revenue_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Growth:</span>
+            <span class="stage-stat-val" style="color:#10b981;">${esc(s.growth_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">S&M Ratio:</span>
+            <span class="stage-stat-val">${esc(s.sales_marketing_formatted)} ${smDelta ? `<small style="font-weight:normal; color:var(--text-muted);">(${smDelta})</small>` : ''}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">R&D Ratio:</span>
+            <span class="stage-stat-val">${esc(s.rd_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Op Margin:</span>
+            <span class="stage-stat-val">${esc(s.operating_margin_formatted)}</span>
+          </div>
+          <div class="stage-stat-row">
+            <span class="stage-stat-lbl">Rule of 40:</span>
+            <span class="stage-stat-val" style="${r40Cls}">${s.rule_of_40 != null ? s.rule_of_40 : 'N/A'}</span>
+          </div>
+        </div>
+
+        <button type="button" class="stage-copy-btn" data-copy-stage="${s.index}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          📋 Copy Levers to My Strategy
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('[data-copy-stage]').forEach(btn => {
+    btn.onclick = () => {
+      const stageIdx = parseInt(btn.dataset.copyStage, 10);
+      const stage = stages.find(s => s.index === stageIdx);
+      if (stage && stage.copy_payload) {
+        copyStageLevers(stage.copy_payload);
+      }
+    };
+  });
+}
+
+function renderNativeSvgFlowchart(stages) {
+  if (!stages || !stages.length) return '';
+  const nodeW = 190;
+  const nodeH = 105;
+  const gap = 55;
+  const totalW = stages.length * (nodeW + gap) - gap + 40;
+  const totalH = 145;
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const bgNormal = isDark ? '#18181b' : '#ffffff';
+  const textTitle = isDark ? '#f8fafc' : '#0f172a';
+  const textSub = isDark ? '#a1a1aa' : '#64748b';
+  const borderNormal = isDark ? '#38bdf8' : '#0284c7';
+  const arrowCol = isDark ? '#38bdf8' : '#0284c7';
+
+  let defs = `
+    <defs>
+      <marker id="flowArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="${arrowCol}"/>
+      </marker>
+    </defs>
+  `;
+
+  let nodesHtml = '';
+  stages.forEach((s, i) => {
+    const x = 20 + i * (nodeW + gap);
+    const y = 20;
+    const isElite = s.rule_of_40 && s.rule_of_40 >= 40;
+    const nodeStroke = isElite ? '#10b981' : borderNormal;
+    const nodeBg = isElite ? (isDark ? 'rgba(16,185,129,0.15)' : '#ecfdf5') : bgNormal;
+    const r40Color = isElite ? '#10b981' : textSub;
+
+    nodesHtml += `
+      <g class="flow-svg-node" transform="translate(${x}, ${y})">
+        <rect width="${nodeW}" height="${nodeH}" rx="8" fill="${nodeBg}" stroke="${nodeStroke}" stroke-width="2"/>
+        <text x="12" y="22" font-size="11" font-weight="700" fill="${textTitle}">${esc(s.year)} · ${esc(s.phase_title.length > 16 ? s.phase_title.slice(0, 15) + '…' : s.phase_title)}</text>
+        <text x="12" y="42" font-size="12" font-weight="800" fill="${borderNormal}">ARR: ${esc(s.revenue_formatted)} (${esc(s.growth_formatted)})</text>
+        <text x="12" y="62" font-size="11" fill="${textSub}">S&M: ${esc(s.sales_marketing_formatted)} | R&D: ${esc(s.rd_formatted)}</text>
+        <text x="12" y="82" font-size="11" font-weight="600" fill="${r40Color}">Margin: ${esc(s.operating_margin_formatted)} | R40: ${s.rule_of_40 ?? 'N/A'}</text>
+      </g>
+    `;
+
+    if (i > 0) {
+      const prevX = 20 + (i - 1) * (nodeW + gap) + nodeW;
+      const curX = x;
+      const arrowY = y + nodeH / 2;
+      const smDelta = s.deltas?.sm_pp;
+      const deltaLabel = smDelta != null ? `${smDelta >= 0 ? '+' : ''}${smDelta}pp S&M` : '';
+
+      nodesHtml += `
+        <line x1="${prevX}" y1="${arrowY}" x2="${curX - 4}" y2="${arrowY}" stroke="${arrowCol}" stroke-width="2" marker-end="url(#flowArrow)"/>
+        ${deltaLabel ? `<text x="${(prevX + curX) / 2}" y="${arrowY - 6}" font-size="10" font-weight="700" fill="${arrowCol}" text-anchor="middle">${deltaLabel}</text>` : ''}
+      `;
+    }
+  });
+
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="min-width:${totalW}px;">${defs}${nodesHtml}</svg>`;
+}
+
 // Initial boot
 try {
   const data = JSON.parse(localStorage.getItem('saas-strategy-flow-v1') || 'null');
@@ -1366,5 +1776,6 @@ initTheme();
 initSidebar();
 initCommandPalette();
 initEvidenceSheet();
+initCompanyFlow();
 updateLocalKPIs();
 run(false);

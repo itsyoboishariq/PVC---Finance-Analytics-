@@ -263,6 +263,20 @@ def make_app(db_path=DB):
         except httpx.HTTPError as exc:raise HTTPException(502,'Connection to OpenAI failed. Please retry.') from exc
         except RuntimeError as exc:raise HTTPException(502,str(exc)) from exc
 
+    @app.get('/api/strategy/company-flow-list')
+    def company_flow_list():
+        import company_flow
+        return {'items': company_flow.list_flow_companies(db_path)}
+
+    @app.post('/api/strategy/company-flow/{identifier}')
+    def company_flow_detail(identifier: str, body: dict = None):
+        import company_flow
+        profile = (body or {}).get('startup_profile')
+        res = company_flow.get_company_flow(identifier, profile, db_path)
+        if 'error' in res:
+            raise HTTPException(404, res['error'])
+        return res
+
     @app.get('/advanced')
     def advanced():return FileResponse(ROOT/'static/index.html')
 

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Strategy Studio · Startup Decision OS</title>
   <link rel="stylesheet" href="/static/workspace.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="/static/analysis-job.js"></script>
 </head>
 <body>
@@ -102,6 +103,19 @@
                 </svg>
                 <span class="menu-label">Deep Regressions</span>
                 <span class="menu-badge badge-slate">SEC Data</span>
+              </button>
+            </li>
+            <li class="sidebar-menu-item">
+              <button type="button" class="sidebar-menu-btn" data-tab-target="tab-company-flow" data-tooltip="AI Company Strategy Flowcharts">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="6" height="5" rx="1"/>
+                  <rect x="15" y="3" width="6" height="5" rx="1"/>
+                  <rect x="9" y="16" width="6" height="5" rx="1"/>
+                  <path d="M6 8v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/>
+                  <path d="M12 13v3"/>
+                </svg>
+                <span class="menu-label">AI Strategy Flow</span>
+                <span class="menu-badge badge-amber">Flowchart</span>
               </button>
             </li>
           </ul>
@@ -403,6 +417,10 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               4 · Deep Empirical Regressions
             </button>
+            <button type="button" class="tab-btn" data-tab="tab-company-flow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="5" rx="1"/><rect x="15" y="3" width="6" height="5" rx="1"/><rect x="9" y="16" width="6" height="5" rx="1"/><path d="M6 8v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/><path d="M12 13v3"/></svg>
+              5 · AI Strategy Flowcharts
+            </button>
           </div>
 
           <!-- Main Workspace Grid -->
@@ -679,6 +697,106 @@
                   <div class="empty">
                     <h2>Turn a choice into a research question.</h2>
                     <p>Run the flow to see financial peers, correlations, adjusted estimates, and historical outcomes for similar starting profiles.</p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- VIEW 5: AI Company Strategy Flowcharts -->
+              <section id="view-company-flow" class="view-panel" style="display:none;">
+                <div class="flowchart-panel">
+                  <!-- Company Selector & Controls Hero -->
+                  <div class="flowchart-hero">
+                    <div class="flowchart-hero-header">
+                      <div>
+                        <h2 class="flowchart-hero-title">AI Strategy Flowcharts · SEC Peer Trajectories & Flow Mapping</h2>
+                        <p class="flowchart-hero-desc">
+                          Explore multi-year strategic lifecycles mapped from SEC 10-K filings for 100+ public B2B SaaS companies.
+                          Compare historical strategic phases against your current ARR plan, contrast gap trade-offs, and copy proven lever allocations directly into your strategy canvas.
+                        </p>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" id="toggleMermaidCodeBtn" class="btn" style="font-size:12px;">
+                          Toggle Syntax
+                        </button>
+                        <button type="button" id="refreshCompanyFlowBtn" class="btn primary" style="font-size:12px;">
+                          Analyze Flow
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="flowchart-select-row">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Company:</span>
+                        <select id="companyFlowSelect" class="flowchart-select">
+                          <option value="DDOG">Datadog (DDOG)</option>
+                          <option value="SNOW">Snowflake (SNOW)</option>
+                          <option value="CRWD">CrowdStrike (CRWD)</option>
+                          <option value="HUBS">HubSpot (HUBS)</option>
+                          <option value="MDB">MongoDB (MDB)</option>
+                          <option value="ZI">ZoomInfo (ZI)</option>
+                          <option value="JAMF">Jamf (JAMF)</option>
+                          <option value="CFLT">Confluent (CFLT)</option>
+                          <option value="ESTC">Elastic (ESTC)</option>
+                        </select>
+                      </div>
+                      <div class="flowchart-chips" id="flowQuickChips">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-dim);">Quick Picks:</span>
+                        <button type="button" class="flowchart-chip active" data-flow-ticker="DDOG">Datadog</button>
+                        <button type="button" class="flowchart-chip" data-flow-ticker="SNOW">Snowflake</button>
+                        <button type="button" class="flowchart-chip" data-flow-ticker="CRWD">CrowdStrike</button>
+                        <button type="button" class="flowchart-chip" data-flow-ticker="HUBS">HubSpot</button>
+                        <button type="button" class="flowchart-chip" data-flow-ticker="MDB">MongoDB</button>
+                        <button type="button" class="flowchart-chip" data-flow-ticker="ZI">ZoomInfo</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Flowchart Visual Container -->
+                  <div class="flowchart-canvas-card">
+                    <div class="flowchart-canvas-header">
+                      <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <h3 style="font-size:16px; font-weight:700; margin:0;" id="flowchartCompanyTitle">Datadog (DDOG) Multi-Year Strategy Flow</h3>
+                          <span id="flowchartPeriodCountPill" class="kpi-tag" style="background:#e0f2fe; color:#0369a1;">9 Annual Periods</span>
+                        </div>
+                        <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0;" id="flowchartSubtitle">
+                          Chronological progression through capital-efficient expansion, platform expansion, and free cash flow scale.
+                        </p>
+                      </div>
+                      <div style="font-size:11px; color:var(--text-muted);">
+                        Tip: Click any phase below to copy its specific S&M and R&D ratios.
+                      </div>
+                    </div>
+
+                    <!-- Flow Diagram Viewport -->
+                    <div class="flowchart-diagram-box" id="companyFlowDiagramBox">
+                      <div id="companyFlowMermaid" style="width:100%; display:flex; justify-content:center;"></div>
+                    </div>
+
+                    <!-- Raw Mermaid Syntax (toggled) -->
+                    <pre class="flowchart-raw-code" id="companyFlowRawCode"></pre>
+                  </div>
+
+                  <!-- Contrast Comparison Card (Peer at equivalent ARR vs Founder Plan) -->
+                  <div class="contrast-card" id="companyFlowComparisonCard">
+                    <!-- Populated dynamically via JS -->
+                  </div>
+
+                  <!-- Multi-Period Lifecycle Stages Grid -->
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                      <div>
+                        <h3 style="font-size:15px; font-weight:700; margin:0;">Chronological Strategy Stages & Allocation Levers</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin:2px 0 0;">
+                          Annual financial profiles from SEC 10-K filings. Copy proven lever combinations into your workspace.
+                        </p>
+                      </div>
+                      <span id="stageCountBadge" style="font-size:11px; font-weight:700; color:var(--text-muted);">Showing all stages</span>
+                    </div>
+
+                    <div class="flow-stages-grid" id="companyFlowStagesGrid">
+                      <!-- Populated dynamically via JS -->
+                    </div>
                   </div>
                 </div>
               </section>
