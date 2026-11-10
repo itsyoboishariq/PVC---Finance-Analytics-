@@ -2063,13 +2063,14 @@ main {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  min-height: 195px;
+  min-height: 205px;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 20px;
   box-sizing: border-box;
   display: block;
+  -webkit-overflow-scrolling: touch;
 }
 
 #companyFlowMermaid {
@@ -2077,11 +2078,12 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  min-height: 155px;
+  min-height: 170px;
 }
 
 .flowchart-viewport svg {
-  height: 155px;
+  min-width: 1750px;
+  height: 170px;
   max-width: none !important;
   cursor: pointer;
   display: block;

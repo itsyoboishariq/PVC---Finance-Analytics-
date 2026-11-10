@@ -240,7 +240,7 @@ function renderHierarchyTree(req, res) {
         </div>`).join('') || '<div class="node">Enable a spending decision on the left.</div>'}
     </div>
     <div class="arrow">↓</div>
-    <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context').selectedOptions[0].text)}</strong><span>Match starting profiles → compare actions</span></div>
+    <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context')?.selectedOptions?.[0]?.text || $('context')?.value || 'Historical SaaS Periods')}</strong><span>Match starting profiles → compare actions</span></div>
     <div class="arrow">↓</div>
     <div class="node goal"><small>YOUR OBJECTIVE</small><strong>${req.objective === 'growth' ? 'Grow revenue' : 'Improve operating profitability'}</strong><span>Financial peers + adjusted regression</span></div>
   `;
@@ -339,7 +339,7 @@ function backToHierarchy() {
   $('drilldownNav').style.display = 'none';
   $('hierarchyTreeRoot').style.display = 'flex';
 }
-$('backToHierarchyBtn').onclick = backToHierarchy;
+if ($('backToHierarchyBtn')) $('backToHierarchyBtn').onclick = backToHierarchy;
 
 // Drag and Drop Evidence System
 function setupDropTargets() {
@@ -1066,42 +1066,51 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 // Input listeners
-$('editor').addEventListener('input', () => {
-  revision++;
-  updateLocalKPIs();
-  $('state').textContent = 'Draft · changes unanalyzed';
-  $('state').className = 'flow-status-pill';
-});
-
-$('editor').onsubmit = e => { e.preventDefault(); run(false); };
-$('askAnalyst').onclick = () => run(true);
-
-$('save').onclick = () => {
-  const data = {};
-  document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(e => {
-    data[e.id] = e.type === 'checkbox' ? e.checked : e.value;
+if ($('editor')) {
+  $('editor').addEventListener('input', () => {
+    revision++;
+    updateLocalKPIs();
+    if ($('state')) {
+      $('state').textContent = 'Draft · changes unanalyzed';
+      $('state').className = 'flow-status-pill';
+    }
   });
-  localStorage.setItem('saas-strategy-flow-v1', JSON.stringify(data));
-  toast.success('Strategy Plan Saved', 'Parameters have been saved locally in this browser.');
-};
+}
 
-$('exportJson').onclick = () => {
-  const payload = {
-    request: getRequest(),
-    results: currentResult,
-    attached_evidence: attachedEvidence,
-    exported_at: new Date().toISOString()
+if ($('editor')) $('editor').onsubmit = e => { e.preventDefault(); run(false); };
+if ($('askAnalyst')) $('askAnalyst').onclick = () => run(true);
+
+if ($('save')) {
+  $('save').onclick = () => {
+    const data = {};
+    document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(e => {
+      data[e.id] = e.type === 'checkbox' ? e.checked : e.value;
+    });
+    localStorage.setItem('saas-strategy-flow-v1', JSON.stringify(data));
+    toast.success('Strategy Plan Saved', 'Parameters have been saved locally in this browser.');
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${($('name').value || 'strategy').toLowerCase().replace(/\s+/g, '_')}_plan.json`;
-  a.click();
-  toast.success('Executive Plan Exported', `${$('name').value || 'strategy'}_plan.json downloaded.`);
-};
+}
 
-$('saveToTeamLibraryBtn').onclick = () => {
+if ($('exportJson')) {
+  $('exportJson').onclick = () => {
+    const payload = {
+      request: getRequest(),
+      results: currentResult,
+      attached_evidence: attachedEvidence,
+      exported_at: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${($('name').value || 'strategy').toLowerCase().replace(/\s+/g, '_')}_plan.json`;
+    a.click();
+    toast.success('Executive Plan Exported', `${$('name').value || 'strategy'}_plan.json downloaded.`);
+  };
+}
+
+if ($('saveToTeamLibraryBtn')) {
+  $('saveToTeamLibraryBtn').onclick = () => {
   const name = prompt('Enter a name for this founder strategy:', $('name').value);
   if (!name) return;
   const author = prompt('Enter author name or team role:', 'Founder & CEO') || 'Founder';
@@ -1136,7 +1145,8 @@ $('saveToTeamLibraryBtn').onclick = () => {
   currentResult.benchmarks.unshift(newBm);
   selectBenchmark(newBm.id);
   toast.success('Saved to Team Library', `"${name}" is now available in the Benchmarking Library.`);
-};
+  };
+}
 
 // ==========================================================================
 // Shadcn Sidebar Controller (Inspired by satnaing/shadcn-admin)
@@ -1549,8 +1559,9 @@ function renderPhaseDeepdive(data) {
     $('inspStageTitle').textContent = `${data.year} · ${comp.name} Strategic Milestone`;
   }
   if ($('inspAdoptBtn')) {
-    $('inspAdoptBtn').textContent = `📋 Copy ${data.year} Levers (${data.copy_payload.sales_marketing_ratio}% S&M, ${data.copy_payload.rd_ratio}% R&D)`;
-    $('inspAdoptBtn').onclick = () => copyStageLevers(data.copy_payload);
+    const cp = data.copy_payload || {};
+    $('inspAdoptBtn').textContent = `📋 Copy ${data.year} Levers (${cp.sales_marketing_ratio ?? 40}% S&M, ${cp.rd_ratio ?? 25}% R&D)`;
+    $('inspAdoptBtn').onclick = () => copyStageLevers(cp);
   }
 
   // 1. Strategic Why Panel
