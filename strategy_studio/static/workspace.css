@@ -95,20 +95,24 @@ body {
   overflow: hidden;
 }
 
-/* --- Shadcn Sidebar --- */
+/* --- Shadcn Sidebar (Slide-Over Drawer) --- */
 .shadcn-sidebar {
-  width: var(--sidebar-width);
-  min-width: var(--sidebar-width);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 360px;
+  max-width: 90vw;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
   height: 100vh;
-  z-index: 40;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-sm);
+  z-index: 60;
+  transform: translateX(0);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+  visibility: visible;
+  box-shadow: var(--shadow-lg);
   user-select: none;
 }
 
@@ -445,11 +449,13 @@ body {
 }
 
 /* ==========================================================================
-   Collapsed State (collapsible="icon" / data-state="collapsed")
+   Collapsed State (Slide-Over Off-Screen Drawer)
    ========================================================================== */
 .shadcn-sidebar[data-state="collapsed"] {
-  width: var(--sidebar-collapsed-width);
-  min-width: var(--sidebar-collapsed-width);
+  transform: translateX(-100%) !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 360px;
 }
 
 .shadcn-sidebar[data-state="collapsed"] .team-info,
@@ -1626,36 +1632,21 @@ main {
   gap: 10px;
 }
 
-/* Mobile Backdrop */
+/* Drawer Backdrop */
 .sidebar-backdrop {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
-  z-index: 35;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 55;
+  transition: opacity 0.2s ease;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .workspace-grid { grid-template-columns: 1fr; }
-  .radar-layout { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-  .shadcn-sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
-  }
-  .shadcn-sidebar[data-mobile-open="true"] {
-    transform: translateX(0);
-  }
-  .sidebar-backdrop[data-visible="true"] {
-    display: block;
-  }
+.sidebar-backdrop[data-visible="true"],
+.sidebar-backdrop.active,
+.sidebar-backdrop[data-state="open"] {
+  display: block;
 }
 
 /* ==========================================================================
@@ -2071,20 +2062,29 @@ main {
 .flowchart-viewport {
   width: 100%;
   overflow-x: auto;
-  min-height: 250px;
+  overflow-y: hidden;
+  min-height: 195px;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
-  display: flex;
-  justify-content: center;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  display: block;
+}
+
+#companyFlowMermaid {
+  min-width: 100%;
+  display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
+  min-height: 155px;
 }
 
 .flowchart-viewport svg {
-  max-width: 100%;
-  height: auto;
+  height: 155px;
+  max-width: none !important;
   cursor: pointer;
+  display: block;
 }
 
 /* Hover and active effects on Mermaid / SVG nodes */
@@ -2096,14 +2096,21 @@ main {
 
 .flowchart-viewport .node:hover,
 .flowchart-viewport .flow-svg-node:hover {
-  filter: drop-shadow(0 4px 8px rgba(2, 132, 199, 0.3));
+  filter: drop-shadow(0 4px 8px rgba(2, 132, 199, 0.35));
   transform: translateY(-2px);
 }
 
 .flowchart-viewport .node.active-stage rect,
 .flowchart-viewport .flow-svg-node.active-stage rect {
-  stroke: #7c3aed !important;
-  stroke-width: 3px !important;
+  stroke: #0284c7 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 8px rgba(2, 132, 199, 0.5));
+}
+
+@media (max-width: 1250px) {
+  .flowchart-chips {
+    display: none !important;
+  }
 }
 
 /* Strategic Why & Financial Intelligence Inspector Panel */

@@ -1150,38 +1150,43 @@ function initSidebar() {
   function setSidebarState(state) {
     if (!sidebar) return;
     sidebar.setAttribute('data-state', state);
+    if (backdrop) {
+      if (state === 'expanded') {
+        backdrop.setAttribute('data-state', 'open');
+        backdrop.setAttribute('data-visible', 'true');
+        backdrop.classList.add('active');
+      } else {
+        backdrop.removeAttribute('data-state');
+        backdrop.setAttribute('data-visible', 'false');
+        backdrop.classList.remove('active');
+      }
+    }
     localStorage.setItem('shadcn_sidebar_state', state);
   }
 
   function toggleSidebar() {
     if (!sidebar) return;
-    if (window.innerWidth <= 768) {
-      const isOpen = sidebar.getAttribute('data-mobile-open') === 'true';
-      sidebar.setAttribute('data-mobile-open', !isOpen ? 'true' : 'false');
-      if (backdrop) backdrop.setAttribute('data-visible', !isOpen ? 'true' : 'false');
-    } else {
-      const cur = sidebar.getAttribute('data-state') || 'expanded';
-      setSidebarState(cur === 'expanded' ? 'collapsed' : 'expanded');
-    }
+    const cur = sidebar.getAttribute('data-state') || 'collapsed';
+    setSidebarState(cur === 'expanded' ? 'collapsed' : 'expanded');
   }
 
-  const savedState = localStorage.getItem('shadcn_sidebar_state') || 'expanded';
-  setSidebarState(savedState);
-
-  if (collapseBtn) collapseBtn.onclick = toggleSidebar;
+  if (collapseBtn) collapseBtn.onclick = () => setSidebarState('collapsed');
   if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
-  if (backdrop) backdrop.onclick = () => {
-    sidebar.setAttribute('data-mobile-open', 'false');
-    backdrop.setAttribute('data-visible', 'false');
-  };
+  if (backdrop) backdrop.onclick = () => setSidebarState('collapsed');
 
-  // Keyboard shortcut Ctrl+B or Cmd+B to toggle sidebar
+  // Keyboard shortcuts
   window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sidebar && sidebar.getAttribute('data-state') === 'expanded') {
+      setSidebarState('collapsed');
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
       e.preventDefault();
       toggleSidebar();
     }
   });
+
+  // Flowchart is the centerpiece: default to clean collapsed drawer
+  setSidebarState('collapsed');
 
   // Sidebar navigation item clicks
   document.querySelectorAll('[data-tab-target]').forEach(btn => {
@@ -1520,7 +1525,8 @@ async function loadPhaseDeepdive(stageIdxOrYear) {
 function highlightFlowchartNode(stageIndex) {
   // Highlight in Mermaid or native SVG
   document.querySelectorAll('.flowchart-viewport .node, .flowchart-viewport .flow-svg-node').forEach((el, idx) => {
-    el.classList.toggle('active-stage', idx === (stageIndex - 1));
+    const isTarget = (el.dataset && el.dataset.stage && parseInt(el.dataset.stage, 10) === stageIndex) || idx === (stageIndex - 1);
+    el.classList.toggle('active-stage', isTarget);
   });
 }
 
@@ -1706,6 +1712,12 @@ async function renderMermaidDiagram(data) {
   // If Mermaid is loaded, upgrade to Mermaid diagram
   if (typeof mermaid !== 'undefined' && mermaid.render) {
     try {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'loose',
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      });
       const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
       const isDark = document.documentElement.classList.contains('dark');
       let code = data.mermaid_code;
@@ -1714,10 +1726,14 @@ async function renderMermaidDiagram(data) {
                    .replace(/color:#0f172a/g, 'color:#f8fafc');
       }
       const { svg } = await mermaid.render(renderId, code);
-      container.innerHTML = svg;
-      bindMermaidNodeClicks();
+      if (svg && svg.includes('<svg')) {
+        container.innerHTML = svg;
+        bindMermaidNodeClicks();
+      }
     } catch (err) {
       console.warn('Mermaid rendering issue, keeping native SVG:', err);
+      container.innerHTML = renderNativeSvgFlowchart(data.stages);
+      bindSvgNodeClicks();
     }
   }
 }
@@ -1906,7 +1922,7 @@ function renderNativeSvgFlowchart(stages) {
     const r40Color = isElite ? '#10b981' : textSub;
 
     nodesHtml += `
-      <g class="flow-svg-node" transform="translate(${x}, ${y})" onclick="selectFlowPhase('S${i+1}')">
+      <g class="flow-svg-node" data-stage="${i+1}" transform="translate(${x}, ${y})" onclick="selectFlowPhase('S${i+1}')">
         <rect width="${nodeW}" height="${nodeH}" rx="8" fill="${nodeBg}" stroke="${nodeStroke}" stroke-width="2"/>
         <text x="12" y="22" font-size="11" font-weight="700" fill="${textTitle}">${esc(s.year)} · ${esc(s.phase_title.length > 16 ? s.phase_title.slice(0, 15) + '…' : s.phase_title)}</text>
         <text x="12" y="42" font-size="12" font-weight="800" fill="${borderNormal}">ARR: ${esc(s.revenue_formatted)} (${esc(s.growth_formatted)})</text>

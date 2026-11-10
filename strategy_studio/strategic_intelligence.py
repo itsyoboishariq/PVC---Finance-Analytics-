@@ -493,3 +493,4 @@ def get_phase_deepdive(identifier, stage_index_or_year, startup_profile=None, pa
             'financial_strategy': financial_strategy,
             'copy_payload': copy_payload
         }
+

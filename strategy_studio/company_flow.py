@@ -164,9 +164,9 @@ def get_company_flow(identifier, startup_profile=None, path=DB):
         # Build Mermaid.js Flowchart syntax
         mermaid_lines = [
             "graph LR",
-            "  classDef normal fill:#ffffff,stroke:#0284c7,stroke-width:2px,rx:8px,ry:8px,color:#0f172a;",
-            "  classDef elite fill:#ecfdf5,stroke:#10b981,stroke-width:2px,rx:8px,ry:8px,color:#065f46;",
-            "  classDef heavy fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,rx:8px,ry:8px,color:#92400e;"
+            "  classDef normal fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0f172a;",
+            "  classDef elite fill:#ecfdf5,stroke:#10b981,stroke-width:2px,color:#065f46;",
+            "  classDef heavy fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,color:#92400e;"
         ]
         
         for i, s in enumerate(stages):
