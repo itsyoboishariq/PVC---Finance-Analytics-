@@ -2089,24 +2089,27 @@ main {
   display: block;
 }
 
-/* Hover and active effects on Mermaid / SVG nodes */
+/* Hover and active effects on Mermaid / SVG nodes - stable & zero jitter */
 .flowchart-viewport .node,
 .flowchart-viewport .flow-svg-node {
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.flowchart-viewport .node:hover,
-.flowchart-viewport .flow-svg-node:hover {
-  filter: drop-shadow(0 4px 8px rgba(2, 132, 199, 0.35));
-  transform: translateY(-2px);
+.flowchart-viewport .node rect,
+.flowchart-viewport .flow-svg-node rect {
+  transition: stroke 0.18s ease, stroke-width 0.18s ease;
+}
+
+.flowchart-viewport .node:hover rect,
+.flowchart-viewport .flow-svg-node:hover rect {
+  stroke: var(--primary) !important;
+  stroke-width: 3px !important;
 }
 
 .flowchart-viewport .node.active-stage rect,
 .flowchart-viewport .flow-svg-node.active-stage rect {
   stroke: #0284c7 !important;
   stroke-width: 3.5px !important;
-  filter: drop-shadow(0 0 8px rgba(2, 132, 199, 0.5));
 }
 
 @media (max-width: 1250px) {
