@@ -929,14 +929,14 @@ function initTheme() {
     }
   }
 
-  const savedTheme = localStorage.getItem('athena_theme') || 'dark';
+  const savedTheme = localStorage.getItem('athena_theme') || 'light';
   setTheme(savedTheme);
 
   if (toggleBtn) {
     toggleBtn.onclick = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setTheme(isDark ? 'light' : 'dark');
-      toast.info('Theme Updated', `Switched to ${isDark ? 'Ivory Crimson' : 'Athena Darkish Red'} mode.`);
+      toast.info('Theme Updated', `Switched to ${isDark ? 'Light' : 'Dark'} mode.`);
     };
   }
 }
@@ -1656,16 +1656,16 @@ async function initCompanyFlow() {
   }
 
   // Handle syntax toggle
-  if (toggleBtn) {
-    toggleBtn.onclick = () => {
+  document.querySelectorAll('#toggleMermaidCodeBtn, #toggleMermaidCodeBtnTopbar, .toggle-mermaid-btn').forEach(btn => {
+    btn.onclick = () => {
       const drawer = $('mermaidCodeDrawer');
       if (drawer) {
         const isShown = drawer.style.display === 'block';
         drawer.style.display = isShown ? 'none' : 'block';
-        toggleBtn.classList.toggle('active', !isShown);
+        btn.classList.toggle('active', !isShown);
       }
     };
-  }
+  });
 
   if (copyMermaidBtn) {
     copyMermaidBtn.onclick = () => {
@@ -1846,13 +1846,17 @@ function renderPhaseDeepdive(data) {
   if ($('inspStageTitle')) {
     $('inspStageTitle').textContent = `${stageYear} · ${comp.name} Strategic Milestone`;
   }
+  const cp = data.copy_payload || {
+    sales_marketing_ratio: parseFloat(fin.sales_marketing) || 40,
+    rd_ratio: parseFloat(fin.rd) || 25
+  };
   if ($('inspAdoptBtn')) {
-    const cp = data.copy_payload || {
-      sales_marketing_ratio: parseFloat(fin.sales_marketing) || 40,
-      rd_ratio: parseFloat(fin.rd) || 25
-    };
     $('inspAdoptBtn').textContent = `📋 Copy ${stageYear} Levers (${cp.sales_marketing_ratio}% S&M, ${cp.rd_ratio}% R&D)`;
     $('inspAdoptBtn').onclick = () => copyStageLevers(cp);
+  }
+  if ($('dashAdoptBtn')) {
+    $('dashAdoptBtn').textContent = `📋 Copy ${stageYear} Levers (${cp.sales_marketing_ratio}% S&M, ${cp.rd_ratio}% R&D)`;
+    $('dashAdoptBtn').onclick = () => copyStageLevers(cp);
   }
 
   // 1. Strategic Why Panel
@@ -2487,13 +2491,6 @@ function renderProcessFlowTemplateSvg(stages) {
     <g transform="translate(460, 112)">
       <rect width="90" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
       <text x="45" y="15" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
-    </g>
-  </svg>
-  `;
-}
-    <g transform="translate(460, 112)">
-      <rect width="90" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
-      <text x="45" y="15" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare</text>
     </g>
   </svg>
   `;
