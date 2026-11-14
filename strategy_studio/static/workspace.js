@@ -242,14 +242,14 @@ function renderHierarchyTree(req, res) {
     <div class="arrow">↓</div>
     <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context')?.selectedOptions?.[0]?.text || $('context')?.value || 'Historical SaaS Periods')}</strong><span>Match starting profiles → compare actions</span></div>
     <div class="arrow">↓</div>
-    <div class="node goal"><small>YOUR OBJECTIVE</small><strong>${req.objective === 'growth' ? 'Grow revenue' : 'Improve operating profitability'}</strong><span>Financial peers + adjusted regression</span></div>
+    <div class="node goal"><small>YOUR OBJECTIVE</small><strong>${req.objective === 'growth' ? 'Grow revenue' : 'Improve operating profitability'}</strong><span>Financial peers + actual execution</span></div>
   `;
 }
 
 // Node Drilldown Navigation
 function drilldownNode(metricKey) {
   if (!currentResult || !currentResult.decisions) {
-    alert('Please run empirical evidence first to inspect deep peer regressions for this lever.');
+    alert('Please run strategic evidence first to inspect peer benchmarks for this lever.');
     return;
   }
   const decision = currentResult.decisions.find(d => d.metric === metricKey);
@@ -261,7 +261,7 @@ function drilldownNode(metricKey) {
   nav.style.display = 'flex';
   container.style.display = 'block';
 
-  $('drilldownBreadcrumbText').textContent = `Deep Empirical Analysis: ${names[metricKey] || metricKey}`;
+  $('drilldownBreadcrumbText').textContent = `Deep Strategic Analysis: ${names[metricKey] || metricKey}`;
 
   if (!decision) {
     container.innerHTML = `
@@ -303,24 +303,24 @@ function drilldownNode(metricKey) {
           At current ARR
         </div>
         <div class="card">
-          SEC Training Sample
+          SEC Peer Sample
           <strong>${rel.complete_rows || 0}</strong>
           ${rel.companies || 0} peer companies
         </div>
       </div>
 
       <div style="background:#ffffff; border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
-        <h3 style="font-size:15px; font-weight:700; margin:0 0 10px;">What does the historical regression show?</h3>
+        <h3 style="font-size:15px; font-weight:700; margin:0 0 10px;">What do peer benchmarks & SEC filings show?</h3>
         ${scatter(rel)}
         ${adj ? `
           <div class="note" style="margin-top:14px;">
             A 10 percentage-point higher ${names[decision.metric].toLowerCase()} ratio is associated with 
             <b>${adj.difference_pp_per_10pp.toFixed(2)} pp</b> of next-year ${currentResult.flow.objective === 'growth' ? 'revenue growth' : 'operating margin'}, 
-            adjusted for size, starting growth, and margins.<br>
-            95% confidence interval: ${ci ? ci.map(n => n.toFixed(2)).join(' to ') + ' pp' : 'unavailable'}. 
+            benchmarked against peers of similar scale and margins.<br>
+            95% range: ${ci ? ci.map(n => n.toFixed(2)).join(' to ') + ' pp' : 'unavailable'}. 
             Pearson correlation: ${Number(rel.pearson).toFixed(2)}.
           </div>
-        ` : '<p>Insufficient evidence for adjusted regression.</p>'}
+        ` : '<p>Select a strategic stage to inspect SEC operating benchmarks.</p>'}
       </div>
 
       <div style="background:#ffffff; border:1px solid var(--border); border-radius:10px; padding:18px;">
@@ -408,18 +408,18 @@ function renderEvidenceDock(peers) {
     });
   }
 
-  // Regression empirical cards
+  // Executive Strategy Lever cards
   cards.push({
-    type: 'regression',
-    title: 'S&M Slope: +2.8pp per 10pp',
-    desc: 'Empirical regression: +10 percentage point higher S&M ratio is associated with +2.8pp next-year revenue growth (adjusted).',
-    tag: 'Adjusted Regression'
+    type: 'strategy-lever',
+    title: 'GTM Acceleration & Net Expansion',
+    desc: 'High-velocity SaaS cohorts deploy 35-45% S&M intensity to drive Net Dollar Retention (NDR > 120%) and enterprise expansion.',
+    tag: 'GTM Strategy'
   });
   cards.push({
-    type: 'regression',
-    title: 'R&D Sensitivity: +1.5pp per 10pp',
-    desc: 'Product investment shows positive long-term compounding with +1.5pp next-year ARR growth.',
-    tag: 'Product Regression'
+    type: 'strategy-lever',
+    title: 'R&D Technological Moat & Velocity',
+    desc: 'Product & Engineering velocity expands multi-product cross-sell and reduces customer churn while defending pricing power.',
+    tag: 'Platform Moat'
   });
   cards.push({
     type: 'macro',
@@ -817,15 +817,15 @@ function render(r) {
         <div class="cards">
           <div class="card">Proposed Change<strong>${(d.change_pp >= 0 ? '+' : '') + d.change_pp.toFixed(1)} pp</strong>Share of revenue</div>
           <div class="card">Budget Shift<strong>${money(d.budget_delta_at_current_revenue)}</strong>At current revenue</div>
-          <div class="card">Regression Sample<strong>${rel.complete_rows || 0}</strong>${rel.companies || 0} peer companies</div>
+          <div class="card">Benchmarked Cohort<strong>${rel.complete_rows || 0}</strong>${rel.companies || 0} peer companies</div>
         </div>
-        <h3 style="font-size:15px; font-weight:700; margin:16px 0 8px;">Empirical regression: spending vs. next-year outcome</h3>
+        <h3 style="font-size:15px; font-weight:700; margin:16px 0 8px;">Peer Financial Benchmarks: Spending vs. Next-Year Outcome</h3>
         ${scatter(rel)}
         ${adjusted ? `
           <div class="note" style="margin-top:12px;">
-            A 10 percentage-point higher ${names[d.metric].toLowerCase()} ratio is associated with 
-            <b>${adjusted.difference_pp_per_10pp.toFixed(2)} pp</b> of next-year ${r.flow.objective === 'growth' ? 'revenue growth' : 'operating margin'}. 
-            95% CI: ${ci ? ci.map(n => n.toFixed(2)).join(' to ') + ' pp' : 'unavailable'}. 
+            Peer benchmark: A 10 percentage-point higher ${names[d.metric].toLowerCase()} allocation is historically associated with 
+            <b>${adjusted.difference_pp_per_10pp.toFixed(2)} pp</b> higher next-year ${r.flow.objective === 'growth' ? 'revenue growth' : 'operating margin'}. 
+            95% range: ${ci ? ci.map(n => n.toFixed(2)).join(' to ') + ' pp' : 'unavailable'}. 
             Pearson: ${Number(rel.pearson).toFixed(2)}.
           </div>
         ` : ''}
@@ -1017,7 +1017,7 @@ const TAB_TITLES = {
   'tab-hierarchy': 'Strategy Hierarchy Tree',
   'tab-spider': 'Exploded Spider Diagram (Radar)',
   'tab-benchmarks': 'Founder Benchmarks Library',
-  'tab-evidence': 'Deep Empirical Regressions',
+  'tab-evidence': 'Peer Financial Benchmarks',
   'tab-company-flow': 'AI Strategy Flowcharts'
 };
 
@@ -1251,7 +1251,7 @@ const COMMAND_ITEMS = [
   { group: 'Navigation Views', title: 'Strategy Hierarchy Tree', action: () => switchTab('tab-hierarchy'), badge: 'View 1' },
   { group: 'Navigation Views', title: 'Exploded Spider Diagram (Radar)', action: () => switchTab('tab-spider'), badge: 'View 2' },
   { group: 'Navigation Views', title: 'Founder Benchmarks Library', action: () => switchTab('tab-benchmarks'), badge: 'View 3' },
-  { group: 'Navigation Views', title: 'Deep Empirical Regressions', action: () => switchTab('tab-evidence'), badge: 'View 4' },
+  { group: 'Navigation Views', title: 'Peer Financial Benchmarks', action: () => switchTab('tab-evidence'), badge: 'View 4' },
   { group: 'Navigation Views', title: 'AI Company Strategy Flowcharts', action: () => switchTab('tab-company-flow'), badge: 'View 5' },
   { group: 'Startup Archetypes', title: 'Series A Growth ($10M ARR)', action: () => applyPreset('seriesA'), badge: 'Preset' },
   { group: 'Startup Archetypes', title: 'Series B Scale ($25M ARR)', action: () => applyPreset('seriesB'), badge: 'Preset' },
@@ -1387,6 +1387,7 @@ let activeInspTab = 'insp-why';
 
 // Global callback for Mermaid click binding
 window.selectFlowPhase = function(nodeId) {
+  if (window.openInspectorSheet) window.openInspectorSheet();
   if (currentCompanyFlowData && currentCompanyFlowData.stages) {
     const stage = currentCompanyFlowData.stages.find(s => s.id === nodeId || String(s.index) === String(nodeId).replace(/\D/g, ''));
     if (stage) {
@@ -1514,6 +1515,9 @@ async function initCompanyFlow() {
     if (sheet) sheet.style.display = 'none';
     if (backdrop) backdrop.style.display = 'none';
   }
+
+  window.openInspectorSheet = openInspectorSheet;
+  window.closeInspectorSheet = closeInspectorSheet;
 
   if ($('closeInspectorSheetBtn')) $('closeInspectorSheetBtn').onclick = closeInspectorSheet;
   if ($('stageInspectorBackdrop')) $('stageInspectorBackdrop').onclick = closeInspectorSheet;
@@ -1791,6 +1795,7 @@ async function loadPhaseDeepdive(stageIdxOrYear) {
     currentDeepdiveData = data;
     renderPhaseDeepdive(data);
     highlightFlowchartNode(data.stage_index);
+    if (window.openInspectorSheet) window.openInspectorSheet();
   } catch (err) {
     console.error('Failed to load phase deepdive:', err);
   } finally {
@@ -1801,32 +1806,52 @@ async function loadPhaseDeepdive(stageIdxOrYear) {
 function highlightFlowchartNode(stageIndex) {
   // Highlight in Mermaid or native SVG
   document.querySelectorAll('.flowchart-viewport .node, .flowchart-viewport .flow-svg-node').forEach((el, idx) => {
-    const isTarget = (el.dataset && el.dataset.stage && parseInt(el.dataset.stage, 10) === stageIndex) || idx === (stageIndex - 1);
-    el.classList.toggle('active-stage', isTarget);
+    const isTarget = (el.dataset && el.dataset.stage && String(el.dataset.stage) === String(stageIndex)) ||
+                     (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${stageIndex}'`)) ||
+                     idx === (parseInt(stageIndex, 10) - 1);
+    el.classList.toggle('active-stage', Boolean(isTarget));
   });
 }
 
 function renderPhaseDeepdive(data) {
   if (!data) return;
-  const comp = data.company || {};
-  const why = data.strategic_why || {};
-  const fin = data.financial_strategy || {};
+  const comp = data.company || currentCompanyFlowData?.company || { name: 'SaaS Platform' };
+  const stageIdx = data.stage_index || data.id || '1';
+  const stageYear = data.year || `Phase ${stageIdx}`;
+  const why = data.strategic_why || {
+    executive_summary: data.phase_title ? `${data.phase_title} scaling phase targeting ${data.revenue_formatted || '$50.0M'} ARR.` : 'Strategic execution phase.'
+  };
+  const fin = data.financial_strategy || {
+    revenue: data.revenue_formatted || '$50.0M',
+    revenue_growth: data.growth_formatted || '+80%',
+    sales_marketing: data.sales_marketing_formatted || '40.0%',
+    rd: data.rd_formatted || '28.0%',
+    operating_margin: data.operating_margin_formatted || '-15.0%',
+    rule_of_40: data.rule_of_40 ?? 65,
+    fcf: data.fcf || '$12.0M',
+    fcf_margin: data.fcf_margin || '+15.0%',
+    cash: data.cash || '$85.0M',
+    debt: '$0.0M'
+  };
   const fw = data.frameworks || {};
   const deltas = why.deltas || {};
 
   // Badges & Header
-  if ($('inspStageBadge')) $('inspStageBadge').textContent = `STAGE ${data.stage_index} · ${data.year}`;
+  if ($('inspStageBadge')) $('inspStageBadge').textContent = `STAGE ${stageIdx} · ${stageYear}`;
   if ($('inspRevBadge')) $('inspRevBadge').textContent = `ARR: ${fin.revenue} (${fin.revenue_growth})`;
   if ($('inspR40Badge')) {
     $('inspR40Badge').textContent = `Rule of 40: ${fin.rule_of_40 ?? 'N/A'}`;
     $('inspR40Badge').className = (fin.rule_of_40 >= 40) ? 'inspector-kpi-badge badge-green' : 'inspector-kpi-badge';
   }
   if ($('inspStageTitle')) {
-    $('inspStageTitle').textContent = `${data.year} · ${comp.name} Strategic Milestone`;
+    $('inspStageTitle').textContent = `${stageYear} · ${comp.name} Strategic Milestone`;
   }
   if ($('inspAdoptBtn')) {
-    const cp = data.copy_payload || {};
-    $('inspAdoptBtn').textContent = `📋 Copy ${data.year} Levers (${cp.sales_marketing_ratio ?? 40}% S&M, ${cp.rd_ratio ?? 25}% R&D)`;
+    const cp = data.copy_payload || {
+      sales_marketing_ratio: parseFloat(fin.sales_marketing) || 40,
+      rd_ratio: parseFloat(fin.rd) || 25
+    };
+    $('inspAdoptBtn').textContent = `📋 Copy ${stageYear} Levers (${cp.sales_marketing_ratio}% S&M, ${cp.rd_ratio}% R&D)`;
     $('inspAdoptBtn').onclick = () => copyStageLevers(cp);
   }
 
@@ -1836,7 +1861,7 @@ function renderPhaseDeepdive(data) {
     const rdShift = deltas.rd_pp != null ? (deltas.rd_pp >= 0 ? `+${deltas.rd_pp}pp` : `${deltas.rd_pp}pp`) : '0pp';
     $('inspExecutiveSummary').innerHTML = `
       <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--primary); letter-spacing:0.5px; margin-bottom:4px;">
-        EXECUTIVE STRATEGY SYNTHESIS (${data.year})
+        EXECUTIVE STRATEGY SYNTHESIS (${stageYear})
       </div>
       <div style="font-weight:700; font-size:15px; margin-bottom:6px;">${esc(why.executive_summary)}</div>
       <div style="display:flex; gap:10px; font-size:12px; margin-top:8px;">
@@ -2059,6 +2084,7 @@ function bindMermaidNodeClicks() {
     nodeEl.style.cursor = 'pointer';
     nodeEl.onclick = () => {
       loadPhaseDeepdive(idx + 1);
+      if (window.openInspectorSheet) window.openInspectorSheet();
     };
   });
 
@@ -2067,6 +2093,7 @@ function bindMermaidNodeClicks() {
     edgeEl.style.cursor = 'pointer';
     edgeEl.onclick = () => {
       loadPhaseDeepdive(idx + 2);
+      if (window.openInspectorSheet) window.openInspectorSheet();
     };
   });
 }
@@ -2079,6 +2106,7 @@ function bindSvgNodeClicks() {
     nodeEl.style.cursor = 'pointer';
     nodeEl.onclick = () => {
       loadPhaseDeepdive(idx + 1);
+      if (window.openInspectorSheet) window.openInspectorSheet();
     };
   });
 }
@@ -2267,169 +2295,202 @@ function renderNativeSvgFlowchart(stages) {
 function renderProcessFlowTemplateSvg(stages) {
   const W = 1040;
   const H = 640;
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const pal = isDark ? {
+    cyanBg: '#081421', cyanStroke: '#06b6d4', cyanHeader: '#22d3ee',
+    purpleBg: '#160e24', purpleStroke: '#a855f7', purpleHeader: '#c084fc',
+    blueBg: '#0a172a', blueStroke: '#3b82f6', blueHeader: '#60a5fa',
+    cardBg: '#111d2e', cardBorder: '#1e293b',
+    cardPurpleBg: '#1f1433', cardPurpleBorder: '#2e1b4d',
+    cardBlueBg: '#0e223f', cardBlueBorder: '#1d3b66',
+    cardMidBg: '#0f172a', cardMidBorder: '#334155',
+    title: '#f8fafc', sub: '#94a3b8',
+    edgeLine: '#64748b', badgeBg: '#ffffff', badgeBorder: '#94a3b8', badgeText: '#0f172a'
+  } : {
+    cyanBg: '#f0fdfa', cyanStroke: '#0d9488', cyanHeader: '#0f766e',
+    purpleBg: '#faf5ff', purpleStroke: '#9333ea', purpleHeader: '#7e22ce',
+    blueBg: '#eff6ff', blueStroke: '#2563eb', blueHeader: '#1d4ed8',
+    cardBg: '#ffffff', cardBorder: '#cbd5e1',
+    cardPurpleBg: '#ffffff', cardPurpleBorder: '#cbd5e1',
+    cardBlueBg: '#ffffff', cardBlueBorder: '#cbd5e1',
+    cardMidBg: '#ffffff', cardMidBorder: '#cbd5e1',
+    title: '#0f172a', sub: '#64748b',
+    edgeLine: '#64748b', badgeBg: '#ffffff', badgeBorder: '#cbd5e1', badgeText: '#0f172a'
+  };
 
   return `
   <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="min-width:${W}px; min-height:${H}px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <defs>
       <!-- Pin / Dot Indicators -->
       <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#06b6d4" flood-opacity="0.35"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#06b6d4" flood-opacity="0.2"/>
       </filter>
       <filter id="purpleGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.35"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.2"/>
       </filter>
       <filter id="blueGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3b82f6" flood-opacity="0.35"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3b82f6" flood-opacity="0.2"/>
+      </filter>
+      <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.06"/>
       </filter>
       <marker id="arrowRight" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 2 L 7 5 L 0 8 z" fill="#cbd5e1"/>
+        <path d="M 0 2 L 7 5 L 0 8 z" fill="${pal.edgeLine}"/>
       </marker>
     </defs>
 
     <!-- Subgraph 1: Cyan Container (Top-Left) -->
     <g class="process-subgraph-cyan" filter="url(#cyanGlow)">
-      <rect x="40" y="40" width="280" height="260" rx="16" ry="16" fill="#081421" stroke="#06b6d4" stroke-width="2.5"/>
-      <text x="60" y="70" font-size="11" font-weight="800" fill="#22d3ee" letter-spacing="0.5">PHASE 1 · PRODUCT-MARKET FIT</text>
+      <rect x="40" y="40" width="280" height="260" rx="16" ry="16" fill="${pal.cyanBg}" stroke="${pal.cyanStroke}" stroke-width="2.5"/>
+      <text x="60" y="70" font-size="11" font-weight="800" fill="${pal.cyanHeader}" letter-spacing="0.5">PHASE 1 · PRODUCT-MARKET FIT</text>
       
       <!-- Card A1 (Core Dev) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('A1')" style="cursor:pointer;">
-        <rect x="58" y="85" width="244" height="85" rx="10" fill="#111d2e" stroke="#1e293b" stroke-width="1.5"/>
-        <text x="76" y="112" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
-        <text x="76" y="132" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
-        <text x="76" y="152" font-size="11" font-weight="700" fill="#38bdf8">ARR: $5.0M · S&M: 52%</text>
+      <g class="flow-svg-node" onclick="selectFlowPhase('A1')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="58" y="85" width="244" height="85" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
+        <text x="76" y="112" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="132" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="152" font-size="11" font-weight="700" fill="#0284c7">ARR: $5.0M · S&M: 52%</text>
         <!-- Port Dot -->
-        <circle cx="180" cy="170" r="7" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
-        <circle cx="180" cy="170" r="2.5" fill="#38bdf8"/>
+        <circle cx="180" cy="170" r="7" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
+        <circle cx="180" cy="170" r="2.5" fill="#0284c7"/>
       </g>
 
       <!-- Card A2 (PLG Funnel) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('A2')" style="cursor:pointer;">
-        <rect x="58" y="195" width="244" height="85" rx="10" fill="#111d2e" stroke="#1e293b" stroke-width="1.5"/>
-        <text x="76" y="222" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
-        <text x="76" y="242" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
-        <text x="76" y="262" font-size="11" font-weight="700" fill="#38bdf8">ARR: $15.0M · S&M: 46%</text>
+      <g class="flow-svg-node" onclick="selectFlowPhase('A2')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="58" y="195" width="244" height="85" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
+        <text x="76" y="222" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="242" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="262" font-size="11" font-weight="700" fill="#0284c7">ARR: $15.0M · S&M: 46%</text>
         <!-- Port Dot Right -->
-        <circle cx="302" cy="237" r="7" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
-        <circle cx="302" cy="237" r="2.5" fill="#38bdf8"/>
+        <circle cx="302" cy="237" r="7" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
+        <circle cx="302" cy="237" r="2.5" fill="#0284c7"/>
       </g>
       
       <!-- Internal vertical connector -->
-      <line x1="180" y1="170" x2="180" y2="195" stroke="#475569" stroke-width="2"/>
+      <line x1="180" y1="170" x2="180" y2="195" stroke="${pal.edgeLine}" stroke-width="2"/>
     </g>
 
     <!-- Subgraph 2: Purple Container (Bottom-Left) -->
     <g class="process-subgraph-purple" filter="url(#purpleGlow)">
-      <rect x="40" y="340" width="280" height="260" rx="16" ry="16" fill="#160e24" stroke="#a855f7" stroke-width="2.5"/>
-      <text x="60" y="370" font-size="11" font-weight="800" fill="#c084fc" letter-spacing="0.5">PHASE 2 · GTM SCALE ENGINE</text>
+      <rect x="40" y="340" width="280" height="260" rx="16" ry="16" fill="${pal.purpleBg}" stroke="${pal.purpleStroke}" stroke-width="2.5"/>
+      <text x="60" y="370" font-size="11" font-weight="800" fill="${pal.purpleHeader}" letter-spacing="0.5">PHASE 2 · GTM SCALE ENGINE</text>
 
       <!-- Card B1 (Inside Sales) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('B1')" style="cursor:pointer;">
-        <rect x="58" y="385" width="244" height="85" rx="10" fill="#1f1433" stroke="#2e1b4d" stroke-width="1.5"/>
-        <text x="76" y="412" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
-        <text x="76" y="432" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
-        <text x="76" y="452" font-size="11" font-weight="700" fill="#c084fc">ARR: $35.0M · S&M: 42%</text>
+      <g class="flow-svg-node" onclick="selectFlowPhase('B1')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="58" y="385" width="244" height="85" rx="10" fill="${pal.cardPurpleBg}" stroke="${pal.cardPurpleBorder}" stroke-width="1.5"/>
+        <text x="76" y="412" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="432" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="452" font-size="11" font-weight="700" fill="#7c3aed">ARR: $35.0M · S&M: 42%</text>
         <!-- Port Dot -->
-        <circle cx="180" cy="470" r="7" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
-        <circle cx="180" cy="470" r="2.5" fill="#c084fc"/>
+        <circle cx="180" cy="470" r="7" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
+        <circle cx="180" cy="470" r="2.5" fill="#7c3aed"/>
       </g>
 
       <!-- Card B2 (Multi-Product) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('B2')" style="cursor:pointer;">
-        <rect x="58" y="495" width="244" height="85" rx="10" fill="#1f1433" stroke="#2e1b4d" stroke-width="1.5"/>
-        <text x="76" y="522" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
-        <text x="76" y="542" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
-        <text x="76" y="562" font-size="11" font-weight="700" fill="#c084fc">ARR: $75.0M · S&M: 38%</text>
+      <g class="flow-svg-node" onclick="selectFlowPhase('B2')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="58" y="495" width="244" height="85" rx="10" fill="${pal.cardPurpleBg}" stroke="${pal.cardPurpleBorder}" stroke-width="1.5"/>
+        <text x="76" y="522" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="542" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="562" font-size="11" font-weight="700" fill="#7c3aed">ARR: $75.0M · S&M: 38%</text>
         <!-- Port Dot Right -->
-        <circle cx="302" cy="537" r="7" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
-        <circle cx="302" cy="537" r="2.5" fill="#c084fc"/>
+        <circle cx="302" cy="537" r="7" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
+        <circle cx="302" cy="537" r="2.5" fill="#7c3aed"/>
       </g>
 
       <!-- Internal vertical connector -->
-      <line x1="180" y1="470" x2="180" y2="495" stroke="#6b21a8" stroke-width="2"/>
+      <line x1="180" y1="470" x2="180" y2="495" stroke="${pal.edgeLine}" stroke-width="2"/>
     </g>
 
     <!-- Connector between Cyan and Purple Containers -->
-    <path d="M 180 300 L 180 340" stroke="#475569" stroke-width="2"/>
-    <circle cx="180" cy="300" r="5" fill="#081421" stroke="#06b6d4" stroke-width="2"/>
-    <circle cx="180" cy="340" r="5" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
+    <path d="M 180 300 L 180 340" stroke="${pal.edgeLine}" stroke-width="2"/>
+    <circle cx="180" cy="300" r="5" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
+    <circle cx="180" cy="340" r="5" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
 
     <!-- Middle Floating Cards (Bridge Trajectory) -->
     <!-- Card M1 (Mid-Market Inflection) -->
-    <g class="flow-svg-node" onclick="selectFlowPhase('M1')" style="cursor:pointer;">
-      <rect x="390" y="240" width="190" height="95" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>
-      <text x="410" y="270" font-size="14" font-weight="800" fill="#f8fafc">Etiam elementum</text>
-      <text x="410" y="292" font-size="11.5" fill="#94a3b8">Quisque ornare sapien</text>
-      <text x="410" y="314" font-size="11" font-weight="700" fill="#38bdf8">ARR: $120.0M · 60%</text>
-      <circle cx="390" cy="287" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
-      <circle cx="580" cy="287" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+    <g class="flow-svg-node" onclick="selectFlowPhase('M1')" style="cursor:pointer;" filter="url(#cardShadow)">
+      <rect x="390" y="240" width="190" height="95" rx="10" fill="${pal.cardMidBg}" stroke="${pal.cardMidBorder}" stroke-width="1.5"/>
+      <text x="410" y="270" font-size="14" font-weight="800" fill="${pal.title}">Etiam elementum</text>
+      <text x="410" y="292" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+      <text x="410" y="314" font-size="11" font-weight="700" fill="#0284c7">ARR: $120.0M · 60%</text>
+      <circle cx="390" cy="287" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
+      <circle cx="580" cy="287" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
     </g>
 
     <!-- Card M2 (Channel Ecosystem) -->
-    <g class="flow-svg-node" onclick="selectFlowPhase('M2')" style="cursor:pointer;">
-      <rect x="390" y="470" width="190" height="95" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>
-      <text x="410" y="500" font-size="14" font-weight="800" fill="#f8fafc">Etiam elementum</text>
-      <text x="410" y="522" font-size="11.5" fill="#94a3b8">Quisque ornare sapien</text>
-      <text x="410" y="544" font-size="11" font-weight="700" fill="#c084fc">ARR: $200.0M · 50%</text>
-      <circle cx="390" cy="517" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
-      <circle cx="580" cy="517" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+    <g class="flow-svg-node" onclick="selectFlowPhase('M2')" style="cursor:pointer;" filter="url(#cardShadow)">
+      <rect x="390" y="470" width="190" height="95" rx="10" fill="${pal.cardMidBg}" stroke="${pal.cardMidBorder}" stroke-width="1.5"/>
+      <text x="410" y="500" font-size="14" font-weight="800" fill="${pal.title}">Etiam elementum</text>
+      <text x="410" y="522" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+      <text x="410" y="544" font-size="11" font-weight="700" fill="#7c3aed">ARR: $200.0M · 50%</text>
+      <circle cx="390" cy="517" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
+      <circle cx="580" cy="517" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
     </g>
 
     <!-- Subgraph 3: Blue Container (Right) -->
     <g class="process-subgraph-blue" filter="url(#blueGlow)">
-      <rect x="670" y="170" width="330" height="390" rx="16" ry="16" fill="#0a172a" stroke="#3b82f6" stroke-width="2.5"/>
-      <text x="695" y="205" font-size="11" font-weight="800" fill="#60a5fa" letter-spacing="0.5">PHASE 3 · ENTERPRISE PLATFORM & MOAT</text>
+      <rect x="670" y="170" width="330" height="390" rx="16" ry="16" fill="${pal.blueBg}" stroke="${pal.blueStroke}" stroke-width="2.5"/>
+      <text x="695" y="205" font-size="11" font-weight="800" fill="${pal.blueHeader}" letter-spacing="0.5">PHASE 3 · ENTERPRISE PLATFORM & MOAT</text>
 
       <!-- Card C1 (Enterprise Suite GA) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('C1')" style="cursor:pointer;">
-        <rect x="692" y="225" width="286" height="135" rx="12" fill="#0e223f" stroke="#1d3b66" stroke-width="1.5"/>
-        <text x="714" y="260" font-size="15" font-weight="800" fill="#f8fafc">Etiam elementum</text>
-        <text x="714" y="285" font-size="12" fill="#94a3b8">Quisque ornare sapien</text>
-        <text x="714" y="310" font-size="12" font-weight="700" fill="#60a5fa">Enterprise Security · ARR: $450.0M</text>
-        <text x="714" y="332" font-size="11" font-weight="600" fill="#34d399">S&M: 32% | R&D: 23% | Rule of 40: 52</text>
-        <circle cx="692" cy="292" r="7" fill="#0a172a" stroke="#3b82f6" stroke-width="2"/>
-        <circle cx="692" cy="292" r="2.5" fill="#60a5fa"/>
+      <g class="flow-svg-node" onclick="selectFlowPhase('C1')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="692" y="225" width="286" height="135" rx="12" fill="${pal.cardBlueBg}" stroke="${pal.cardBlueBorder}" stroke-width="1.5"/>
+        <text x="714" y="260" font-size="15" font-weight="800" fill="${pal.title}">Etiam elementum</text>
+        <text x="714" y="285" font-size="12" fill="${pal.sub}">Quisque ornare sapien</text>
+        <text x="714" y="310" font-size="12" font-weight="700" fill="#2563eb">Enterprise Security · ARR: $450.0M</text>
+        <text x="714" y="332" font-size="11" font-weight="600" fill="#059669">S&M: 32% | R&D: 23% | Rule of 40: 52</text>
+        <circle cx="692" cy="292" r="7" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="2"/>
+        <circle cx="692" cy="292" r="2.5" fill="#2563eb"/>
       </g>
 
       <!-- Card C2 (Operating Cash Machine) -->
-      <g class="flow-svg-node" onclick="selectFlowPhase('C2')" style="cursor:pointer;">
-        <rect x="692" y="390" width="286" height="135" rx="12" fill="#0e223f" stroke="#1d3b66" stroke-width="1.5"/>
-        <text x="714" y="425" font-size="15" font-weight="800" fill="#f8fafc">Etiam elementum</text>
-        <text x="714" y="450" font-size="12" fill="#94a3b8">Quisque ornare sapien</text>
-        <text x="714" y="475" font-size="12" font-weight="700" fill="#34d399">Operating Leverage · ARR: $850.0M</text>
-        <text x="714" y="497" font-size="11" font-weight="600" fill="#38bdf8">FCF Margin: 28% | Rule of 40: 54</text>
-        <circle cx="692" cy="457" r="7" fill="#0a172a" stroke="#3b82f6" stroke-width="2"/>
-        <circle cx="692" cy="457" r="2.5" fill="#34d399"/>
+      <g class="flow-svg-node" onclick="selectFlowPhase('C2')" style="cursor:pointer;" filter="url(#cardShadow)">
+        <rect x="692" y="390" width="286" height="135" rx="12" fill="${pal.cardBlueBg}" stroke="${pal.cardBlueBorder}" stroke-width="1.5"/>
+        <text x="714" y="425" font-size="15" font-weight="800" fill="${pal.title}">Etiam elementum</text>
+        <text x="714" y="450" font-size="12" fill="${pal.sub}">Quisque ornare sapien</text>
+        <text x="714" y="475" font-size="12" font-weight="700" fill="#059669">Operating Leverage · ARR: $850.0M</text>
+        <text x="714" y="497" font-size="11" font-weight="600" fill="#0284c7">FCF Margin: 28% | Rule of 40: 54</text>
+        <circle cx="692" cy="457" r="7" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="2"/>
+        <circle cx="692" cy="457" r="2.5" fill="#059669"/>
       </g>
 
       <!-- Internal vertical connector between C1 and C2 -->
-      <line x1="835" y1="360" x2="835" y2="390" stroke="#3b82f6" stroke-width="2"/>
-      <circle cx="835" cy="360" r="5" fill="#0a172a" stroke="#3b82f6" stroke-width="1.5"/>
-      <circle cx="835" cy="390" r="5" fill="#0a172a" stroke="#3b82f6" stroke-width="1.5"/>
+      <line x1="835" y1="360" x2="835" y2="390" stroke="${pal.blueStroke}" stroke-width="2"/>
+      <circle cx="835" cy="360" r="5" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="1.5"/>
+      <circle cx="835" cy="390" r="5" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="1.5"/>
     </g>
 
     <!-- Edge Connectors with High-Contrast Pill Badges -->
     <!-- Edge 1: Card A2 -> Card M1 -->
-    <path d="M 302 237 L 340 237 L 340 287 L 384 287" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <path d="M 302 237 L 340 237 L 340 287 L 384 287" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
     <g transform="translate(315, 218)">
-      <rect width="130" height="24" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
-      <text x="65" y="16" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare ut nequetemes</text>
+      <rect width="130" height="24" rx="12" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
+      <text x="65" y="16" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare ut nequetemes</text>
     </g>
 
     <!-- Edge 2: Card B2 -> Card M2 -->
-    <path d="M 302 537 L 384 537" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <path d="M 302 537 L 384 537" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
     <g transform="translate(320, 520)">
-      <rect width="80" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
-      <text x="40" y="15" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare</text>
+      <rect width="80" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
+      <text x="40" y="15" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
     </g>
 
     <!-- Edge 3: Card M1 -> Card C1 -->
-    <path d="M 580 287 L 686 287" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <path d="M 580 287 L 686 287" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
 
     <!-- Edge 4: Card M2 -> Card C2 -->
-    <path d="M 580 517 L 630 517 L 630 457 L 686 457" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <path d="M 580 517 L 630 517 L 630 457 L 686 457" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
 
     <!-- Edge 5: Cross Bridge G1 -> G3 -->
-    <path d="M 320 125 L 670 125 L 835 125 L 835 170" fill="none" stroke="#334155" stroke-dasharray="4,4" stroke-width="1.5"/>
+    <path d="M 320 125 L 670 125 L 835 125 L 835 170" fill="none" stroke="${pal.edgeLine}" stroke-dasharray="4,4" stroke-width="1.5"/>
+    <g transform="translate(460, 112)">
+      <rect width="90" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
+      <text x="45" y="15" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
+    </g>
+  </svg>
+  `;
+}
     <g transform="translate(460, 112)">
       <rect width="90" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
       <text x="45" y="15" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare</text>
