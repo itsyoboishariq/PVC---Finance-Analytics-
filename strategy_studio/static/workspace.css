@@ -2384,48 +2384,75 @@ main {
   display: block;
 }
 
-/* Hover and active effects on Mermaid / SVG nodes - stable & zero jitter */
-.flowchart-viewport .node,
+/* ==========================================================================
+   Interactive Component-Driven Strategy Flow Styling
+   ========================================================================== */
 .flowchart-viewport .flow-svg-node {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.flowchart-viewport .flow-svg-node:hover {
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.12));
+}
+
+.flowchart-viewport .flow-svg-node:hover rect.card-bg {
+  stroke: #0284c7 !important;
+  stroke-width: 2px !important;
+}
+
+.flowchart-viewport .flow-svg-node.active-stage rect.card-bg {
+  stroke: #0284c7 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 12px rgba(2, 132, 199, 0.45));
+}
+
+/* Animated Capital/Revenue Flow Pulse on Connectors */
+@keyframes flowPulse {
+  from {
+    stroke-dashoffset: 44;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.flow-pulse-edge {
+  stroke-dasharray: 6 10;
+  animation: flowPulse 2.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Edge Decision Badges */
+.edge-badge-group {
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.edge-badge-group rect {
+  transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+}
+
+.edge-badge-group:hover rect {
+  fill: #0f172a !important;
+  stroke: #0f172a !important;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.25));
+}
+
+.edge-badge-group:hover text {
+  fill: #ffffff !important;
+}
+
+/* Legacy node compatibility */
+.flowchart-viewport .node {
   cursor: pointer;
 }
 
-.flowchart-viewport .node rect,
-.flowchart-viewport .flow-svg-node rect {
-  transition: stroke 0.18s ease, stroke-width 0.18s ease;
-}
-
-.flowchart-viewport .node:hover rect,
-.flowchart-viewport .flow-svg-node:hover rect {
-  stroke: var(--primary) !important;
-  stroke-width: 3px !important;
-}
-
-.flowchart-viewport .node.active-stage rect,
-.flowchart-viewport .flow-svg-node.active-stage rect {
-  stroke: #fb7185 !important;
+.flowchart-viewport .node.active-stage rect {
+  stroke: #0284c7 !important;
   stroke-width: 3.5px !important;
-}
-
-.dark .flowchart-viewport .edgePath path {
-  stroke: #e11d48 !important;
-  stroke-width: 2px !important;
-}
-.dark .flowchart-viewport .arrowheadPath {
-  fill: #e11d48 !important;
-  stroke: #e11d48 !important;
-}
-.dark .flowchart-viewport .edgeLabel {
-  background-color: #14090c !important;
-  color: #fda4af !important;
-}
-.dark .flowchart-viewport .edgeLabel rect {
-  fill: #14090c !important;
-  opacity: 0.95 !important;
-}
-.dark .flowchart-viewport .edgeLabel span {
-  color: #fda4af !important;
-  font-weight: 700 !important;
 }
 
 @media (max-width: 1320px) {
