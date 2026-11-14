@@ -11,3 +11,6 @@ class WorkspaceTests(unittest.TestCase):
   c=TestClient(app)
   r=c.get('/api/strategy/company-flow-list');self.assertEqual(r.status_code,200);self.assertTrue(len(r.json()['items'])>=10)
   r2=c.post('/api/strategy/company-flow/SNOW',json={'startup_profile':{'revenue':10e6,'sales_marketing_ratio':.45}});self.assertEqual(r2.status_code,200);d=r2.json();self.assertTrue(len(d['stages'])>=3);self.assertIn('graph LR',d['mermaid_code']);self.assertIn('comparison',d)
+ def test_phase_deepdive(self):
+  c=TestClient(app)
+  r=c.get('/api/strategy/phase-deepdive/DDOG/3');self.assertEqual(r.status_code,200);d=r.json();self.assertIn('strategic_why',d);self.assertIn('frameworks',d);self.assertIn('ansoff',d['frameworks']);self.assertTrue(len(d['product_lines'])>=1)
