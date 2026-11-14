@@ -103,24 +103,18 @@ body {
   overflow: hidden;
 }
 
-/* --- Shadcn Sidebar (Slide-Over Drawer) --- */
+/* --- Shadcn Sidebar with ChatGPT Icon Rail (Collapsible: 54px Rail <-> 380px Expanded) --- */
 .shadcn-sidebar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 360px;
-  max-width: 90vw;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
   background: var(--surface);
   border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  z-index: 60;
-  transform: translateX(0);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
-  visibility: visible;
-  box-shadow: var(--shadow-lg);
+  flex-shrink: 0;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  z-index: 50;
   user-select: none;
 }
 
@@ -457,95 +451,298 @@ body {
 }
 
 /* ==========================================================================
-   Collapsed State (Slide-Over Off-Screen Drawer)
+   Shadcn Sidebar with Icon Rail (ChatGPT Design System)
    ========================================================================== */
-.shadcn-sidebar[data-state="collapsed"] {
-  transform: translateX(-100%) !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  width: 360px;
-}
 
-.shadcn-sidebar[data-state="collapsed"] .team-info,
-.shadcn-sidebar[data-state="collapsed"] .sidebar-group-label,
-.shadcn-sidebar[data-state="collapsed"] .menu-label,
-.shadcn-sidebar[data-state="collapsed"] .menu-badge,
-.shadcn-sidebar[data-state="collapsed"] .search-text,
-.shadcn-sidebar[data-state="collapsed"] .search-kbd,
-.shadcn-sidebar[data-state="collapsed"] .user-info,
-.shadcn-sidebar[data-state="collapsed"] .user-chevrons,
-.shadcn-sidebar[data-state="collapsed"] .status-indicator-text {
-  display: none !important;
-}
-
-.shadcn-sidebar[data-state="collapsed"] .sidebar-header {
-  padding: 12px 8px;
+/* Rail Component (Always docked on the left) */
+.sidebar-rail {
+  width: 54px;
+  min-width: 54px;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 45;
+}
+
+.rail-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.rail-logo-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.shadcn-sidebar[data-state="collapsed"] .team-switcher {
+.openai-logo-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+  transition: all 0.2s ease;
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-collapse-trigger {
-  display: none;
+.dark .openai-logo-box {
+  background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-search-box {
-  padding: 8px 6px;
+.rail-logo-btn:hover .openai-logo-box {
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-search-btn {
+.rail-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 7px 0;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-menu-btn {
+.rail-icon-btn:hover {
+  background: var(--surface-subtle);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+.rail-icon-btn.active {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-main);
+  border-color: #cbd5e1;
+}
+
+.dark .rail-icon-btn.active {
+  background: rgba(225, 29, 72, 0.15);
+  color: #fb7185;
+  border-color: #be123c;
+}
+
+.rail-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.rail-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 8px 0;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-footer {
-  padding: 10px 6px;
+.dark .rail-user-avatar {
+  background: #fb7185;
+  color: #0f172a;
 }
 
-.shadcn-sidebar[data-state="collapsed"] .sidebar-user-card {
-  justify-content: center;
-  padding: 6px 0;
-}
-
-.shadcn-sidebar[data-state="collapsed"] .sidebar-status-strip {
-  justify-content: center;
-  padding: 0;
-}
-
-/* Tooltips when Sidebar is Collapsed */
-.shadcn-sidebar[data-state="collapsed"] .sidebar-menu-btn:hover::after,
-.shadcn-sidebar[data-state="collapsed"] .sidebar-search-btn:hover::after {
+/* Tooltips on Rail Buttons */
+.sidebar-rail button[data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: calc(100% + 10px);
+  left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
   background: #0f172a;
-  color: #f8fafc;
-  padding: 5px 9px;
+  color: #ffffff;
+  padding: 5px 10px;
   border-radius: 6px;
   font-size: 11.5px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 100;
-  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
   animation: tooltipFade 0.15s ease-out;
 }
 
-.dark .shadcn-sidebar[data-state="collapsed"] .sidebar-menu-btn:hover::after,
-.dark .shadcn-sidebar[data-state="collapsed"] .sidebar-search-btn:hover::after {
+.dark .sidebar-rail button[data-tooltip]:hover::after {
   background: #27272a;
   color: #ffffff;
   border: 1px solid #3f3f46;
+}
+
+/* Expandable Panel Styling */
+.sidebar-expanded-panel {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.team-logo.openai-gradient {
+  background: linear-gradient(135deg, #10a37f 0%, #0d8c6c 100%);
+  color: #ffffff;
+}
+
+.sidebar-category-nav {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--surface-subtle);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-cat-pill {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.sidebar-cat-pill:hover,
+.sidebar-cat-pill.active {
+  background: var(--text-main);
+  color: #ffffff;
+  border-color: var(--text-main);
+}
+
+.dark .sidebar-cat-pill:hover,
+.dark .sidebar-cat-pill.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.sidebar-feature-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-peer-pill {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sidebar-peer-pill:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.sidebar-archetypes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sidebar-archetype-card {
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sidebar-archetype-card:hover {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.06);
+}
+
+.archetype-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.archetype-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   Collapsed vs Expanded States
+   ========================================================================== */
+.shadcn-sidebar[data-state="collapsed"] {
+  width: 54px !important;
+  transform: none !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.shadcn-sidebar[data-state="collapsed"] .sidebar-expanded-panel {
+  display: none !important;
+}
+
+.shadcn-sidebar[data-state="expanded"] {
+  width: 380px !important;
+  transform: none !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+}
+
+.shadcn-sidebar[data-state="expanded"] .sidebar-expanded-panel {
+  display: flex !important;
 }
 
 @keyframes tooltipFade {
@@ -2022,19 +2219,160 @@ main {
 .mermaid-centric-workspace {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0;
   width: 100%;
+  height: 100%;
 }
 
 .flowchart-hero-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 0;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+}
+
+/* ==========================================================================
+   Flush Fullscreen Strategy Flowchart Canvas (Fits directly beneath topbar)
+   ========================================================================== */
+.flush-fullscreen-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: calc(100vh - 54px) !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  background: #ffffff !important;
+}
+
+.flush-canvas-card {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+/* Floating Translucent Control Dock (Centered at top of canvas) */
+.ai-flow-floating-dock {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 9999px;
+  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 95vw;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .ai-flow-floating-dock {
+  background: rgba(20, 9, 12, 0.92);
+  border-color: rgba(56, 21, 29, 0.9);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+.ai-flow-floating-dock.minimized {
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+
+.ai-flow-floating-dock.minimized .ai-flow-dock-pill,
+.ai-flow-floating-dock.minimized .dock-divider,
+.ai-flow-floating-dock.minimized .dock-presets-group {
+  display: none !important;
+}
+
+.ai-flow-dock-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 2px 4px 2px 8px;
+  width: 290px;
+}
+
+.dark .ai-flow-dock-pill {
+  background: #14090c;
+  border-color: #38151d;
+}
+
+.dock-divider {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.dark .dock-divider {
+  background: #38151d;
+}
+
+.dock-presets-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Floating Stage Badge at Top-Left */
+.canvas-floating-badge {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: 20;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.dark .canvas-floating-badge {
+  background: rgba(20, 9, 12, 0.88);
+  border-color: rgba(56, 21, 29, 0.9);
+}
+
+/* Full-Height Flowchart Viewport (Flush Edge-to-Edge) */
+.full-height-viewport {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1 !important;
+  min-height: 500px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  position: relative !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px) !important;
+  background-size: 24px 24px !important;
+  cursor: grab;
 }
 
 .flowchart-top-bar {

@@ -1159,12 +1159,14 @@ function initSidebar() {
   const collapseBtn = $('sidebarCollapseBtn');
   const topbarTrigger = $('topbarSidebarTrigger');
   const backdrop = $('sidebarBackdrop');
+  const railLogoBtn = $('railLogoBtn');
+  const railToggleBtn = $('railToggleBtn');
 
   function setSidebarState(state) {
     if (!sidebar) return;
     sidebar.setAttribute('data-state', state);
     if (backdrop) {
-      if (state === 'expanded') {
+      if (state === 'expanded' && window.innerWidth <= 1024) {
         backdrop.setAttribute('data-state', 'open');
         backdrop.setAttribute('data-visible', 'true');
         backdrop.classList.add('active');
@@ -1185,7 +1187,54 @@ function initSidebar() {
 
   if (collapseBtn) collapseBtn.onclick = () => setSidebarState('collapsed');
   if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
+  if (railLogoBtn) railLogoBtn.onclick = toggleSidebar;
+  if (railToggleBtn) railToggleBtn.onclick = toggleSidebar;
   if (backdrop) backdrop.onclick = () => setSidebarState('collapsed');
+
+  function scrollToSidebarSection(secId) {
+    if (!secId) return;
+    const sec = $(secId);
+    if (sec) {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Handle Rail Nav Icon Clicks: opens sidebar to that feature!
+  document.querySelectorAll('.sidebar-rail button[data-target-sec]').forEach(btn => {
+    btn.onclick = () => {
+      setSidebarState('expanded');
+      document.querySelectorAll('.sidebar-rail .rail-icon-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const secId = btn.dataset.targetSec;
+      scrollToSidebarSection(secId);
+      // Synchronize category pills
+      document.querySelectorAll('.sidebar-category-nav .sidebar-cat-pill').forEach(pill => {
+        pill.classList.toggle('active', pill.dataset.targetSec === secId);
+      });
+    };
+  });
+
+  // Handle Rail Dashboard button
+  if ($('railNavDashboard')) {
+    $('railNavDashboard').onclick = () => {
+      const viewDashBtn = $('viewDashboardBtn');
+      if (viewDashBtn) viewDashBtn.click();
+    };
+  }
+
+  // Handle Expanded Category Nav Pills
+  document.querySelectorAll('.sidebar-category-nav .sidebar-cat-pill').forEach(pill => {
+    pill.onclick = () => {
+      document.querySelectorAll('.sidebar-category-nav .sidebar-cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const secId = pill.dataset.targetSec;
+      scrollToSidebarSection(secId);
+      // Synchronize rail icons
+      document.querySelectorAll('.sidebar-rail button[data-target-sec]').forEach(b => {
+        b.classList.toggle('active', b.dataset.targetSec === secId);
+      });
+    };
+  });
 
   // Keyboard shortcuts
   window.addEventListener('keydown', e => {
@@ -1198,7 +1247,7 @@ function initSidebar() {
     }
   });
 
-  // Flowchart is the centerpiece: default to clean collapsed drawer
+  // Flowchart is the centerpiece: default to clean collapsed icon rail
   setSidebarState('collapsed');
 
   // Sidebar navigation item clicks
@@ -1445,6 +1494,19 @@ async function initCompanyFlow() {
           document.exitFullscreen().catch(e => console.warn(e));
           toggleFullscreenBtn.textContent = '⛶';
         }
+      }
+    };
+  }
+
+  // Floating Toolbar Dock Toggle
+  const toggleDockBtn = $('toggleDockBtn');
+  if (toggleDockBtn) {
+    toggleDockBtn.onclick = () => {
+      const dock = $('aiFlowFloatingDock');
+      if (dock) {
+        const isMin = dock.classList.toggle('minimized');
+        toggleDockBtn.textContent = isMin ? '+' : '−';
+        toggleDockBtn.title = isMin ? 'Expand Toolbar' : 'Minimize Toolbar';
       }
     };
   }
@@ -1716,6 +1778,17 @@ async function initCompanyFlow() {
       });
     };
   });
+
+  // Global Helpers for Sidebar & Quick Actions
+  window.selectCompany = function(ticker) {
+    if (select) {
+      select.value = ticker;
+      select.dispatchEvent(new Event('change'));
+    } else {
+      loadCompanyFlow(ticker);
+    }
+  };
+  window.loadPresetFlow = loadPresetFlow;
 
   // Default initial load: Process Flow Diagram Template matching reference image!
   loadPresetFlow('template-process-flow');
