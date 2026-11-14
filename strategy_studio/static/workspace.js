@@ -1448,13 +1448,86 @@ async function initCompanyFlow() {
     };
   }
 
+  // View Switcher (Strategy Canvas vs Executive Bento Dashboard)
+  const viewCanvasBtn = $('viewCanvasBtn');
+  const viewDashboardBtn = $('viewDashboardBtn');
+  const canvasCard = document.querySelector('.flowchart-hero-card');
+  const dashView = $('executiveDashboardView');
+  const breadcrumb = $('currentTopBreadcrumb');
+
+  function switchView(mode) {
+    if (mode === 'dashboard') {
+      if (canvasCard) canvasCard.style.display = 'none';
+      if (dashView) dashView.style.display = 'flex';
+      viewCanvasBtn?.classList.remove('active');
+      viewDashboardBtn?.classList.add('active');
+      if (breadcrumb) breadcrumb.textContent = 'Executive Dashboard';
+      if (currentDeepdiveData) renderPhaseDeepdive(currentDeepdiveData);
+    } else {
+      if (canvasCard) canvasCard.style.display = 'flex';
+      if (dashView) dashView.style.display = 'none';
+      viewCanvasBtn?.classList.add('active');
+      viewDashboardBtn?.classList.remove('active');
+      if (breadcrumb) breadcrumb.textContent = 'Strategy Canvas';
+    }
+  }
+
+  if (viewCanvasBtn) viewCanvasBtn.onclick = () => switchView('canvas');
+  if (viewDashboardBtn) viewDashboardBtn.onclick = () => switchView('dashboard');
+
+  // AI Model Selector Handler
+  const aiModelSelect = $('aiModelSelect');
+  if (aiModelSelect) {
+    fetch('/api/ai/model-config')
+      .then(r => r.json())
+      .then(cfg => {
+        if (cfg.current_model) aiModelSelect.value = cfg.current_model;
+      })
+      .catch(e => console.warn(e));
+
+    aiModelSelect.onchange = async () => {
+      const selectedModel = aiModelSelect.value;
+      try {
+        await fetch('/api/ai/set-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel })
+        });
+        toast.success('AI Model Configured', `Active model set to ${selectedModel}`);
+      } catch (e) {
+        toast.error('Model Error', e.message);
+      }
+    };
+  }
+
+  // Shadcn Sheet Drawer Open / Close Handlers
+  function openInspectorSheet() {
+    const sheet = $('stageInspectorSheet');
+    const backdrop = $('stageInspectorBackdrop');
+    if (sheet) sheet.style.display = 'flex';
+    if (backdrop) backdrop.style.display = 'block';
+  }
+
+  function closeInspectorSheet() {
+    const sheet = $('stageInspectorSheet');
+    const backdrop = $('stageInspectorBackdrop');
+    if (sheet) sheet.style.display = 'none';
+    if (backdrop) backdrop.style.display = 'none';
+  }
+
+  if ($('closeInspectorSheetBtn')) $('closeInspectorSheetBtn').onclick = closeInspectorSheet;
+  if ($('stageInspectorBackdrop')) $('stageInspectorBackdrop').onclick = closeInspectorSheet;
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeInspectorSheet();
+  });
+
   if (toggleInspectorBtn) {
     toggleInspectorBtn.onclick = () => {
-      const insp = $('stageInspectorSection');
-      if (insp) {
-        const isHidden = insp.style.display === 'none';
-        insp.style.display = isHidden ? 'block' : 'none';
-        toggleInspectorBtn.classList.toggle('active', isHidden);
+      const sheet = $('stageInspectorSheet');
+      if (sheet && sheet.style.display !== 'none') {
+        closeInspectorSheet();
+      } else {
+        openInspectorSheet();
       }
     };
   }
@@ -2129,6 +2202,9 @@ function copyStageLevers(payload) {
 }
 
 function renderNativeSvgFlowchart(stages) {
+  if (currentCompanyFlowData && (currentCompanyFlowData.id === 'template-process-flow' || currentCompanyFlowData.id === 'template')) {
+    return renderProcessFlowTemplateSvg(stages);
+  }
   if (!stages || !stages.length) return '';
   const nodeW = 190;
   const nodeH = 105;
@@ -2185,6 +2261,181 @@ function renderNativeSvgFlowchart(stages) {
   });
 
   return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="min-width:${totalW}px;">${defs}${nodesHtml}</svg>`;
+}
+
+/* Vector-Sharp Replica of the Process Flow Diagram Template */
+function renderProcessFlowTemplateSvg(stages) {
+  const W = 1040;
+  const H = 640;
+
+  return `
+  <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="min-width:${W}px; min-height:${H}px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <defs>
+      <!-- Pin / Dot Indicators -->
+      <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#06b6d4" flood-opacity="0.35"/>
+      </filter>
+      <filter id="purpleGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.35"/>
+      </filter>
+      <filter id="blueGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3b82f6" flood-opacity="0.35"/>
+      </filter>
+      <marker id="arrowRight" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 2 L 7 5 L 0 8 z" fill="#cbd5e1"/>
+      </marker>
+    </defs>
+
+    <!-- Subgraph 1: Cyan Container (Top-Left) -->
+    <g class="process-subgraph-cyan" filter="url(#cyanGlow)">
+      <rect x="40" y="40" width="280" height="260" rx="16" ry="16" fill="#081421" stroke="#06b6d4" stroke-width="2.5"/>
+      <text x="60" y="70" font-size="11" font-weight="800" fill="#22d3ee" letter-spacing="0.5">PHASE 1 · PRODUCT-MARKET FIT</text>
+      
+      <!-- Card A1 (Core Dev) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('A1')" style="cursor:pointer;">
+        <rect x="58" y="85" width="244" height="85" rx="10" fill="#111d2e" stroke="#1e293b" stroke-width="1.5"/>
+        <text x="76" y="112" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
+        <text x="76" y="132" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
+        <text x="76" y="152" font-size="11" font-weight="700" fill="#38bdf8">ARR: $5.0M · S&M: 52%</text>
+        <!-- Port Dot -->
+        <circle cx="180" cy="170" r="7" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
+        <circle cx="180" cy="170" r="2.5" fill="#38bdf8"/>
+      </g>
+
+      <!-- Card A2 (PLG Funnel) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('A2')" style="cursor:pointer;">
+        <rect x="58" y="195" width="244" height="85" rx="10" fill="#111d2e" stroke="#1e293b" stroke-width="1.5"/>
+        <text x="76" y="222" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
+        <text x="76" y="242" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
+        <text x="76" y="262" font-size="11" font-weight="700" fill="#38bdf8">ARR: $15.0M · S&M: 46%</text>
+        <!-- Port Dot Right -->
+        <circle cx="302" cy="237" r="7" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
+        <circle cx="302" cy="237" r="2.5" fill="#38bdf8"/>
+      </g>
+      
+      <!-- Internal vertical connector -->
+      <line x1="180" y1="170" x2="180" y2="195" stroke="#475569" stroke-width="2"/>
+    </g>
+
+    <!-- Subgraph 2: Purple Container (Bottom-Left) -->
+    <g class="process-subgraph-purple" filter="url(#purpleGlow)">
+      <rect x="40" y="340" width="280" height="260" rx="16" ry="16" fill="#160e24" stroke="#a855f7" stroke-width="2.5"/>
+      <text x="60" y="370" font-size="11" font-weight="800" fill="#c084fc" letter-spacing="0.5">PHASE 2 · GTM SCALE ENGINE</text>
+
+      <!-- Card B1 (Inside Sales) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('B1')" style="cursor:pointer;">
+        <rect x="58" y="385" width="244" height="85" rx="10" fill="#1f1433" stroke="#2e1b4d" stroke-width="1.5"/>
+        <text x="76" y="412" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
+        <text x="76" y="432" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
+        <text x="76" y="452" font-size="11" font-weight="700" fill="#c084fc">ARR: $35.0M · S&M: 42%</text>
+        <!-- Port Dot -->
+        <circle cx="180" cy="470" r="7" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="180" cy="470" r="2.5" fill="#c084fc"/>
+      </g>
+
+      <!-- Card B2 (Multi-Product) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('B2')" style="cursor:pointer;">
+        <rect x="58" y="495" width="244" height="85" rx="10" fill="#1f1433" stroke="#2e1b4d" stroke-width="1.5"/>
+        <text x="76" y="522" font-size="14" font-weight="800" fill="#f8fafc">Etiam elem</text>
+        <text x="76" y="542" font-size="11.5" fill="#94a3b8">Quisque ore sapien</text>
+        <text x="76" y="562" font-size="11" font-weight="700" fill="#c084fc">ARR: $75.0M · S&M: 38%</text>
+        <!-- Port Dot Right -->
+        <circle cx="302" cy="537" r="7" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="302" cy="537" r="2.5" fill="#c084fc"/>
+      </g>
+
+      <!-- Internal vertical connector -->
+      <line x1="180" y1="470" x2="180" y2="495" stroke="#6b21a8" stroke-width="2"/>
+    </g>
+
+    <!-- Connector between Cyan and Purple Containers -->
+    <path d="M 180 300 L 180 340" stroke="#475569" stroke-width="2"/>
+    <circle cx="180" cy="300" r="5" fill="#081421" stroke="#06b6d4" stroke-width="2"/>
+    <circle cx="180" cy="340" r="5" fill="#160e24" stroke="#a855f7" stroke-width="2"/>
+
+    <!-- Middle Floating Cards (Bridge Trajectory) -->
+    <!-- Card M1 (Mid-Market Inflection) -->
+    <g class="flow-svg-node" onclick="selectFlowPhase('M1')" style="cursor:pointer;">
+      <rect x="390" y="240" width="190" height="95" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <text x="410" y="270" font-size="14" font-weight="800" fill="#f8fafc">Etiam elementum</text>
+      <text x="410" y="292" font-size="11.5" fill="#94a3b8">Quisque ornare sapien</text>
+      <text x="410" y="314" font-size="11" font-weight="700" fill="#38bdf8">ARR: $120.0M · 60%</text>
+      <circle cx="390" cy="287" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+      <circle cx="580" cy="287" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+    </g>
+
+    <!-- Card M2 (Channel Ecosystem) -->
+    <g class="flow-svg-node" onclick="selectFlowPhase('M2')" style="cursor:pointer;">
+      <rect x="390" y="470" width="190" height="95" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <text x="410" y="500" font-size="14" font-weight="800" fill="#f8fafc">Etiam elementum</text>
+      <text x="410" y="522" font-size="11.5" fill="#94a3b8">Quisque ornare sapien</text>
+      <text x="410" y="544" font-size="11" font-weight="700" fill="#c084fc">ARR: $200.0M · 50%</text>
+      <circle cx="390" cy="517" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+      <circle cx="580" cy="517" r="6" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+    </g>
+
+    <!-- Subgraph 3: Blue Container (Right) -->
+    <g class="process-subgraph-blue" filter="url(#blueGlow)">
+      <rect x="670" y="170" width="330" height="390" rx="16" ry="16" fill="#0a172a" stroke="#3b82f6" stroke-width="2.5"/>
+      <text x="695" y="205" font-size="11" font-weight="800" fill="#60a5fa" letter-spacing="0.5">PHASE 3 · ENTERPRISE PLATFORM & MOAT</text>
+
+      <!-- Card C1 (Enterprise Suite GA) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('C1')" style="cursor:pointer;">
+        <rect x="692" y="225" width="286" height="135" rx="12" fill="#0e223f" stroke="#1d3b66" stroke-width="1.5"/>
+        <text x="714" y="260" font-size="15" font-weight="800" fill="#f8fafc">Etiam elementum</text>
+        <text x="714" y="285" font-size="12" fill="#94a3b8">Quisque ornare sapien</text>
+        <text x="714" y="310" font-size="12" font-weight="700" fill="#60a5fa">Enterprise Security · ARR: $450.0M</text>
+        <text x="714" y="332" font-size="11" font-weight="600" fill="#34d399">S&M: 32% | R&D: 23% | Rule of 40: 52</text>
+        <circle cx="692" cy="292" r="7" fill="#0a172a" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="692" cy="292" r="2.5" fill="#60a5fa"/>
+      </g>
+
+      <!-- Card C2 (Operating Cash Machine) -->
+      <g class="flow-svg-node" onclick="selectFlowPhase('C2')" style="cursor:pointer;">
+        <rect x="692" y="390" width="286" height="135" rx="12" fill="#0e223f" stroke="#1d3b66" stroke-width="1.5"/>
+        <text x="714" y="425" font-size="15" font-weight="800" fill="#f8fafc">Etiam elementum</text>
+        <text x="714" y="450" font-size="12" fill="#94a3b8">Quisque ornare sapien</text>
+        <text x="714" y="475" font-size="12" font-weight="700" fill="#34d399">Operating Leverage · ARR: $850.0M</text>
+        <text x="714" y="497" font-size="11" font-weight="600" fill="#38bdf8">FCF Margin: 28% | Rule of 40: 54</text>
+        <circle cx="692" cy="457" r="7" fill="#0a172a" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="692" cy="457" r="2.5" fill="#34d399"/>
+      </g>
+
+      <!-- Internal vertical connector between C1 and C2 -->
+      <line x1="835" y1="360" x2="835" y2="390" stroke="#3b82f6" stroke-width="2"/>
+      <circle cx="835" cy="360" r="5" fill="#0a172a" stroke="#3b82f6" stroke-width="1.5"/>
+      <circle cx="835" cy="390" r="5" fill="#0a172a" stroke="#3b82f6" stroke-width="1.5"/>
+    </g>
+
+    <!-- Edge Connectors with High-Contrast Pill Badges -->
+    <!-- Edge 1: Card A2 -> Card M1 -->
+    <path d="M 302 237 L 340 237 L 340 287 L 384 287" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <g transform="translate(315, 218)">
+      <rect width="130" height="24" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+      <text x="65" y="16" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare ut nequetemes</text>
+    </g>
+
+    <!-- Edge 2: Card B2 -> Card M2 -->
+    <path d="M 302 537 L 384 537" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+    <g transform="translate(320, 520)">
+      <rect width="80" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+      <text x="40" y="15" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare</text>
+    </g>
+
+    <!-- Edge 3: Card M1 -> Card C1 -->
+    <path d="M 580 287 L 686 287" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+
+    <!-- Edge 4: Card M2 -> Card C2 -->
+    <path d="M 580 517 L 630 517 L 630 457 L 686 457" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrowRight)"/>
+
+    <!-- Edge 5: Cross Bridge G1 -> G3 -->
+    <path d="M 320 125 L 670 125 L 835 125 L 835 170" fill="none" stroke="#334155" stroke-dasharray="4,4" stroke-width="1.5"/>
+    <g transform="translate(460, 112)">
+      <rect width="90" height="22" rx="11" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+      <text x="45" y="15" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Quisque ornare</text>
+    </g>
+  </svg>
+  `;
 }
 
 // Initial boot

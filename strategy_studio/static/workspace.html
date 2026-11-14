@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Strategy Studio · Interactive Multi-Year Strategy Flowchart</title>
-  <link rel="stylesheet" href="/static/workspace.css?v=4.2">
+  <link rel="stylesheet" href="/static/workspace.css?v=4.3">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="/static/analysis-job.js"></script>
 </head>
@@ -168,14 +168,37 @@
           <div class="flowchart-company-branding">
             <span style="font-weight:800; font-size:15px; letter-spacing:-0.3px;">Strategy Studio</span>
             <span style="color:var(--text-dim); font-size:14px;">/</span>
-            <span style="font-size:13px; font-weight:700; color:var(--text-muted);">Interactive Multi-Year Flowchart</span>
+            <span style="font-size:13px; font-weight:700; color:var(--text-muted);" id="currentTopBreadcrumb">Decision OS</span>
+          </div>
+
+          <!-- View Mode Switcher: Canvas vs Executive Dashboard -->
+          <div class="view-mode-switcher">
+            <button id="viewCanvasBtn" type="button" class="view-switch-btn active" title="Interactive Strategy Flowchart Canvas">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Strategy Canvas</span>
+            </button>
+            <button id="viewDashboardBtn" type="button" class="view-switch-btn" title="Executive Strategy Bento Dashboard">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+              <span>Executive Dashboard</span>
+            </button>
           </div>
         </div>
 
         <div class="topbar-right">
+          <!-- AI Model Switcher -->
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Model:</span>
+            <select id="aiModelSelect" class="flowchart-select model-select">
+              <option value="gpt-5" selected>🧠 GPT-5 (Strong Strategy)</option>
+              <option value="o3-mini">🔬 o3-mini (Reasoning)</option>
+              <option value="gpt-4o">🎨 GPT-4o (Creative)</option>
+              <option value="gpt-5-mini">⚡ GPT-5 Mini (Fast)</option>
+            </select>
+          </div>
+
           <!-- Select Company Dropdown -->
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Company:</span>
+            <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Company:</span>
             <select id="companyFlowSelect" class="flowchart-select">
               <option value="DDOG" selected>Datadog (DDOG)</option>
               <option value="SNOW">Snowflake (SNOW)</option>
@@ -201,8 +224,8 @@
           </div>
 
           <!-- Actions -->
-          <button id="askAnalyst" type="button" class="btn ai-btn" style="font-size:12px;" title="Run AI synthesis with gpt-5-mini">
-            ✦ Ask AI Agent: Why?
+          <button id="askAnalyst" type="button" class="btn ai-btn" style="font-size:12px;" title="Run AI synthesis with configured OpenAI Model">
+            ✦ Ask AI: Why?
           </button>
           <button type="button" id="toggleMermaidCodeBtn" class="btn" style="font-size:12px;">
             Syntax
@@ -303,121 +326,231 @@
             </div>
           </section>
 
-          <!-- THE STRATEGIC "WHY" & FINANCIAL INTELLIGENCE INSPECTOR PANEL -->
-          <section id="stageInspectorSection" class="stage-inspector-card">
-            
-            <!-- Inspector Header -->
-            <div class="inspector-header">
-              <div class="inspector-title-wrap">
-                <div class="inspector-badge-strip">
-                  <span class="inspector-phase-badge" id="inspStageBadge">STAGE 3 · FY2019</span>
-                  <span class="inspector-kpi-badge" id="inspRevBadge">ARR: $362.8M (+83.2%)</span>
-                  <span class="inspector-kpi-badge badge-green" id="inspR40Badge">Rule of 40: 77.6</span>
+          <!-- EXECUTIVE BENTO DASHBOARD VIEW (TOGGLEABLE VIA TOPBAR) -->
+          <section id="executiveDashboardView" class="executive-bento-dashboard" style="display:none;">
+            <!-- Dashboard Stage Hero Header -->
+            <div class="bento-hero-header">
+              <div>
+                <div class="inspector-badge-strip" style="margin-bottom:6px;">
+                  <span class="inspector-phase-badge" id="dashStageBadge">STAGE 3 · FY2019</span>
+                  <span class="inspector-kpi-badge" id="dashRevBadge">ARR: $362.8M (+83.2%)</span>
+                  <span class="inspector-kpi-badge badge-green" id="dashR40Badge">Rule of 40: 77.6</span>
                 </div>
-                <h3 class="inspector-title" id="inspStageTitle">FY2019 · Capital-Efficient Expansion</h3>
+                <h2 class="bento-hero-title" id="dashStageTitle">FY2019 · Capital-Efficient Expansion</h2>
+                <p class="bento-hero-desc" id="dashHeroSubtitle">Executive MD&A analysis, capital allocation posture, and strategic management framework mapping.</p>
               </div>
-
-              <div class="inspector-actions">
-                <button type="button" class="btn primary" id="inspAdoptBtn" style="font-size:13px; padding:8px 16px;">
-                  📋 Copy FY2019 Levers (40.4% S&M, 30.7% R&D)
+              <div>
+                <button type="button" class="btn primary" id="dashAdoptBtn" style="font-size:13px; padding:8px 18px;">
+                  📋 Copy Stage Levers to Startup Plan
                 </button>
               </div>
             </div>
 
-            <!-- Inspector Sub-Tabs -->
-            <div class="inspector-nav">
-              <button type="button" class="insp-tab-btn active" data-insp-target="insp-why">
-                💡 The Strategic "Why" & Trajectory
-              </button>
-              <button type="button" class="insp-tab-btn" data-insp-target="insp-products">
-                📦 Product Lines & Ansoff Framework
-              </button>
-              <button type="button" class="insp-tab-btn" data-insp-target="insp-financials">
-                📊 Financial Strategy & SEC Source
-              </button>
-              <button type="button" class="insp-tab-btn" data-insp-target="insp-adopt">
-                🎯 Peer Contrast & Adopt Levers
-              </button>
-            </div>
-
-            <!-- Inspector Panel 1: The Strategic Why -->
-            <div id="insp-why" class="insp-tab-panel">
-              <div class="insp-narrative-box" id="inspExecutiveSummary">
-                Loading strategic intelligence...
+            <!-- Bento Top KPI Metric Cards -->
+            <div class="bento-kpi-grid">
+              <div class="bento-kpi-card">
+                <span class="kpi-label">RULE OF 40 SCORE</span>
+                <div class="kpi-val text-emerald" id="dashKpiR40">77.6</div>
+                <div class="kpi-sub">Top Decile Efficiency</div>
               </div>
-
-              <div class="insp-why-grid">
-                <div class="insp-card">
-                  <h4>📉 Sales & Marketing Trajectory</h4>
-                  <p id="inspSmWhy">Analyzing GTM scaling and quota ramp...</p>
-                </div>
-                <div class="insp-card">
-                  <h4>🔬 R&D & Technological Moat</h4>
-                  <p id="inspRdWhy">Analyzing technological moat reinvestment...</p>
-                </div>
-                <div class="insp-card">
-                  <h4>📈 Operating Margin & Leverage</h4>
-                  <p id="inspMarginWhy">Analyzing operating leverage and fixed cost absorption...</p>
-                </div>
-                <div class="insp-card">
-                  <h4>💰 Capital Allocation & Cash Burn</h4>
-                  <p id="inspCapitalWhy">Analyzing balance sheet posture and free cash flow...</p>
-                </div>
+              <div class="bento-kpi-card">
+                <span class="kpi-label">ANNUAL REVENUE (ARR)</span>
+                <div class="kpi-val" id="dashKpiRev">$362.8M</div>
+                <div class="kpi-sub" id="dashKpiGrowth">+83.2% YoY Growth</div>
+              </div>
+              <div class="bento-kpi-card">
+                <span class="kpi-label">SALES & MARKETING RATIO</span>
+                <div class="kpi-val text-sky" id="dashKpiSm">40.4%</div>
+                <div class="kpi-sub" id="dashKpiSmDelta">-4.4 pp S&M Optimization</div>
+              </div>
+              <div class="bento-kpi-card">
+                <span class="kpi-label">R&D REINVESTMENT RATIO</span>
+                <div class="kpi-val text-purple" id="dashKpiRd">30.7%</div>
+                <div class="kpi-sub" id="dashKpiRdDelta">+2.9 pp Platform Moat</div>
               </div>
             </div>
 
-            <!-- Inspector Panel 2: Product Lines & Frameworks -->
-            <div id="insp-products" class="insp-tab-panel" style="display:none;">
-              <h4 class="insp-subtitle">Active Product Lines in this Phase</h4>
-              <div class="insp-products-grid" id="inspProductsGrid">
-                <!-- Dynamically populated -->
+            <!-- Executive Synthesis Card -->
+            <div class="bento-narrative-card">
+              <div class="bento-card-header">
+                <span class="sparkle-icon">✦</span>
+                <span style="font-weight:700; font-size:13px; letter-spacing:0.3px;">EXECUTIVE STRATEGY SYNTHESIS & MD&A RATIONALE</span>
               </div>
+              <div class="bento-narrative-text" id="dashExecutiveSummary">
+                Loading executive intelligence...
+              </div>
+            </div>
 
-              <h4 class="insp-subtitle" style="margin-top:24px;">Strategic Management Frameworks</h4>
+            <!-- 4-Pillar Strategic Deep-Dive Bento Grid -->
+            <div class="bento-pillars-grid">
+              <div class="bento-pillar-card">
+                <div class="pillar-header">
+                  <span class="pillar-icon">📉</span>
+                  <h4>Sales & Marketing Trajectory</h4>
+                </div>
+                <p id="dashSmWhy">Analyzing GTM scaling and quota ramp...</p>
+              </div>
+              <div class="bento-pillar-card">
+                <div class="pillar-header">
+                  <span class="pillar-icon">🔬</span>
+                  <h4>R&D & Technological Moat</h4>
+                </div>
+                <p id="dashRdWhy">Analyzing technological moat reinvestment...</p>
+              </div>
+              <div class="bento-pillar-card">
+                <div class="pillar-header">
+                  <span class="pillar-icon">📈</span>
+                  <h4>Operating Margin & Leverage</h4>
+                </div>
+                <p id="dashMarginWhy">Analyzing operating leverage and fixed cost absorption...</p>
+              </div>
+              <div class="bento-pillar-card">
+                <div class="pillar-header">
+                  <span class="pillar-icon">💰</span>
+                  <h4>Capital Allocation & Free Cash Flow</h4>
+                </div>
+                <p id="dashCapitalWhy">Analyzing balance sheet posture and free cash flow...</p>
+              </div>
+            </div>
+
+            <!-- Product Lines & Management Frameworks Section -->
+            <div class="bento-frameworks-card">
+              <h3 style="font-size:15px; font-weight:800; margin:0 0 12px;">Strategic Management Frameworks</h3>
               <div class="insp-frameworks-grid">
-                <div class="insp-framework-card" id="inspAnsoffCard">
+                <div class="insp-framework-card">
                   <div class="insp-framework-title">🎯 Ansoff Growth Matrix</div>
-                  <div class="insp-framework-content" id="inspAnsoffContent"></div>
+                  <div class="insp-framework-content" id="dashAnsoffContent"></div>
                 </div>
-
-                <div class="insp-framework-card" id="inspMcKinseyCard">
+                <div class="insp-framework-card">
                   <div class="insp-framework-title">⏳ McKinsey 3 Horizons</div>
-                  <div class="insp-framework-content" id="inspMcKinseyContent"></div>
+                  <div class="insp-framework-content" id="dashMcKinseyContent"></div>
                 </div>
-
-                <div class="insp-framework-card" id="inspBcgCard">
+                <div class="insp-framework-card">
                   <div class="insp-framework-title">⭐ BCG Portfolio Matrix</div>
-                  <div class="insp-framework-content" id="inspBcgContent"></div>
+                  <div class="insp-framework-content" id="dashBcgContent"></div>
                 </div>
-
-                <div class="insp-framework-card" id="inspPortersCard">
+                <div class="insp-framework-card">
                   <div class="insp-framework-title">🏰 Porter's Competitive Moats</div>
-                  <div class="insp-framework-content" id="inspPortersContent"></div>
+                  <div class="insp-framework-content" id="dashPortersContent"></div>
                 </div>
               </div>
             </div>
-
-            <!-- Inspector Panel 3: Complete Financial Strategy & SEC Filings -->
-            <div id="insp-financials" class="insp-tab-panel" style="display:none;">
-              <h4 class="insp-subtitle">Verified SEC Financial Vitals</h4>
-              <div class="insp-vitals-grid" id="inspVitalsGrid">
-                <!-- Dynamically populated -->
-              </div>
-
-              <div class="insp-sec-link-box" id="inspSecLinkBox">
-                <span>Direct SEC 10-K Filing Documentation:</span>
-                <a id="inspSecUrl" href="#" target="_blank" rel="noopener noreferrer">View Official SEC 10-K Disclosures ↗</a>
-              </div>
-            </div>
-
-            <!-- Inspector Panel 4: Peer Contrast & Adopt Levers -->
-            <div id="insp-adopt" class="insp-tab-panel" style="display:none;">
-              <div id="companyFlowComparisonCard">
-                <!-- Dynamically populated -->
-              </div>
-            </div>
-
           </section>
+
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHADCN RIGHT-SLIDING SHEET DRAWER (EXPLANATION BEHIND NODES) -->
+  <div id="stageInspectorBackdrop" class="shadcn-sheet-backdrop" style="display:none;"></div>
+  <aside id="stageInspectorSheet" class="shadcn-sheet-drawer" aria-modal="true" role="dialog" style="display:none;">
+    <div class="sheet-drawer-header">
+      <div>
+        <div class="inspector-badge-strip">
+          <span class="inspector-phase-badge" id="inspStageBadge">STAGE 3 · FY2019</span>
+          <span class="inspector-kpi-badge" id="inspRevBadge">ARR: $362.8M</span>
+          <span class="inspector-kpi-badge badge-green" id="inspR40Badge">R40: 77.6</span>
+        </div>
+        <h3 class="sheet-drawer-title" id="inspStageTitle">FY2019 · Capital-Efficient Expansion</h3>
+      </div>
+      <button id="closeInspectorSheetBtn" type="button" class="icon-trigger-btn" title="Close Drawer (ESC)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Sheet Sub-Tabs -->
+    <div class="inspector-nav" style="padding:10px 16px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <button type="button" class="insp-tab-btn active" data-insp-target="insp-why">
+        💡 Strategic "Why"
+      </button>
+      <button type="button" class="insp-tab-btn" data-insp-target="insp-products">
+        📦 Product Lines
+      </button>
+      <button type="button" class="insp-tab-btn" data-insp-target="insp-financials">
+        📊 SEC Filings
+      </button>
+      <button type="button" class="insp-tab-btn" data-insp-target="insp-adopt">
+        🎯 Peer Contrast
+      </button>
+    </div>
+
+    <!-- Sheet Drawer Body -->
+    <div class="sheet-drawer-body">
+      <!-- Panel 1: Strategic Why -->
+      <div id="insp-why" class="insp-tab-panel">
+        <div class="insp-narrative-box" id="inspExecutiveSummary">
+          Loading strategic intelligence...
+        </div>
+
+        <div class="insp-why-grid">
+          <div class="insp-card">
+            <h4>📉 Sales & Marketing Trajectory</h4>
+            <p id="inspSmWhy">Analyzing GTM scaling and quota ramp...</p>
+          </div>
+          <div class="insp-card">
+            <h4>🔬 R&D & Technological Moat</h4>
+            <p id="inspRdWhy">Analyzing technological moat reinvestment...</p>
+          </div>
+          <div class="insp-card">
+            <h4>📈 Operating Margin & Leverage</h4>
+            <p id="inspMarginWhy">Analyzing operating leverage and fixed cost absorption...</p>
+          </div>
+          <div class="insp-card">
+            <h4>💰 Capital Allocation & Cash Burn</h4>
+            <p id="inspCapitalWhy">Analyzing balance sheet posture and free cash flow...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Product Lines -->
+      <div id="insp-products" class="insp-tab-panel" style="display:none;">
+        <h4 class="insp-subtitle">Active Product Lines in this Phase</h4>
+        <div class="insp-products-grid" id="inspProductsGrid"></div>
+        <h4 class="insp-subtitle" style="margin-top:20px;">Strategic Management Frameworks</h4>
+        <div class="insp-frameworks-grid">
+          <div class="insp-framework-card" id="inspAnsoffCard">
+            <div class="insp-framework-title">🎯 Ansoff Growth Matrix</div>
+            <div class="insp-framework-content" id="inspAnsoffContent"></div>
+          </div>
+          <div class="insp-framework-card" id="inspMcKinseyCard">
+            <div class="insp-framework-title">⏳ McKinsey 3 Horizons</div>
+            <div class="insp-framework-content" id="inspMcKinseyContent"></div>
+          </div>
+          <div class="insp-framework-card" id="inspBcgCard">
+            <div class="insp-framework-title">⭐ BCG Portfolio Matrix</div>
+            <div class="insp-framework-content" id="inspBcgContent"></div>
+          </div>
+          <div class="insp-framework-card" id="inspPortersCard">
+            <div class="insp-framework-title">🏰 Porter's Moats</div>
+            <div class="insp-framework-content" id="inspPortersContent"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Financial Vitals -->
+      <div id="insp-financials" class="insp-tab-panel" style="display:none;">
+        <h4 class="insp-subtitle">Verified SEC Financial Vitals</h4>
+        <div class="insp-vitals-grid" id="inspVitalsGrid"></div>
+        <div class="insp-sec-link-box" id="inspSecLinkBox" style="margin-top:16px;">
+          <span>Official SEC 10-K Documentation:</span>
+          <a id="inspSecUrl" href="#" target="_blank" rel="noopener noreferrer">View SEC 10-K Filing ↗</a>
+        </div>
+      </div>
+
+      <!-- Panel 4: Peer Contrast -->
+      <div id="insp-adopt" class="insp-tab-panel" style="display:none;">
+        <div id="companyFlowComparisonCard"></div>
+      </div>
+    </div>
+
+    <!-- Sheet Drawer Footer -->
+    <div class="sheet-drawer-footer">
+      <button type="button" class="btn primary" id="inspAdoptBtn" style="width:100%; font-size:13px; padding:10px;">
+        📋 Copy Stage Levers to Startup Plan
+      </button>
+    </div>
+  </aside>
 
         </main>
       </div>
@@ -428,7 +561,7 @@
   <div id="sonnerContainer" class="sonner-toast-container"></div>
 
   <!-- Scripts -->
-  <script src="/static/workspace.js?v=4.2"></script>
+  <script src="/static/workspace.js?v=4.3"></script>
   <link rel="stylesheet" href="/static/side-agent.css?v=4.0">
   <script src="/static/side-agent.js"></script>
 </body>

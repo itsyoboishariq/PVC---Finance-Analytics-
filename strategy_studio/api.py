@@ -307,6 +307,34 @@ def make_app(db_path=DB):
         except Exception as exc:
             raise HTTPException(500, f"AI generation failed: {str(exc)}") from exc
 
+    @app.get('/api/ai/model-config')
+    def get_model_config():
+        import ai_flow
+        cfg = ai_flow.load_ai_config()
+        return {
+            'current_model': cfg.get('OPENAI_MODEL', 'gpt-5-mini'),
+            'models': [
+                {'id': 'gpt-5', 'name': 'GPT-5 (Deep Strategy - Strongest)', 'tier': 'strong'},
+                {'id': 'o3-mini', 'name': 'o3-mini (Advanced Reasoning)', 'tier': 'reasoning'},
+                {'id': 'gpt-4o', 'name': 'GPT-4o (Creative Architecture)', 'tier': 'flagship'},
+                {'id': 'gpt-5-mini', 'name': 'GPT-5 Mini (Fast & Efficient)', 'tier': 'fast'}
+            ]
+        }
+
+    @app.post('/api/ai/set-model')
+    def set_model(body: dict):
+        new_model = body.get('model', 'gpt-5-mini')
+        path = ROOT / 'ai.local.json'
+        data = {}
+        if path.exists():
+            try:
+                data = json.loads(path.read_text(encoding='utf-8'))
+            except Exception:
+                data = {}
+        data['OPENAI_MODEL'] = new_model
+        path.write_text(json.dumps(data, indent=2), encoding='utf-8')
+        return {'status': 'ok', 'model': new_model}
+
     @app.get('/advanced')
     def advanced():return FileResponse(ROOT/'static/index.html')
 
