@@ -1387,14 +1387,98 @@ let activeInspTab = 'insp-why';
 
 // Global callback for Mermaid click binding
 window.selectFlowPhase = function(nodeId) {
+  if (currentCompanyFlowData && currentCompanyFlowData.stages) {
+    const stage = currentCompanyFlowData.stages.find(s => s.id === nodeId || String(s.index) === String(nodeId).replace(/\D/g, ''));
+    if (stage) {
+      renderPhaseDeepdive(stage);
+      highlightFlowchartNode(stage.index || nodeId);
+      return;
+    }
+  }
   const stageIdx = parseInt(String(nodeId).replace(/\D/g, ''), 10) || 1;
   loadPhaseDeepdive(stageIdx);
 };
+
+let canvasZoom = 1.0;
+let canvasPanX = 0;
+let canvasPanY = 0;
+let isPanning = false;
+let startPanX = 0;
+let startPanY = 0;
+
+function updateCanvasTransform() {
+  const el = $('canvasTransformContainer');
+  if (el) {
+    el.style.transform = `translate(${canvasPanX}px, ${canvasPanY}px) scale(${canvasZoom})`;
+  }
+}
 
 async function initCompanyFlow() {
   const select = $('companyFlowSelect');
   const toggleBtn = $('toggleMermaidCodeBtn');
   const askAnalystBtn = $('askAnalyst');
+  const aiPromptInput = $('aiFlowPromptInput');
+  const aiGenBtn = $('aiFlowGenerateBtn');
+  const copyMermaidBtn = $('copyMermaidBtn');
+  const applyMermaidBtn = $('applyMermaidBtn');
+  const toggleInspectorBtn = $('toggleInspectorBtn');
+  const zoomInBtn = $('zoomInBtn');
+  const zoomOutBtn = $('zoomOutBtn');
+  const zoomResetBtn = $('zoomResetBtn');
+  const toggleFullscreenBtn = $('toggleFullscreenBtn');
+  const viewport = $('companyFlowDiagramBox');
+
+  // Pan & Zoom Event Listeners
+  if (zoomInBtn) zoomInBtn.onclick = () => { canvasZoom = Math.min(2.5, canvasZoom + 0.15); updateCanvasTransform(); };
+  if (zoomOutBtn) zoomOutBtn.onclick = () => { canvasZoom = Math.max(0.4, canvasZoom - 0.15); updateCanvasTransform(); };
+  if (zoomResetBtn) zoomResetBtn.onclick = () => { canvasZoom = 1.0; canvasPanX = 0; canvasPanY = 0; updateCanvasTransform(); };
+  
+  if (toggleFullscreenBtn) {
+    toggleFullscreenBtn.onclick = () => {
+      const card = document.querySelector('.flowchart-hero-card');
+      if (card) {
+        if (!document.fullscreenElement) {
+          card.requestFullscreen().catch(e => console.warn(e));
+          toggleFullscreenBtn.textContent = '✕';
+        } else {
+          document.exitFullscreen().catch(e => console.warn(e));
+          toggleFullscreenBtn.textContent = '⛶';
+        }
+      }
+    };
+  }
+
+  if (toggleInspectorBtn) {
+    toggleInspectorBtn.onclick = () => {
+      const insp = $('stageInspectorSection');
+      if (insp) {
+        const isHidden = insp.style.display === 'none';
+        insp.style.display = isHidden ? 'block' : 'none';
+        toggleInspectorBtn.classList.toggle('active', isHidden);
+      }
+    };
+  }
+
+  // Mouse drag to pan
+  if (viewport) {
+    viewport.addEventListener('mousedown', e => {
+      if (e.target.closest('.node') || e.target.closest('button') || e.target.closest('input')) return;
+      isPanning = true;
+      startPanX = e.clientX - canvasPanX;
+      startPanY = e.clientY - canvasPanY;
+      viewport.style.cursor = 'grabbing';
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isPanning) return;
+      canvasPanX = e.clientX - startPanX;
+      canvasPanY = e.clientY - startPanY;
+      updateCanvasTransform();
+    });
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      if (viewport) viewport.style.cursor = 'grab';
+    });
+  }
 
   // Load companies list from API
   try {
@@ -1432,14 +1516,97 @@ async function initCompanyFlow() {
     };
   });
 
+  // Handle Preset Pills
+  document.querySelectorAll('.preset-pill').forEach(pill => {
+    pill.onclick = () => {
+      document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const pid = pill.dataset.presetId;
+      loadPresetFlow(pid);
+    };
+  });
+
+  // Handle AI Flow Generation via ChatGPT
+  async function triggerAiFlowGen() {
+    const prompt = (aiPromptInput?.value || '').trim();
+    if (!prompt) {
+      toast.info('AI Prompt', 'Please enter a description for the strategy flow you want to create.');
+      aiPromptInput?.focus();
+      return;
+    }
+    const spinner = $('aiFlowSpinner');
+    const btnText = $('aiFlowBtnText');
+    if (spinner) spinner.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Generating...';
+    if (aiGenBtn) aiGenBtn.disabled = true;
+
+    toast.info('ChatGPT Agent', 'Synthesizing strategy flow architecture and writing Mermaid code with gpt-5-mini...');
+
+    try {
+      const profile = typeof getRequest === 'function' ? getRequest().profile : null;
+      const res = await fetch('/api/strategy/ai-generate-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt,
+          company_context: select?.value || 'DDOG',
+          startup_profile: profile
+        })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      currentCompanyFlowData = data;
+      renderCompanyFlow(data);
+      toast.success('Strategy Flow Created', `Generated: ${data.title}`);
+    } catch (err) {
+      console.error('AI Flow generation failed:', err);
+      toast.error('AI Flow Failed', err.message);
+    } finally {
+      if (spinner) spinner.style.display = 'none';
+      if (btnText) btnText.textContent = 'Generate Strategy Flow';
+      if (aiGenBtn) aiGenBtn.disabled = false;
+    }
+  }
+
+  if (aiGenBtn) aiGenBtn.onclick = triggerAiFlowGen;
+  if (aiPromptInput) {
+    aiPromptInput.onkeydown = e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        triggerAiFlowGen();
+      }
+    };
+  }
+
   // Handle syntax toggle
   if (toggleBtn) {
     toggleBtn.onclick = () => {
+      const drawer = $('mermaidCodeDrawer');
+      if (drawer) {
+        const isShown = drawer.style.display === 'block';
+        drawer.style.display = isShown ? 'none' : 'block';
+        toggleBtn.classList.toggle('active', !isShown);
+      }
+    };
+  }
+
+  if (copyMermaidBtn) {
+    copyMermaidBtn.onclick = () => {
       const raw = $('companyFlowRawCode');
       if (raw) {
-        const isShown = raw.style.display === 'block';
-        raw.style.display = isShown ? 'none' : 'block';
-        toggleBtn.textContent = isShown ? 'Syntax' : 'Hide Syntax';
+        navigator.clipboard.writeText(raw.value);
+        toast.success('Copied', 'Mermaid code copied to clipboard');
+      }
+    };
+  }
+
+  if (applyMermaidBtn) {
+    applyMermaidBtn.onclick = () => {
+      const raw = $('companyFlowRawCode');
+      if (raw && currentCompanyFlowData) {
+        currentCompanyFlowData.mermaid_code = raw.value;
+        renderMermaidDiagram(currentCompanyFlowData);
+        toast.success('Applied', 'Rendered updated Mermaid syntax');
       }
     };
   }
@@ -1473,8 +1640,31 @@ async function initCompanyFlow() {
     };
   });
 
-  // Pre-load default company flow
-  loadCompanyFlow('DDOG');
+  // Default initial load: Process Flow Diagram Template matching reference image!
+  loadPresetFlow('template-process-flow');
+}
+
+async function loadPresetFlow(presetId) {
+  const diagramBox = $('companyFlowDiagramBox');
+  if (diagramBox) diagramBox.style.opacity = '0.5';
+
+  try {
+    const res = await fetch(`/api/strategy/flow-template/${encodeURIComponent(presetId)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentCompanyFlowData = data;
+    renderCompanyFlow(data);
+
+    // Initial inspector stage
+    if (data.stages && data.stages.length > 0) {
+      renderPhaseDeepdive(data.stages[0]);
+    }
+  } catch (err) {
+    console.error('Failed to load preset flow:', err);
+    toast.error('Preset Error', `Could not load preset ${presetId}`);
+  } finally {
+    if (diagramBox) diagramBox.style.opacity = '1';
+  }
 }
 
 function updateQuickChipHighlight(ticker) {
@@ -1705,7 +1895,7 @@ function renderCompanyFlow(data) {
   }
 
   if ($('companyFlowRawCode')) {
-    $('companyFlowRawCode').textContent = data.mermaid_code || '';
+    $('companyFlowRawCode').value = data.mermaid_code || '';
   }
 
   // Render Mermaid Diagram with interactive click binding
@@ -1755,22 +1945,24 @@ async function renderMermaidDiagram(data) {
         }
       });
       const renderId = 'mermaid_svg_' + Math.floor(Math.random() * 1000000);
-      let code = data.mermaid_code;
-      if (isDark) {
-        code = code.replace(/fill:#ffffff/g, 'fill:#160a0d')
-                   .replace(/stroke:#0284c7/g, 'stroke:#be123c')
-                   .replace(/color:#0f172a/g, 'color:#faf4f5')
-                   .replace(/fill:#ecfdf5/g, 'fill:#0d1a15')
-                   .replace(/color:#065f46/g, 'color:#a7f3d0')
-                   .replace(/fill:#fffbeb/g, 'fill:#1f130b')
-                   .replace(/color:#92400e/g, 'color:#fde68a');
-      } else {
-        code = code.replace(/fill:#160a0d/g, 'fill:#ffffff')
-                   .replace(/color:#faf4f5/g, 'color:#4c0519')
-                   .replace(/fill:#0e1915/g, 'fill:#ecfdf5')
-                   .replace(/color:#ecfdf5/g, 'color:#065f46')
-                   .replace(/fill:#1f130b/g, 'fill:#fffbeb')
-                   .replace(/color:#fef3c7/g, 'color:#92400e');
+      let code = data.mermaid_code || '';
+      if (!code.includes('style G1') && !code.includes('classDef cyanCard') && !code.includes('classDef highlight')) {
+        if (isDark) {
+          code = code.replace(/fill:#ffffff/g, 'fill:#160a0d')
+                     .replace(/stroke:#0284c7/g, 'stroke:#be123c')
+                     .replace(/color:#0f172a/g, 'color:#faf4f5')
+                     .replace(/fill:#ecfdf5/g, 'fill:#0d1a15')
+                     .replace(/color:#065f46/g, 'color:#a7f3d0')
+                     .replace(/fill:#fffbeb/g, 'fill:#1f130b')
+                     .replace(/color:#92400e/g, 'color:#fde68a');
+        } else {
+          code = code.replace(/fill:#160a0d/g, 'fill:#ffffff')
+                     .replace(/color:#faf4f5/g, 'color:#4c0519')
+                     .replace(/fill:#0e1915/g, 'fill:#ecfdf5')
+                     .replace(/color:#ecfdf5/g, 'color:#065f46')
+                     .replace(/fill:#1f130b/g, 'fill:#fffbeb')
+                     .replace(/color:#fef3c7/g, 'color:#92400e');
+        }
       }
       const { svg } = await mermaid.render(renderId, code);
       if (svg && svg.includes('<svg')) {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Strategy Studio · Interactive Multi-Year Strategy Flowchart</title>
-  <link rel="stylesheet" href="/static/workspace.css?v=4.1">
+  <link rel="stylesheet" href="/static/workspace.css?v=4.2">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="/static/analysis-job.js"></script>
 </head>
@@ -221,36 +221,86 @@
       </header>
 
       <!-- Scrollable Body Centered Around the Mermaid Flowchart -->
-      <div class="shadcn-body" style="padding:20px;">
-        <main class="mermaid-centric-workspace">
+      <div class="shadcn-body" style="padding:16px;">
+        <main class="mermaid-centric-workspace full-view-layout">
           
-          <!-- HERO CENTERPIECE: THE MULTI-YEAR STRATEGY FLOWCHART -->
-          <section class="flowchart-hero-card">
+          <!-- HERO CENTERPIECE: THE FULL-VIEW MULTI-YEAR STRATEGY FLOWCHART -->
+          <section class="flowchart-hero-card full-view-card">
+            
+            <!-- AI Agent Strategy Flow Generator Header -->
+            <div class="ai-flow-prompt-container">
+              <div class="ai-flow-input-wrap">
+                <div class="ai-sparkle-pill">
+                  <span class="sparkle">✦</span>
+                  <span class="sparkle-text">ChatGPT Agent</span>
+                </div>
+                <input id="aiFlowPromptInput" type="text" placeholder="Prompt AI Agent to create or update strategy flow... (e.g. 'Build an Enterprise AI SaaS flow with PLG, Sales Pods, and Multi-Agent Moat' or 'Add open-source branch')" />
+                <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn">
+                  <span id="aiFlowBtnText">Generate Strategy Flow</span>
+                  <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
+                </button>
+              </div>
+
+              <!-- Quick Presets Row -->
+              <div class="ai-flow-presets-bar">
+                <span class="presets-label">QUICK TEMPLATES:</span>
+                <div class="presets-chips-wrap">
+                  <button type="button" class="preset-pill active" data-preset-id="template-process-flow">⚡ Process Flow Template</button>
+                  <button type="button" class="preset-pill" data-preset-id="ai-saas-blueprint">🚀 AI SaaS Blueprint</button>
+                  <button type="button" class="preset-pill" data-preset-id="datadog-clustered">🐕 Datadog Clustered</button>
+                  <button type="button" class="preset-pill" data-preset-id="snowflake-scale">❄️ Snowflake Scale</button>
+                  <button type="button" class="preset-pill" data-preset-id="crowdstrike-falcon">🛡️ CrowdStrike Falcon</button>
+                </div>
+
+                <!-- Canvas Viewport Controls -->
+                <div class="flowchart-canvas-controls">
+                  <button id="zoomInBtn" class="ctrl-btn" type="button" title="Zoom In">+</button>
+                  <button id="zoomOutBtn" class="ctrl-btn" type="button" title="Zoom Out">−</button>
+                  <button id="zoomResetBtn" class="ctrl-btn" type="button" title="Reset View">⤢</button>
+                  <button id="toggleFullscreenBtn" class="ctrl-btn" type="button" title="Toggle Fullscreen Canvas">⛶</button>
+                  <button id="toggleMermaidCodeBtn" class="ctrl-btn" type="button" title="View / Edit Mermaid Syntax">&lt;/&gt;</button>
+                  <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Toggle Details Inspector">👁️</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flowchart Title & Stage Hint Bar -->
             <div class="flowchart-top-bar">
               <div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                  <h2 class="flowchart-company-name" id="flowchartCompanyTitle">Datadog (DDOG) Multi-Year Strategy Flow</h2>
-                  <span id="flowchartPeriodCountPill" class="kpi-tag" style="background:rgba(190, 18, 60, 0.2); color:#fda4af; border:1px solid rgba(225, 29, 72, 0.35); font-weight:700;">9 Annual Periods</span>
+                  <h2 class="flowchart-company-name" id="flowchartCompanyTitle">Process Flow Diagram Template</h2>
+                  <span id="flowchartPeriodCountPill" class="kpi-tag" style="background:rgba(6, 182, 212, 0.2); color:#67e8f9; border:1px solid rgba(6, 182, 212, 0.4); font-weight:700;">Modular Clustered Architecture</span>
                 </div>
                 <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;" id="flowchartSubtitle">
-                  Tracking strategic scaling from $100.8M (FY2017) to $3.43B ARR (FY2025) based on SEC 10-K filings.
+                  Modular multi-stage strategy flow with clustered subgraphs, orthogonal routing, and edge metrics.
                 </p>
               </div>
 
               <!-- Interactive Prompt Pill -->
               <div class="flowchart-interactive-hint">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <span>Click any stage node or arrow in the flowchart to reveal the Strategic "Why", product lines, and management frameworks</span>
+                <span>Click any stage card or transition arrow in the diagram to inspect strategic drivers and copy financial levers</span>
               </div>
             </div>
 
             <!-- Flowchart Viewport -->
-            <div class="flowchart-viewport" id="companyFlowDiagramBox">
-              <div id="companyFlowMermaid"></div>
+            <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
+              <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
+                <div id="companyFlowMermaid"></div>
+              </div>
             </div>
 
             <!-- Raw Mermaid Syntax (Hidden by default) -->
-            <pre class="flowchart-raw-code" id="companyFlowRawCode"></pre>
+            <div class="flowchart-raw-code-container" id="mermaidCodeDrawer" style="display:none;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:12px; font-weight:700; color:var(--text-muted);">MERMAID.JS SYNTAX (GENERATED BY CHATGPT)</span>
+                <div>
+                  <button id="copyMermaidBtn" type="button" class="btn" style="font-size:11px; padding:4px 8px;">Copy</button>
+                  <button id="applyMermaidBtn" type="button" class="btn primary" style="font-size:11px; padding:4px 8px;">Apply Code</button>
+                </div>
+              </div>
+              <textarea class="flowchart-raw-code" id="companyFlowRawCode" rows="12"></textarea>
+            </div>
           </section>
 
           <!-- THE STRATEGIC "WHY" & FINANCIAL INTELLIGENCE INSPECTOR PANEL -->
@@ -378,7 +428,7 @@
   <div id="sonnerContainer" class="sonner-toast-container"></div>
 
   <!-- Scripts -->
-  <script src="/static/workspace.js?v=4.1"></script>
+  <script src="/static/workspace.js?v=4.2"></script>
   <link rel="stylesheet" href="/static/side-agent.css?v=4.0">
   <script src="/static/side-agent.js"></script>
 </body>

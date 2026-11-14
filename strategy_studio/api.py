@@ -286,6 +286,27 @@ def make_app(db_path=DB):
             raise HTTPException(404, res['error'])
         return res
 
+    @app.get('/api/strategy/flow-template/{template_id}')
+    def flow_template(template_id: str):
+        import ai_flow
+        return ai_flow.get_preset_flow(template_id, db_path=db_path)
+
+    @app.post('/api/strategy/ai-generate-flow')
+    def ai_generate_flow(body: dict):
+        import ai_flow
+        prompt = body.get('prompt', 'Build an Enterprise SaaS strategy flow')
+        company = body.get('company_context')
+        profile = body.get('startup_profile')
+        try:
+            return ai_flow.generate_ai_strategy_flow(
+                user_prompt=prompt,
+                company_context=company,
+                startup_profile=profile,
+                db_path=db_path
+            )
+        except Exception as exc:
+            raise HTTPException(500, f"AI generation failed: {str(exc)}") from exc
+
     @app.get('/advanced')
     def advanced():return FileResponse(ROOT/'static/index.html')
 
