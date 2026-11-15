@@ -1498,16 +1498,39 @@ async function initCompanyFlow() {
     };
   }
 
-  // Floating Toolbar Dock Toggle
-  const toggleDockBtn = $('toggleDockBtn');
-  if (toggleDockBtn) {
-    toggleDockBtn.onclick = () => {
-      const dock = $('aiFlowFloatingDock');
-      if (dock) {
-        const isMin = dock.classList.toggle('minimized');
-        toggleDockBtn.textContent = isMin ? '+' : '−';
-        toggleDockBtn.title = isMin ? 'Expand Toolbar' : 'Minimize Toolbar';
-      }
+  // Shadcn Flow Right Sidebar Toggle Handlers
+  const flowRightSidebar = $('flowRightSidebar');
+  const toggleRightSidebarBtn = $('toggleRightSidebarBtn');
+  const collapsedRightTrigger = $('collapsedRightSidebarTrigger');
+  const toggleRightSidebarTopbarBtn = $('toggleRightSidebarTopbarBtn');
+
+  function setRightSidebarState(expand) {
+    if (!flowRightSidebar) return;
+    if (expand) {
+      flowRightSidebar.classList.remove('collapsed');
+      flowRightSidebar.setAttribute('data-state', 'expanded');
+      flowRightSidebar.style.display = 'flex';
+      if (collapsedRightTrigger) collapsedRightTrigger.style.display = 'none';
+      if (toggleRightSidebarTopbarBtn) toggleRightSidebarTopbarBtn.classList.add('active');
+    } else {
+      flowRightSidebar.classList.add('collapsed');
+      flowRightSidebar.setAttribute('data-state', 'collapsed');
+      flowRightSidebar.style.display = 'none';
+      if (collapsedRightTrigger) collapsedRightTrigger.style.display = 'flex';
+      if (toggleRightSidebarTopbarBtn) toggleRightSidebarTopbarBtn.classList.remove('active');
+    }
+  }
+
+  if (toggleRightSidebarBtn) {
+    toggleRightSidebarBtn.onclick = () => setRightSidebarState(false);
+  }
+  if (collapsedRightTrigger) {
+    collapsedRightTrigger.onclick = () => setRightSidebarState(true);
+  }
+  if (toggleRightSidebarTopbarBtn) {
+    toggleRightSidebarTopbarBtn.onclick = () => {
+      const isExpanded = flowRightSidebar && flowRightSidebar.getAttribute('data-state') === 'expanded' && flowRightSidebar.style.display !== 'none';
+      setRightSidebarState(!isExpanded);
     };
   }
 
@@ -2867,19 +2890,15 @@ function renderClusteredCompanySvg(stages, flowData) {
   const isDark = document.documentElement.classList.contains('dark');
 
   const pal = isDark ? {
-    cyanBg: '#081421', cyanStroke: '#06b6d4', cyanHeader: '#22d3ee',
-    purpleBg: '#160e24', purpleStroke: '#a855f7', purpleHeader: '#c084fc',
-    blueBg: '#0a172a', blueStroke: '#3b82f6', blueHeader: '#60a5fa',
-    cardBg: '#111d2e', cardBorder: '#1e293b',
+    clusterBg: '#0b1120', clusterBorder: '#1e293b', clusterHeader: '#94a3b8',
+    cardBg: '#111827', cardBorder: '#1f2937',
     title: '#f8fafc', sub: '#94a3b8',
-    edgeLine: '#475569', edgePulse: '#38bdf8', badgeBg: '#0f172a', badgeBorder: '#334155', badgeText: '#f8fafc'
+    edgeLine: '#475569', badgeBg: '#1e293b', badgeBorder: '#334155', badgeText: '#cbd5e1'
   } : {
-    cyanBg: '#f0fdfa', cyanStroke: '#0d9488', cyanHeader: '#0f766e',
-    purpleBg: '#faf5ff', purpleStroke: '#9333ea', purpleHeader: '#7e22ce',
-    blueBg: '#eff6ff', blueStroke: '#2563eb', blueHeader: '#1d4ed8',
-    cardBg: '#ffffff', cardBorder: '#cbd5e1',
+    clusterBg: '#f8fafc', clusterBorder: '#e2e8f0', clusterHeader: '#475569',
+    cardBg: '#ffffff', cardBorder: '#e2e8f0',
     title: '#0f172a', sub: '#64748b',
-    edgeLine: '#94a3b8', edgePulse: '#0284c7', badgeBg: '#ffffff', badgeBorder: '#cbd5e1', badgeText: '#0f172a'
+    edgeLine: '#94a3b8', badgeBg: '#ffffff', badgeBorder: '#cbd5e1', badgeText: '#475569'
   };
 
   const n = stages.length;
@@ -2898,17 +2917,8 @@ function renderClusteredCompanySvg(stages, flowData) {
 
   let defs = `
     <defs>
-      <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#06b6d4" flood-opacity="0.2"/>
-      </filter>
-      <filter id="purpleGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.2"/>
-      </filter>
-      <filter id="blueGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3b82f6" flood-opacity="0.2"/>
-      </filter>
       <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.06"/>
+        <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.04"/>
       </filter>
       <marker id="arrowHead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
         <path d="M 0 2 L 7 5 L 0 8 z" fill="${pal.edgeLine}"/>
@@ -2916,69 +2926,67 @@ function renderClusteredCompanySvg(stages, flowData) {
     </defs>
   `;
 
-  // 1. Cluster 1: Initial Traction & PMF (Cyan)
+  // 1. Cluster 1: Initial Traction & PMF
   const g1H = g1Stages.length * 118 + 55;
   let g1Html = `
-    <g class="process-subgraph-cyan" filter="url(#cyanGlow)">
-      <rect x="${c1X}" y="${c1Y}" width="${cW + 40}" height="${g1H}" rx="16" fill="${pal.cyanBg}" stroke="${pal.cyanStroke}" stroke-width="2.5"/>
-      <text x="${c1X + 20}" y="${c1Y + 28}" font-size="11" font-weight="800" fill="${pal.cyanHeader}" letter-spacing="0.5">PHASE 1 · INITIAL GTM &amp; TRACTION</text>
+    <g class="process-subgraph-cluster">
+      <rect x="${c1X}" y="${c1Y}" width="${cW + 40}" height="${g1H}" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="${c1X + 16}" y="${c1Y + 12}" width="220" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="${c1X + 24}" y="${c1Y + 27}" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 1 · INITIAL GTM &amp; TRACTION</text>
   `;
   g1Stages.forEach((s, i) => {
-    const cardY = c1Y + 42 + i * 115;
+    const cardY = c1Y + 44 + i * 115;
     const cardX = c1X + 20;
     const r40Val = s.rule_of_40 != null ? `R40: ${s.rule_of_40}` : '';
     g1Html += `
       <g class="flow-svg-node" onclick="selectFlowPhase('${s.id || s.index}')" filter="url(#cardShadow)" data-stage="${s.index || s.id}" style="cursor:pointer;">
-        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH}" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
-        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="#e0f2fe"/>
-        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="800" fill="#0369a1">${esc(s.year)} · STAGE ${s.index || i+1}</text>
+        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH}" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="${pal.clusterBg}" stroke="${pal.cardBorder}" stroke-width="0.75"/>
+        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="700" fill="${pal.clusterHeader}">${esc(s.year)} · STAGE ${s.index || i+1}</text>
         <text x="${cardX + 14}" y="${cardY + 47}" font-size="13" font-weight="700" fill="${pal.title}">${esc(s.phase_title.length > 28 ? s.phase_title.slice(0, 27) + '…' : s.phase_title)}</text>
-        <text x="${cardX + 14}" y="${cardY + 68}" font-size="14" font-weight="900" fill="#0284c7">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="700" fill="#059669">(${esc(s.growth_formatted)})</tspan></text>
-        <text x="${cardX + 14}" y="${cardY + 86}" font-size="10.5" font-weight="600" fill="${pal.sub}">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} ${r40Val ? '| ' + r40Val : ''}</text>
-        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="6" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
-        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="2.5" fill="#0284c7"/>
+        <text x="${cardX + 14}" y="${cardY + 68}" font-size="13.5" font-weight="800" fill="${pal.title}">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="600" fill="#10b981">(${esc(s.growth_formatted)})</tspan></text>
+        <text x="${cardX + 14}" y="${cardY + 86}" font-size="10.5" font-weight="500" fill="${pal.sub}">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} ${r40Val ? '| ' + r40Val : ''}</text>
+        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
     `;
     if (i > 0) {
-      const prevY = c1Y + 42 + (i - 1) * 115 + cH;
+      const prevY = c1Y + 44 + (i - 1) * 115 + cH;
       g1Html += `
-        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="2"/>
-        <path class="flow-pulse-edge" d="M ${cardX + cW/2} ${prevY} L ${cardX + cW/2} ${cardY}" stroke="${pal.edgePulse}" stroke-width="2"/>
+        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       `;
     }
   });
   g1Html += `</g>`;
 
-  // 2. Cluster 2: Scale Engine & Multi-Product (Purple)
+  // 2. Cluster 2: Scale Engine & Multi-Product
   const c2X = c1X;
-  const c2Y = c1Y + g1H + 35;
+  const c2Y = c1Y + g1H + 30;
   const g2H = g2Stages.length * 118 + 55;
   let g2Html = `
-    <g class="process-subgraph-purple" filter="url(#purpleGlow)">
-      <rect x="${c2X}" y="${c2Y}" width="${cW + 40}" height="${g2H}" rx="16" fill="${pal.purpleBg}" stroke="${pal.purpleStroke}" stroke-width="2.5"/>
-      <text x="${c2X + 20}" y="${c2Y + 28}" font-size="11" font-weight="800" fill="${pal.purpleHeader}" letter-spacing="0.5">PHASE 2 · SCALE ENGINE &amp; MULTI-PRODUCT</text>
+    <g class="process-subgraph-cluster">
+      <rect x="${c2X}" y="${c2Y}" width="${cW + 40}" height="${g2H}" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="${c2X + 16}" y="${c2Y + 12}" width="245" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="${c2X + 24}" y="${c2Y + 27}" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 2 · SCALE ENGINE &amp; MULTI-PRODUCT</text>
   `;
   g2Stages.forEach((s, i) => {
-    const cardY = c2Y + 42 + i * 115;
+    const cardY = c2Y + 44 + i * 115;
     const cardX = c2X + 20;
     const r40Val = s.rule_of_40 != null ? `R40: ${s.rule_of_40}` : '';
     g2Html += `
       <g class="flow-svg-node" onclick="selectFlowPhase('${s.id || s.index}')" filter="url(#cardShadow)" data-stage="${s.index || s.id}" style="cursor:pointer;">
-        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH}" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
-        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="#f3e8ff"/>
-        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="800" fill="#7e22ce">${esc(s.year)} · STAGE ${s.index || (k1 + i + 1)}</text>
+        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH}" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="${pal.clusterBg}" stroke="${pal.cardBorder}" stroke-width="0.75"/>
+        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="700" fill="${pal.clusterHeader}">${esc(s.year)} · STAGE ${s.index || (k1 + i + 1)}</text>
         <text x="${cardX + 14}" y="${cardY + 47}" font-size="13" font-weight="700" fill="${pal.title}">${esc(s.phase_title.length > 28 ? s.phase_title.slice(0, 27) + '…' : s.phase_title)}</text>
-        <text x="${cardX + 14}" y="${cardY + 68}" font-size="14" font-weight="900" fill="#7c3aed">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="700" fill="#059669">(${esc(s.growth_formatted)})</tspan></text>
-        <text x="${cardX + 14}" y="${cardY + 86}" font-size="10.5" font-weight="600" fill="${pal.sub}">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} ${r40Val ? '| ' + r40Val : ''}</text>
-        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="6" fill="${pal.cardBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
-        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="2.5" fill="#7c3aed"/>
+        <text x="${cardX + 14}" y="${cardY + 68}" font-size="13.5" font-weight="800" fill="${pal.title}">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="600" fill="#10b981">(${esc(s.growth_formatted)})</tspan></text>
+        <text x="${cardX + 14}" y="${cardY + 86}" font-size="10.5" font-weight="500" fill="${pal.sub}">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} ${r40Val ? '| ' + r40Val : ''}</text>
+        <circle cx="${cardX + cW}" cy="${cardY + cH/2}" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
     `;
     if (i > 0) {
-      const prevY = c2Y + 42 + (i - 1) * 115 + cH;
+      const prevY = c2Y + 44 + (i - 1) * 115 + cH;
       g2Html += `
-        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="2"/>
-        <path class="flow-pulse-edge" d="M ${cardX + cW/2} ${prevY} L ${cardX + cW/2} ${cardY}" stroke="#a855f7" stroke-width="2"/>
+        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       `;
     }
   });
@@ -2986,74 +2994,70 @@ function renderClusteredCompanySvg(stages, flowData) {
 
   // Connector between Cluster 1 and Cluster 2
   const interLine = `
-    <path d="M ${c1X + 20 + cW/2} ${c1Y + g1H} L ${c1X + 20 + cW/2} ${c2Y}" stroke="${pal.edgeLine}" stroke-width="2"/>
-    <path class="flow-pulse-edge" d="M ${c1X + 20 + cW/2} ${c1Y + g1H} L ${c1X + 20 + cW/2} ${c2Y}" stroke="${pal.edgePulse}" stroke-width="2.5"/>
-    <circle cx="${c1X + 20 + cW/2}" cy="${c1Y + g1H}" r="4" fill="${pal.cyanStroke}"/>
-    <circle cx="${c1X + 20 + cW/2}" cy="${c2Y}" r="4" fill="${pal.purpleStroke}"/>
+    <line x1="${c1X + 20 + cW/2}" y1="${c1Y + g1H}" x2="${c1X + 20 + cW/2}" y2="${c2Y}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+    <circle cx="${c1X + 20 + cW/2}" cy="${c1Y + g1H}" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+    <circle cx="${c1X + 20 + cW/2}" cy="${c2Y}" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
   `;
 
-  // 3. Cluster 3: Enterprise Platform & Moat (Blue - Right side)
+  // 3. Cluster 3: Enterprise Platform & Moat
   const c3X = 720;
   const c3Y = 45;
   const g3H = Math.max(g3Stages.length * 128 + 55, 360);
   let g3Html = `
-    <g class="process-subgraph-blue" filter="url(#blueGlow)">
-      <rect x="${c3X}" y="${c3Y}" width="${cW + 40}" height="${g3H}" rx="16" fill="${pal.blueBg}" stroke="${pal.blueStroke}" stroke-width="2.5"/>
-      <text x="${c3X + 20}" y="${c3Y + 28}" font-size="11" font-weight="800" fill="${pal.blueHeader}" letter-spacing="0.5">PHASE 3 · ENTERPRISE PLATFORM &amp; MOAT</text>
+    <g class="process-subgraph-cluster">
+      <rect x="${c3X}" y="${c3Y}" width="${cW + 40}" height="${g3H}" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="${c3X + 16}" y="${c3Y + 12}" width="245" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="${c3X + 24}" y="${c3Y + 27}" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 3 · ENTERPRISE PLATFORM &amp; MOAT</text>
   `;
   g3Stages.forEach((s, i) => {
-    const cardY = c3Y + 42 + i * 125;
+    const cardY = c3Y + 44 + i * 125;
     const cardX = c3X + 20;
     const r40Val = s.rule_of_40 != null ? `Rule of 40: ${s.rule_of_40}` : '';
     g3Html += `
       <g class="flow-svg-node" onclick="selectFlowPhase('${s.id || s.index}')" filter="url(#cardShadow)" data-stage="${s.index || s.id}" style="cursor:pointer;">
-        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH + 8}" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
-        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="#dbeafe"/>
-        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="800" fill="#1d4ed8">${esc(s.year)} · STAGE ${s.index || (k2 + i + 1)}</text>
-        <text x="${cardX + 14}" y="${cardY + 48}" font-size="13.5" font-weight="800" fill="${pal.title}">${esc(s.phase_title.length > 28 ? s.phase_title.slice(0, 27) + '…' : s.phase_title)}</text>
-        <text x="${cardX + 14}" y="${cardY + 70}" font-size="14" font-weight="900" fill="#2563eb">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="700" fill="#059669">(${esc(s.growth_formatted)})</tspan></text>
-        <text x="${cardX + 14}" y="${cardY + 90}" font-size="10.5" font-weight="600" fill="#059669">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} | ${r40Val}</text>
-        <circle cx="${cardX}" cy="${cardY + (cH+8)/2}" r="6" fill="${pal.cardBg}" stroke="${pal.blueStroke}" stroke-width="2"/>
-        <circle cx="${cardX}" cy="${cardY + (cH+8)/2}" r="2.5" fill="#2563eb"/>
+        <rect class="card-bg" x="${cardX}" y="${cardY}" width="${cW}" height="${cH + 8}" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <rect x="${cardX + 14}" y="${cardY + 12}" width="80" height="18" rx="4" fill="${pal.clusterBg}" stroke="${pal.cardBorder}" stroke-width="0.75"/>
+        <text x="${cardX + 20}" y="${cardY + 25}" font-size="10" font-weight="700" fill="${pal.clusterHeader}">${esc(s.year)} · STAGE ${s.index || (k2 + i + 1)}</text>
+        <text x="${cardX + 14}" y="${cardY + 48}" font-size="13.5" font-weight="700" fill="${pal.title}">${esc(s.phase_title.length > 28 ? s.phase_title.slice(0, 27) + '…' : s.phase_title)}</text>
+        <text x="${cardX + 14}" y="${cardY + 70}" font-size="13.5" font-weight="800" fill="${pal.title}">ARR: ${esc(s.revenue_formatted)} <tspan font-size="11" font-weight="600" fill="#10b981">(${esc(s.growth_formatted)})</tspan></text>
+        <text x="${cardX + 14}" y="${cardY + 90}" font-size="10.5" font-weight="500" fill="${pal.sub}">S&amp;M: ${esc(s.sales_marketing_formatted)} | R&amp;D: ${esc(s.rd_formatted)} | ${r40Val}</text>
+        <circle cx="${cardX}" cy="${cardY + (cH+8)/2}" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
     `;
     if (i > 0) {
-      const prevY = c3Y + 42 + (i - 1) * 125 + cH + 8;
+      const prevY = c3Y + 44 + (i - 1) * 125 + cH + 8;
       g3Html += `
-        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="2"/>
-        <path class="flow-pulse-edge" d="M ${cardX + cW/2} ${prevY} L ${cardX + cW/2} ${cardY}" stroke="#2563eb" stroke-width="2"/>
+        <line x1="${cardX + cW/2}" y1="${prevY}" x2="${cardX + cW/2}" y2="${cardY}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       `;
     }
   });
   g3Html += `</g>`;
 
-  // Middle Bridge Connectors (Between Cluster 1 / 2 and Cluster 3)
+  // Middle Bridge Connectors
   const bridgeX1 = c1X + 20 + cW;
-  const bridgeY1 = c1Y + 42 + cH/2;
+  const bridgeY1 = c1Y + 44 + cH/2;
   const bridgeX2 = c3X + 20;
-  const bridgeY2 = c3Y + 42 + cH/2;
+  const bridgeY2 = c3Y + 44 + cH/2;
 
   const bridgePath1 = `M ${bridgeX1} ${bridgeY1} C ${bridgeX1 + 130} ${bridgeY1}, ${bridgeX2 - 130} ${bridgeY2}, ${bridgeX2} ${bridgeY2}`;
   
-  const bridge2Y1 = c2Y + 42 + cH/2;
-  const bridge2Y2 = c3Y + 42 + (g3Stages.length > 1 ? 125 : 0) + cH/2;
+  const bridge2Y1 = c2Y + 44 + cH/2;
+  const bridge2Y2 = c3Y + 44 + (g3Stages.length > 1 ? 125 : 0) + cH/2;
   const bridgePath2 = `M ${bridgeX1} ${bridge2Y1} C ${bridgeX1 + 130} ${bridge2Y1}, ${bridgeX2 - 130} ${bridge2Y2}, ${bridgeX2} ${bridge2Y2}`;
 
   const bridgeHtml = `
     <!-- Top Bridge Connector -->
-    <path d="${bridgePath1}" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowHead)"/>
-    <path class="flow-pulse-edge" d="${bridgePath1}" fill="none" stroke="${pal.edgePulse}" stroke-width="2.5"/>
-    <g class="edge-badge-group" transform="translate(${(bridgeX1 + bridgeX2)/2 - 60}, ${(bridgeY1 + bridgeY2)/2 - 13})" onclick="selectFlowPhase('${g3Stages[0]?.id || g3Stages[0]?.index || 3}')">
-      <rect width="120" height="24" rx="12" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
-      <text x="60" y="16" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Enterprise Expansion ↗</text>
+    <path d="${bridgePath1}" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+    <g class="edge-badge-group" transform="translate(${(bridgeX1 + bridgeX2)/2 - 60}, ${(bridgeY1 + bridgeY2)/2 - 12})" onclick="selectFlowPhase('${g3Stages[0]?.id || g3Stages[0]?.index || 3}')">
+      <rect width="120" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1"/>
+      <text x="60" y="15" font-size="9.5" font-weight="600" fill="${pal.badgeText}" text-anchor="middle">Enterprise Expansion ↗</text>
     </g>
 
     <!-- Bottom Bridge Connector -->
-    <path d="${bridgePath2}" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowHead)"/>
-    <path class="flow-pulse-edge" d="${bridgePath2}" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
-    <g class="edge-badge-group" transform="translate(${(bridgeX1 + bridgeX2)/2 - 65}, ${(bridge2Y1 + bridge2Y2)/2 - 13})" onclick="selectFlowPhase('${stages[stages.length-1]?.id || stages[stages.length-1]?.index || stages.length}')">
-      <rect width="130" height="24" rx="12" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
-      <text x="65" y="16" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Rule of 40 Compounding ↗</text>
+    <path d="${bridgePath2}" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+    <g class="edge-badge-group" transform="translate(${(bridgeX1 + bridgeX2)/2 - 65}, ${(bridge2Y1 + bridge2Y2)/2 - 12})" onclick="selectFlowPhase('${stages[stages.length-1]?.id || stages[stages.length-1]?.index || stages.length}')">
+      <rect width="130" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1"/>
+      <text x="65" y="15" font-size="9.5" font-weight="600" fill="${pal.badgeText}" text-anchor="middle">Rule of 40 Compounding ↗</text>
     </g>
   `;
 
@@ -3078,211 +3082,177 @@ function renderNativeSvgFlowchart(stages) {
   return renderClusteredCompanySvg(stages, currentCompanyFlowData);
 }
 
-/* Vector-Sharp Replica of the Process Flow Diagram Template with Animated Pulse Connectors */
+/* Vector-Sharp Replica of the Process Flow Diagram Template - Refined, Clean, Non-Flashy */
 function renderProcessFlowTemplateSvg(stages) {
   const W = 1040;
   const H = 640;
   const isDark = document.documentElement.classList.contains('dark');
 
   const pal = isDark ? {
-    cyanBg: '#081421', cyanStroke: '#06b6d4', cyanHeader: '#22d3ee',
-    purpleBg: '#160e24', purpleStroke: '#a855f7', purpleHeader: '#c084fc',
-    blueBg: '#0a172a', blueStroke: '#3b82f6', blueHeader: '#60a5fa',
-    cardBg: '#111d2e', cardBorder: '#1e293b',
-    cardPurpleBg: '#1f1433', cardPurpleBorder: '#2e1b4d',
-    cardBlueBg: '#0e223f', cardBlueBorder: '#1d3b66',
-    cardMidBg: '#0f172a', cardMidBorder: '#334155',
+    clusterBg: '#0b1120', clusterBorder: '#1e293b', clusterHeader: '#94a3b8',
+    cardBg: '#111827', cardBorder: '#1f2937',
     title: '#f8fafc', sub: '#94a3b8',
-    edgeLine: '#64748b', badgeBg: '#ffffff', badgeBorder: '#94a3b8', badgeText: '#0f172a'
+    edgeLine: '#475569', badgeBg: '#1e293b', badgeBorder: '#334155', badgeText: '#cbd5e1'
   } : {
-    cyanBg: '#f0fdfa', cyanStroke: '#0d9488', cyanHeader: '#0f766e',
-    purpleBg: '#faf5ff', purpleStroke: '#9333ea', purpleHeader: '#7e22ce',
-    blueBg: '#eff6ff', blueStroke: '#2563eb', blueHeader: '#1d4ed8',
-    cardBg: '#ffffff', cardBorder: '#cbd5e1',
-    cardPurpleBg: '#ffffff', cardPurpleBorder: '#cbd5e1',
-    cardBlueBg: '#ffffff', cardBlueBorder: '#cbd5e1',
-    cardMidBg: '#ffffff', cardMidBorder: '#cbd5e1',
+    clusterBg: '#f8fafc', clusterBorder: '#e2e8f0', clusterHeader: '#475569',
+    cardBg: '#ffffff', cardBorder: '#e2e8f0',
     title: '#0f172a', sub: '#64748b',
-    edgeLine: '#64748b', badgeBg: '#ffffff', badgeBorder: '#cbd5e1', badgeText: '#0f172a'
+    edgeLine: '#94a3b8', badgeBg: '#ffffff', badgeBorder: '#cbd5e1', badgeText: '#475569'
   };
 
   return `
   <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="min-width:${W}px; min-height:${H}px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <defs>
-      <!-- Pin / Dot Indicators -->
-      <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#06b6d4" flood-opacity="0.2"/>
-      </filter>
-      <filter id="purpleGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.2"/>
-      </filter>
-      <filter id="blueGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#3b82f6" flood-opacity="0.2"/>
-      </filter>
       <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.06"/>
+        <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.04"/>
       </filter>
       <marker id="arrowRight" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
         <path d="M 0 2 L 7 5 L 0 8 z" fill="${pal.edgeLine}"/>
       </marker>
     </defs>
 
-    <!-- Subgraph 1: Cyan Container (Top-Left) -->
-    <g class="process-subgraph-cyan" filter="url(#cyanGlow)">
-      <rect x="40" y="40" width="280" height="260" rx="16" ry="16" fill="${pal.cyanBg}" stroke="${pal.cyanStroke}" stroke-width="2.5"/>
-      <text x="60" y="70" font-size="11" font-weight="800" fill="${pal.cyanHeader}" letter-spacing="0.5">PHASE 1 · PRODUCT-MARKET FIT</text>
+    <!-- Subgraph 1: Phase 1 Container (Top-Left) -->
+    <g class="process-subgraph-cluster">
+      <rect x="40" y="40" width="280" height="260" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="58" y="52" width="200" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="68" y="67" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 1 · PRODUCT-MARKET FIT</text>
       
       <!-- Card A1 (Core Dev) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('A1')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="58" y="85" width="244" height="85" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
-        <text x="76" y="112" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <rect class="card-bg" x="58" y="85" width="244" height="85" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="76" y="112" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elem</text>
         <text x="76" y="132" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
-        <text x="76" y="152" font-size="11" font-weight="700" fill="#0284c7">ARR: $5.0M · S&amp;M: 52%</text>
-        <!-- Port Dot -->
-        <circle cx="180" cy="170" r="7" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
-        <circle cx="180" cy="170" r="2.5" fill="#0284c7"/>
+        <text x="76" y="152" font-size="11" font-weight="700" fill="${pal.title}">ARR: $5.0M <tspan font-weight="500" fill="${pal.sub}">· S&amp;M: 52%</tspan></text>
+        <!-- Clean Port Dot -->
+        <circle cx="180" cy="170" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
 
       <!-- Card A2 (PLG Funnel) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('A2')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="58" y="195" width="244" height="85" rx="10" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1.5"/>
-        <text x="76" y="222" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
+        <rect class="card-bg" x="58" y="195" width="244" height="85" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="76" y="222" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elem</text>
         <text x="76" y="242" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
-        <text x="76" y="262" font-size="11" font-weight="700" fill="#0284c7">ARR: $15.0M · S&amp;M: 46%</text>
-        <!-- Port Dot Right -->
-        <circle cx="302" cy="237" r="7" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
-        <circle cx="302" cy="237" r="2.5" fill="#0284c7"/>
+        <text x="76" y="262" font-size="11" font-weight="700" fill="${pal.title}">ARR: $15.0M <tspan font-weight="500" fill="${pal.sub}">· S&amp;M: 46%</tspan></text>
+        <!-- Clean Port Dot Right -->
+        <circle cx="302" cy="237" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
       
       <!-- Internal vertical connector -->
-      <line x1="180" y1="170" x2="180" y2="195" stroke="${pal.edgeLine}" stroke-width="2"/>
-      <path class="flow-pulse-edge" d="M 180 170 L 180 195" fill="none" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="180" y1="170" x2="180" y2="195" stroke="${pal.edgeLine}" stroke-width="1.5"/>
     </g>
 
-    <!-- Subgraph 2: Purple Container (Bottom-Left) -->
-    <g class="process-subgraph-purple" filter="url(#purpleGlow)">
-      <rect x="40" y="340" width="280" height="260" rx="16" ry="16" fill="${pal.purpleBg}" stroke="${pal.purpleStroke}" stroke-width="2.5"/>
-      <text x="60" y="370" font-size="11" font-weight="800" fill="${pal.purpleHeader}" letter-spacing="0.5">PHASE 2 · GTM SCALE ENGINE</text>
+    <!-- Subgraph 2: Phase 2 Container (Bottom-Left) -->
+    <g class="process-subgraph-cluster">
+      <rect x="40" y="330" width="280" height="260" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="58" y="342" width="190" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="68" y="357" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 2 · GTM SCALE ENGINE</text>
 
       <!-- Card B1 (Inside Sales) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('B1')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="58" y="385" width="244" height="85" rx="10" fill="${pal.cardPurpleBg}" stroke="${pal.cardPurpleBorder}" stroke-width="1.5"/>
-        <text x="76" y="412" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
-        <text x="76" y="432" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
-        <text x="76" y="452" font-size="11" font-weight="700" fill="#7c3aed">ARR: $35.0M · S&amp;M: 42%</text>
-        <!-- Port Dot -->
-        <circle cx="180" cy="470" r="7" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
-        <circle cx="180" cy="470" r="2.5" fill="#7c3aed"/>
+        <rect class="card-bg" x="58" y="375" width="244" height="85" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="76" y="402" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="422" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="442" font-size="11" font-weight="700" fill="${pal.title}">ARR: $35.0M <tspan font-weight="500" fill="${pal.sub}">· S&amp;M: 42%</tspan></text>
+        <circle cx="180" cy="460" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
 
       <!-- Card B2 (Multi-Product) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('B2')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="58" y="495" width="244" height="85" rx="10" fill="${pal.cardPurpleBg}" stroke="${pal.cardPurpleBorder}" stroke-width="1.5"/>
-        <text x="76" y="522" font-size="14" font-weight="800" fill="${pal.title}">Etiam elem</text>
-        <text x="76" y="542" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
-        <text x="76" y="562" font-size="11" font-weight="700" fill="#7c3aed">ARR: $75.0M · S&amp;M: 38%</text>
-        <!-- Port Dot Right -->
-        <circle cx="302" cy="537" r="7" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
-        <circle cx="302" cy="537" r="2.5" fill="#7c3aed"/>
+        <rect class="card-bg" x="58" y="485" width="244" height="85" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="76" y="512" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elem</text>
+        <text x="76" y="532" font-size="11.5" fill="${pal.sub}">Quisque ore sapien</text>
+        <text x="76" y="552" font-size="11" font-weight="700" fill="${pal.title}">ARR: $75.0M <tspan font-weight="500" fill="${pal.sub}">· S&amp;M: 38%</tspan></text>
+        <circle cx="302" cy="527" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
 
       <!-- Internal vertical connector -->
-      <line x1="180" y1="470" x2="180" y2="495" stroke="${pal.edgeLine}" stroke-width="2"/>
-      <path class="flow-pulse-edge" d="M 180 470 L 180 495" fill="none" stroke="#a855f7" stroke-width="2"/>
+      <line x1="180" y1="460" x2="180" y2="485" stroke="${pal.edgeLine}" stroke-width="1.5"/>
     </g>
 
-    <!-- Connector between Cyan and Purple Containers -->
-    <path d="M 180 300 L 180 340" stroke="${pal.edgeLine}" stroke-width="2"/>
-    <path class="flow-pulse-edge" d="M 180 300 L 180 340" fill="none" stroke="#64748b" stroke-width="2"/>
-    <circle cx="180" cy="300" r="5" fill="${pal.cardBg}" stroke="${pal.cyanStroke}" stroke-width="2"/>
-    <circle cx="180" cy="340" r="5" fill="${pal.cardPurpleBg}" stroke="${pal.purpleStroke}" stroke-width="2"/>
+    <!-- Connector between Container 1 and 2 -->
+    <line x1="180" y1="300" x2="180" y2="330" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+    <circle cx="180" cy="300" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+    <circle cx="180" cy="330" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
 
     <!-- Middle Floating Cards (Bridge Trajectory) -->
     <!-- Card M1 (Mid-Market Inflection) -->
     <g class="flow-svg-node" onclick="selectFlowPhase('M1')" style="cursor:pointer;" filter="url(#cardShadow)">
-      <rect class="card-bg" x="390" y="240" width="190" height="95" rx="10" fill="${pal.cardMidBg}" stroke="${pal.cardMidBorder}" stroke-width="1.5"/>
-      <text x="410" y="270" font-size="14" font-weight="800" fill="${pal.title}">Etiam elementum</text>
-      <text x="410" y="292" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
-      <text x="410" y="314" font-size="11" font-weight="700" fill="#0284c7">ARR: $120.0M · 60%</text>
-      <circle cx="390" cy="287" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
-      <circle cx="580" cy="287" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
+      <rect class="card-bg" x="390" y="235" width="190" height="95" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+      <text x="410" y="265" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elementum</text>
+      <text x="410" y="287" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+      <text x="410" y="309" font-size="11" font-weight="700" fill="${pal.title}">ARR: $120.0M <tspan font-weight="500" fill="${pal.sub}">· 60%</tspan></text>
+      <circle cx="390" cy="282" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+      <circle cx="580" cy="282" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
     </g>
 
     <!-- Card M2 (Channel Ecosystem) -->
     <g class="flow-svg-node" onclick="selectFlowPhase('M2')" style="cursor:pointer;" filter="url(#cardShadow)">
-      <rect class="card-bg" x="390" y="470" width="190" height="95" rx="10" fill="${pal.cardMidBg}" stroke="${pal.cardMidBorder}" stroke-width="1.5"/>
-      <text x="410" y="500" font-size="14" font-weight="800" fill="${pal.title}">Etiam elementum</text>
-      <text x="410" y="522" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
-      <text x="410" y="544" font-size="11" font-weight="700" fill="#7c3aed">ARR: $200.0M · 50%</text>
-      <circle cx="390" cy="517" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
-      <circle cx="580" cy="517" r="6" fill="${pal.cardMidBg}" stroke="${pal.edgeLine}" stroke-width="2"/>
+      <rect class="card-bg" x="390" y="465" width="190" height="95" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+      <text x="410" y="495" font-size="13.5" font-weight="700" fill="${pal.title}">Etiam elementum</text>
+      <text x="410" y="517" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+      <text x="410" y="539" font-size="11" font-weight="700" fill="${pal.title}">ARR: $200.0M <tspan font-weight="500" fill="${pal.sub}">· 50%</tspan></text>
+      <circle cx="390" cy="512" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+      <circle cx="580" cy="512" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
     </g>
 
-    <!-- Subgraph 3: Blue Container (Right) -->
-    <g class="process-subgraph-blue" filter="url(#blueGlow)">
-      <rect x="670" y="170" width="330" height="390" rx="16" ry="16" fill="${pal.blueBg}" stroke="${pal.blueStroke}" stroke-width="2.5"/>
-      <text x="695" y="205" font-size="11" font-weight="800" fill="${pal.blueHeader}" letter-spacing="0.5">PHASE 3 · ENTERPRISE PLATFORM &amp; MOAT</text>
+    <!-- Subgraph 3: Phase 3 Container (Right) -->
+    <g class="process-subgraph-cluster">
+      <rect x="670" y="160" width="330" height="400" rx="12" fill="${pal.clusterBg}" stroke="${pal.clusterBorder}" stroke-width="1.25"/>
+      <rect x="692" y="174" width="250" height="22" rx="4" fill="${pal.cardBg}" stroke="${pal.clusterBorder}" stroke-width="1"/>
+      <text x="702" y="189" font-size="10" font-weight="700" fill="${pal.clusterHeader}" letter-spacing="0.4">PHASE 3 · ENTERPRISE PLATFORM &amp; MOAT</text>
 
       <!-- Card C1 (Enterprise Suite GA) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('C1')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="692" y="225" width="286" height="135" rx="12" fill="${pal.cardBlueBg}" stroke="${pal.cardBlueBorder}" stroke-width="1.5"/>
-        <text x="714" y="260" font-size="15" font-weight="800" fill="${pal.title}">Etiam elementum</text>
-        <text x="714" y="285" font-size="12" fill="${pal.sub}">Quisque ornare sapien</text>
-        <text x="714" y="310" font-size="12" font-weight="700" fill="#2563eb">Enterprise Security · ARR: $450.0M</text>
-        <text x="714" y="332" font-size="11" font-weight="600" fill="#059669">S&amp;M: 32% | R&amp;D: 23% | Rule of 40: 52</text>
-        <circle cx="692" cy="292" r="7" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="2"/>
-        <circle cx="692" cy="292" r="2.5" fill="#2563eb"/>
+        <rect class="card-bg" x="692" y="210" width="286" height="120" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="714" y="240" font-size="14" font-weight="700" fill="${pal.title}">Etiam elementum</text>
+        <text x="714" y="262" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+        <text x="714" y="286" font-size="12" font-weight="700" fill="${pal.title}">Enterprise Security · ARR: $450.0M</text>
+        <text x="714" y="306" font-size="10.5" font-weight="500" fill="${pal.sub}">S&amp;M: 32% | R&amp;D: 23% | Rule of 40: 52</text>
+        <circle cx="692" cy="270" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
 
       <!-- Card C2 (Operating Cash Machine) -->
       <g class="flow-svg-node" onclick="selectFlowPhase('C2')" style="cursor:pointer;" filter="url(#cardShadow)">
-        <rect class="card-bg" x="692" y="390" width="286" height="135" rx="12" fill="${pal.cardBlueBg}" stroke="${pal.cardBlueBorder}" stroke-width="1.5"/>
-        <text x="714" y="425" font-size="15" font-weight="800" fill="${pal.title}">Etiam elementum</text>
-        <text x="714" y="450" font-size="12" fill="${pal.sub}">Quisque ornare sapien</text>
-        <text x="714" y="475" font-size="12" font-weight="700" fill="#059669">Operating Leverage · ARR: $850.0M</text>
-        <text x="714" y="497" font-size="11" font-weight="600" fill="#0284c7">FCF Margin: 28% | Rule of 40: 54</text>
-        <circle cx="692" cy="457" r="7" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="2"/>
-        <circle cx="692" cy="457" r="2.5" fill="#059669"/>
+        <rect class="card-bg" x="692" y="350" width="286" height="120" rx="8" fill="${pal.cardBg}" stroke="${pal.cardBorder}" stroke-width="1"/>
+        <text x="714" y="380" font-size="14" font-weight="700" fill="${pal.title}">Etiam elementum</text>
+        <text x="714" y="402" font-size="11.5" fill="${pal.sub}">Quisque ornare sapien</text>
+        <text x="714" y="426" font-size="12" font-weight="700" fill="#10b981">Operating Leverage · ARR: $850.0M</text>
+        <text x="714" y="446" font-size="10.5" font-weight="500" fill="${pal.sub}">FCF Margin: 28% | Rule of 40: 54</text>
+        <circle cx="692" cy="410" r="3.5" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
       </g>
 
       <!-- Internal vertical connector between C1 and C2 -->
-      <line x1="835" y1="360" x2="835" y2="390" stroke="${pal.blueStroke}" stroke-width="2"/>
-      <path class="flow-pulse-edge" d="M 835 360 L 835 390" fill="none" stroke="#3b82f6" stroke-width="2"/>
-      <circle cx="835" cy="360" r="5" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="1.5"/>
-      <circle cx="835" cy="390" r="5" fill="${pal.cardBlueBg}" stroke="${pal.blueStroke}" stroke-width="1.5"/>
+      <line x1="835" y1="330" x2="835" y2="350" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+      <circle cx="835" cy="330" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
+      <circle cx="835" cy="350" r="3" fill="${pal.cardBg}" stroke="${pal.edgeLine}" stroke-width="1.5"/>
     </g>
 
-    <!-- Edge Connectors with High-Contrast Pill Badges & Animated Pulses -->
+    <!-- Edge Connectors with Clean Minimal Pill Badges (No Distracting Pulse) -->
     <!-- Edge 1: Card A2 -> Card M1 -->
-    <path d="M 302 237 L 340 237 L 340 287 L 384 287" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
-    <path class="flow-pulse-edge" d="M 302 237 L 340 237 L 340 287 L 384 287" fill="none" stroke="#0284c7" stroke-width="2.5"/>
+    <path d="M 302 237 L 340 237 L 340 282 L 384 282" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowRight)"/>
     <g class="edge-badge-group" transform="translate(315, 218)" onclick="selectFlowPhase('M1')">
-      <rect width="130" height="24" rx="12" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
-      <text x="65" y="16" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare ut nequetemes</text>
+      <rect width="130" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1"/>
+      <text x="65" y="15" font-size="9.5" font-weight="600" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare ut nequetemes</text>
     </g>
 
     <!-- Edge 2: Card B2 -> Card M2 -->
-    <path d="M 302 537 L 384 537" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
-    <path class="flow-pulse-edge" d="M 302 537 L 384 537" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
-    <g class="edge-badge-group" transform="translate(320, 520)" onclick="selectFlowPhase('M2')">
-      <rect width="80" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
-      <text x="40" y="15" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
+    <path d="M 302 527 L 384 527" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowRight)"/>
+    <g class="edge-badge-group" transform="translate(320, 510)" onclick="selectFlowPhase('M2')">
+      <rect width="80" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1"/>
+      <text x="40" y="15" font-size="9.5" font-weight="600" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
     </g>
 
     <!-- Edge 3: Card M1 -> Card C1 -->
-    <path d="M 580 287 L 686 287" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
-    <path class="flow-pulse-edge" d="M 580 287 L 686 287" fill="none" stroke="#0284c7" stroke-width="2.5"/>
+    <path d="M 580 282 L 686 270" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowRight)"/>
 
     <!-- Edge 4: Card M2 -> Card C2 -->
-    <path d="M 580 517 L 630 517 L 630 457 L 686 457" fill="none" stroke="${pal.edgeLine}" stroke-width="2" marker-end="url(#arrowRight)"/>
-    <path class="flow-pulse-edge" d="M 580 517 L 630 517 L 630 457 L 686 457" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+    <path d="M 580 512 L 630 512 L 630 410 L 686 410" fill="none" stroke="${pal.edgeLine}" stroke-width="1.5" marker-end="url(#arrowRight)"/>
 
     <!-- Edge 5: Cross Bridge G1 -> G3 -->
-    <path d="M 320 125 L 670 125 L 835 125 L 835 170" fill="none" stroke="${pal.edgeLine}" stroke-dasharray="4,4" stroke-width="1.5"/>
-    <path class="flow-pulse-edge" d="M 320 125 L 670 125 L 835 125 L 835 170" fill="none" stroke="#0284c7" stroke-width="2"/>
+    <path d="M 320 125 L 670 125 L 835 125 L 835 160" fill="none" stroke="${pal.edgeLine}" stroke-dasharray="3,3" stroke-width="1.25"/>
     <g class="edge-badge-group" transform="translate(460, 112)" onclick="selectFlowPhase('C1')">
-      <rect width="90" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1.5"/>
-      <text x="45" y="15" font-size="9.5" font-weight="700" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
+      <rect width="90" height="22" rx="11" fill="${pal.badgeBg}" stroke="${pal.badgeBorder}" stroke-width="1"/>
+      <text x="45" y="15" font-size="9.5" font-weight="600" fill="${pal.badgeText}" text-anchor="middle">Quisque ornare</text>
     </g>
   </svg>
   `;

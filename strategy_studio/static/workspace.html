@@ -363,6 +363,14 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
+
+          <!-- Right Sidebar Toggle Button -->
+          <button id="toggleRightSidebarTopbarBtn" class="icon-trigger-btn active" type="button" title="Toggle Flow Architecture Tools (Right Sidebar)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M15 3v18"/>
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -372,63 +380,157 @@
           
           <!-- HERO CENTERPIECE: THE FULL-VIEW MULTI-YEAR STRATEGY FLOWCHART -->
           <section class="flowchart-hero-card full-view-card flush-canvas-card">
-            
-            <!-- Sleek Floating Control Dock (Centered at top of canvas, frosted glass) -->
-            <div class="ai-flow-floating-dock" id="aiFlowFloatingDock">
-              <!-- AI Prompt Pill -->
-              <div class="ai-flow-dock-pill">
-                <div class="ai-sparkle-pill">
-                  <span class="sparkle">✦</span>
-                  <span class="sparkle-text">ChatGPT</span>
-                </div>
-                <input id="aiFlowPromptInput" type="text" placeholder="Prompt AI to generate or modify strategy flow..." />
-                <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn" title="Synthesize strategy flow architecture">
-                  <span id="aiFlowBtnText">✦ Flow</span>
-                  <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
-                </button>
-              </div>
-
-              <div class="dock-divider"></div>
-
-              <!-- Quick Presets Row -->
-              <div class="dock-presets-group">
-                <button type="button" class="preset-pill active" data-preset-id="template-process-flow">⚡ Process Flow</button>
-                <button type="button" class="preset-pill" data-preset-id="ai-saas-blueprint">🚀 AI SaaS</button>
-                <button type="button" class="preset-pill" data-preset-id="datadog-clustered">🐕 Datadog</button>
-                <button type="button" class="preset-pill" data-preset-id="snowflake-scale">❄️ Snowflake</button>
-                <button type="button" class="preset-pill" data-preset-id="crowdstrike-falcon">🛡️ CrowdStrike</button>
-              </div>
-
-              <div class="dock-divider"></div>
-
-              <!-- Canvas Viewport Controls -->
-              <div class="flowchart-canvas-controls">
-                <button id="zoomInBtn" class="ctrl-btn" type="button" title="Zoom In">+</button>
-                <button id="zoomOutBtn" class="ctrl-btn" type="button" title="Zoom Out">−</button>
-                <button id="zoomResetBtn" class="ctrl-btn" type="button" title="Reset View">⤢</button>
-                <button id="toggleFullscreenBtn" class="ctrl-btn" type="button" title="Toggle Fullscreen Canvas">⛶</button>
-                <button id="toggleMermaidCodeBtn" class="ctrl-btn toggle-mermaid-btn" type="button" title="View / Edit Mermaid Syntax">&lt;/&gt;</button>
-                <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Toggle Details Inspector">👁️</button>
-                <button id="toggleDockBtn" class="ctrl-btn" type="button" title="Minimize / Expand Toolbar">−</button>
-              </div>
-            </div>
 
             <!-- Floating Stage Header Badge (Top-Left overlay) -->
             <div class="canvas-floating-badge" id="canvasFloatingBadge">
               <div style="display:flex; align-items:center; gap:8px;">
                 <h2 class="flowchart-company-name" id="flowchartCompanyTitle">Process Flow Diagram Template</h2>
-                <span id="flowchartPeriodCountPill" class="kpi-tag" style="background:rgba(6, 182, 212, 0.15); color:#0891b2; border:1px solid rgba(6, 182, 212, 0.35); font-weight:700;">Modular Clustered Architecture</span>
+                <span id="flowchartPeriodCountPill" class="kpi-tag" style="background:var(--surface-muted); color:var(--text-muted); border:1px solid var(--border); font-weight:700;">Modular Clustered Architecture</span>
               </div>
               <p style="font-size:11.5px; color:var(--text-muted); margin:3px 0 0;" id="flowchartSubtitle">
                 💡 Click any stage card or transition arrow in the diagram to inspect strategic drivers
               </p>
             </div>
 
-            <!-- Flowchart Viewport (Fits Flush to Topbar Edge-to-Edge) -->
-            <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
-              <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
-                <div id="companyFlowMermaid"></div>
+            <!-- Flowchart Canvas Workspace Row (Left: Viewport, Right: Shadcn Flow Sidebar) -->
+            <div class="flow-canvas-workspace-row" id="flowCanvasWorkspaceRow">
+              
+              <!-- Flowchart Viewport (Fits Flush to Topbar Edge-to-Edge) -->
+              <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
+                <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
+                  <div id="companyFlowMermaid"></div>
+                </div>
               </div>
+
+              <!-- SHADCN RIGHT SIDEBAR FOR FLOW ARCHITECTURE & CONTROLS -->
+              <aside class="shadcn-flow-right-sidebar" id="flowRightSidebar" data-state="expanded">
+                <!-- Sidebar Header -->
+                <div class="flow-right-sidebar-header">
+                  <div class="flow-right-sidebar-title-group">
+                    <div class="flow-sidebar-icon-box">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="flow-sidebar-title">Flow Architecture</span>
+                      <span class="flow-sidebar-subtitle">AI &amp; Presets</span>
+                    </div>
+                  </div>
+                  <button id="toggleRightSidebarBtn" type="button" class="icon-trigger-btn" title="Collapse Sidebar">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Sidebar Scrollable Body -->
+                <div class="flow-right-sidebar-content">
+                  <!-- Section 1: AI Prompt Generator -->
+                  <div class="flow-sidebar-section">
+                    <div class="flow-sidebar-label">
+                      <span>✦ AI STRATEGY ARCHITECT</span>
+                      <span class="badge-subtle">GPT-5 Mini</span>
+                    </div>
+                    <div class="ai-flow-input-card">
+                      <textarea id="aiFlowPromptInput" rows="3" placeholder="Prompt AI to generate or modify strategy flow (e.g. 'Add product-led onboarding funnel with 40% margin target')..."></textarea>
+                      <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn" title="Synthesize strategy flow architecture">
+                        <span id="aiFlowBtnText">✦ Synthesize Flow</span>
+                        <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Section 2: Flow Archetypes / Presets -->
+                  <div class="flow-sidebar-section">
+                    <div class="flow-sidebar-label">
+                      <span>FLOW TEMPLATES</span>
+                      <span class="badge-subtle">5 Models</span>
+                    </div>
+                    <div class="dock-presets-group presets-vertical-list">
+                      <button type="button" class="preset-pill active" data-preset-id="template-process-flow">
+                        <span class="preset-pill-icon">⚡</span>
+                        <div class="preset-pill-meta">
+                          <strong>Process Flow Template</strong>
+                          <small>3-Phase Clustered Architecture</small>
+                        </div>
+                      </button>
+                      <button type="button" class="preset-pill" data-preset-id="ai-saas-blueprint">
+                        <span class="preset-pill-icon">🚀</span>
+                        <div class="preset-pill-meta">
+                          <strong>AI SaaS Blueprint</strong>
+                          <small>Seed Traction → Scale Engine → Moat</small>
+                        </div>
+                      </button>
+                      <button type="button" class="preset-pill" data-preset-id="datadog-clustered">
+                        <span class="preset-pill-icon">🐕</span>
+                        <div class="preset-pill-meta">
+                          <strong>Datadog (DDOG)</strong>
+                          <small>Multi-Product Cloud Engine</small>
+                        </div>
+                      </button>
+                      <button type="button" class="preset-pill" data-preset-id="snowflake-scale">
+                        <span class="preset-pill-icon">❄️</span>
+                        <div class="preset-pill-meta">
+                          <strong>Snowflake (SNOW)</strong>
+                          <small>Data Cloud Consumption Engine</small>
+                        </div>
+                      </button>
+                      <button type="button" class="preset-pill" data-preset-id="crowdstrike-falcon">
+                        <span class="preset-pill-icon">🛡️</span>
+                        <div class="preset-pill-meta">
+                          <strong>CrowdStrike (CRWD)</strong>
+                          <small>Falcon Platform Security Moat</small>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Section 3: Canvas Controls -->
+                  <div class="flow-sidebar-section">
+                    <div class="flow-sidebar-label">
+                      <span>CANVAS CONTROLS</span>
+                    </div>
+                    <div class="flowchart-canvas-controls right-sidebar-controls-grid">
+                      <button id="zoomInBtn" class="ctrl-btn" type="button" title="Zoom In">
+                        <span class="ctrl-btn-symbol">+</span>
+                        <span>Zoom In</span>
+                      </button>
+                      <button id="zoomOutBtn" class="ctrl-btn" type="button" title="Zoom Out">
+                        <span class="ctrl-btn-symbol">−</span>
+                        <span>Zoom Out</span>
+                      </button>
+                      <button id="zoomResetBtn" class="ctrl-btn" type="button" title="Fit to Screen">
+                        <span class="ctrl-btn-symbol">⤢</span>
+                        <span>Fit View</span>
+                      </button>
+                      <button id="toggleFullscreenBtn" class="ctrl-btn" type="button" title="Toggle Fullscreen">
+                        <span class="ctrl-btn-symbol">⛶</span>
+                        <span>Fullscreen</span>
+                      </button>
+                      <button id="toggleMermaidCodeBtn" class="ctrl-btn toggle-mermaid-btn" type="button" title="View / Edit Mermaid Syntax">
+                        <span class="ctrl-btn-symbol">&lt;/&gt;</span>
+                        <span>Mermaid</span>
+                      </button>
+                      <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Inspect Node Financials">
+                        <span class="ctrl-btn-symbol">👁️</span>
+                        <span>Node Intel</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <!-- Collapsed Trigger Button on Right Margin -->
+              <button id="collapsedRightSidebarTrigger" class="collapsed-right-sidebar-trigger" type="button" title="Open Flow Controls" style="display:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Flow Tools</span>
+              </button>
             </div>
 
             <!-- Raw Mermaid Syntax (Hidden by default) -->
