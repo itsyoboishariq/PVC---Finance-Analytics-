@@ -103,12 +103,12 @@ function getRequest(ai = false) {
 
 function updateLocalKPIs() {
   const r = getRequest();
-  $('flowTitle').textContent = $('name').value || 'My Strategy';
+  if ($('flowTitle')) $('flowTitle').textContent = $('name')?.value || 'My Strategy';
 
   const curGrowth = r.profile.revenue_growth;
   const curMargin = r.profile.operating_margin;
   const curR40 = (curGrowth + curMargin) * 100;
-  $('r40CurrentVal').textContent = curR40.toFixed(1);
+  if ($('r40CurrentVal')) $('r40CurrentVal').textContent = curR40.toFixed(1);
 
   // Quick projected estimate
   const deltaSM = (r.proposed_ratios.sales_marketing_ratio ?? r.profile.sales_marketing_ratio) - r.profile.sales_marketing_ratio;
@@ -117,31 +117,67 @@ function updateLocalKPIs() {
   const projMargin = curMargin - (deltaSM * 0.85) - (deltaRD * 0.90);
   const projR40 = (projGrowth + projMargin) * 100;
 
-  $('r40ProposedVal').textContent = projR40.toFixed(1);
+  if ($('r40ProposedVal')) $('r40ProposedVal').textContent = projR40.toFixed(1);
   const diff = projR40 - curR40;
-  $('r40DeltaText').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' pt shift in Rule of 40';
+  if ($('r40DeltaText')) $('r40DeltaText').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' pt shift in Rule of 40';
 
   const budgetDelta = (deltaSM + deltaRD) * r.profile.revenue;
-  $('budgetDeltaVal').textContent = (budgetDelta >= 0 ? '+' : '') + money(budgetDelta);
-  $('runwayImpactText').textContent = budgetDelta < 0 ? 'Extends runway (burn cut)' : (budgetDelta > 0 ? 'Accelerates burn (investment)' : 'Budget neutral');
+  if ($('budgetDeltaVal')) $('budgetDeltaVal').textContent = (budgetDelta >= 0 ? '+' : '') + money(budgetDelta);
+  if ($('runwayImpactText')) $('runwayImpactText').textContent = budgetDelta < 0 ? 'Extends runway (burn cut)' : (budgetDelta > 0 ? 'Accelerates burn (investment)' : 'Budget neutral');
 
-  $('topTargetSummary').textContent = `Rule of 40: ${projR40.toFixed(1)} (${(diff >= 0 ? '+' : '') + diff.toFixed(1)})`;
+  if ($('topTargetSummary')) $('topTargetSummary').textContent = `Rule of 40: ${projR40.toFixed(1)} (${(diff >= 0 ? '+' : '') + diff.toFixed(1)})`;
 
   // Render tree hierarchy
-  renderHierarchyTree(r, currentResult);
+  try {
+    renderHierarchyTree(r, currentResult);
+  } catch (err) {
+    console.warn('renderHierarchyTree skipped:', err);
+  }
 }
 
 // Hierarchy Tree Rendering
 function renderHierarchyTree(req, res) {
-  $('treeGoalTitle').textContent = req.objective === 'growth'
-    ? 'Accelerate Revenue Growth & Expand Market Share'
-    : 'Improve Operating Profitability & Runway Extension';
-  $('treeGoalDesc').textContent = `${money(req.profile.revenue)} ARR at ${pct(req.profile.revenue_growth)} Growth · ${pct(req.profile.operating_margin)} Margin`;
-  $('treeGoalPill').textContent = req.objective === 'growth' ? 'Objective · Growth' : 'Objective · Profitability';
+  if ($('treeGoalTitle')) {
+    $('treeGoalTitle').textContent = req.objective === 'growth'
+      ? 'Accelerate Revenue Growth & Expand Market Share'
+      : 'Improve Operating Profitability & Runway Extension';
+  }
+  if ($('treeGoalDesc')) {
+    $('treeGoalDesc').textContent = `${money(req.profile.revenue)} ARR at ${pct(req.profile.revenue_growth)} Growth · ${pct(req.profile.operating_margin)} Margin`;
+  }
+  if ($('treeGoalPill')) {
+    $('treeGoalPill').textContent = req.objective === 'growth' ? 'Objective · Growth' : 'Objective · Profitability';
+  }
 
   renderAttachedEvidenceTag('node-root');
 
   const branches = $('treeBranchesContainer');
+  if (!branches) {
+    if ($('flow')) {
+      $('flow').innerHTML = `
+        <div class="node">
+          <small>STARTING PROFILE</small>
+          <strong>${money(req.profile.revenue)} revenue · ${pct(req.profile.revenue_growth)} growth</strong>
+          <span>${pct(req.profile.operating_margin)} operating margin</span>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="branches">
+          ${req.decisions.map(k => `
+            <div class="node decision">
+              <small>SPENDING DECISION</small>
+              <strong>${names[k]}</strong>
+              <span>${pct(req.profile[k])} → ${pct(req.proposed_ratios[k])} of revenue</span>
+              <p>${money((req.proposed_ratios[k] - req.profile[k]) * req.profile.revenue)} budget change at current revenue</p>
+            </div>`).join('') || '<div class="node">Enable a spending decision on the left.</div>'}
+        </div>
+        <div class="arrow">↓</div>
+        <div class="node"><small>RESEARCH CONTEXT</small><strong>${esc($('context')?.selectedOptions?.[0]?.text || $('context')?.value || 'Historical SaaS Periods')}</strong><span>Match starting profiles → compare actions</span></div>
+        <div class="arrow">↓</div>
+        <div class="node goal"><small>YOUR OBJECTIVE</small><strong>${req.objective === 'growth' ? 'Grow revenue' : 'Improve operating profitability'}</strong><span>Financial peers + actual execution</span></div>
+      `;
+    }
+    return;
+  }
   let html = '';
 
   // Pillar 1: Sales & Marketing
@@ -257,11 +293,11 @@ function drilldownNode(metricKey) {
   const treeRoot = $('hierarchyTreeRoot');
   const nav = $('drilldownNav');
 
-  treeRoot.style.display = 'none';
-  nav.style.display = 'flex';
-  container.style.display = 'block';
+  if (treeRoot) treeRoot.style.display = 'none';
+  if (nav) nav.style.display = 'flex';
+  if (container) container.style.display = 'block';
 
-  $('drilldownBreadcrumbText').textContent = `Deep Strategic Analysis: ${names[metricKey] || metricKey}`;
+  if ($('drilldownBreadcrumbText')) $('drilldownBreadcrumbText').textContent = `Deep Strategic Analysis: ${names[metricKey] || metricKey}`;
 
   if (!decision) {
     container.innerHTML = `
@@ -335,9 +371,9 @@ function drilldownNode(metricKey) {
 }
 
 function backToHierarchy() {
-  $('nodeDrilldownContainer').style.display = 'none';
-  $('drilldownNav').style.display = 'none';
-  $('hierarchyTreeRoot').style.display = 'flex';
+  if ($('nodeDrilldownContainer')) $('nodeDrilldownContainer').style.display = 'none';
+  if ($('drilldownNav')) $('drilldownNav').style.display = 'none';
+  if ($('hierarchyTreeRoot')) $('hierarchyTreeRoot').style.display = 'flex';
 }
 if ($('backToHierarchyBtn')) $('backToHierarchyBtn').onclick = backToHierarchy;
 
@@ -389,11 +425,14 @@ function removeEvidence(nodeId, idx) {
 
 function updateEvidenceCount() {
   const total = Object.values(attachedEvidence).reduce((s, a) => s + a.length, 0);
-  $('attachedEvidenceCount').textContent = `${total} evidence card${total === 1 ? '' : 's'} attached to strategy`;
+  if ($('attachedEvidenceCount')) {
+    $('attachedEvidenceCount').textContent = `${total} evidence card${total === 1 ? '' : 's'} attached to strategy`;
+  }
 }
 
 function renderEvidenceDock(peers) {
   const dock = $('evidenceCardsDock');
+  if (!dock) return;
   let cards = [];
 
   // Peer company evidence cards
@@ -513,7 +552,7 @@ function renderRadarChart(radarData) {
           'Rule of 40': selBm.rule_of_40.toFixed(1)
         }
       };
-      $('legendBenchmarkLabel').textContent = selBm.name;
+      if ($('legendBenchmarkLabel')) $('legendBenchmarkLabel').textContent = selBm.name;
     }
   }
 
@@ -545,50 +584,54 @@ function renderRadarChart(radarData) {
     }
   });
 
-  svg.innerHTML = svgHtml;
+  if (svg) svg.innerHTML = svgHtml;
 
   // Render Exploded Axis Boxes
   const statBoxes = $('radarStatBoxes');
-  statBoxes.innerHTML = axes.map((axis, i) => {
-    const curVal = series.current?.raw?.[axis] ?? '—';
-    const propVal = series.proposed?.raw?.[axis] ?? '—';
-    const peerVal = series.peers_median?.raw?.[axis] ?? '—';
-    return `
-      <div class="radar-stat-box">
-        <div class="radar-stat-label">${esc(axis)}</div>
-        <div class="radar-stat-val">${esc(propVal)}</div>
-        <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">
-          Current: <strong>${esc(curVal)}</strong> · Peer Med: <strong>${esc(peerVal)}</strong>
+  if (statBoxes) {
+    statBoxes.innerHTML = axes.map((axis, i) => {
+      const curVal = series.current?.raw?.[axis] ?? '—';
+      const propVal = series.proposed?.raw?.[axis] ?? '—';
+      const peerVal = series.peers_median?.raw?.[axis] ?? '—';
+      return `
+        <div class="radar-stat-box">
+          <div class="radar-stat-label">${esc(axis)}</div>
+          <div class="radar-stat-val">${esc(propVal)}</div>
+          <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">
+            Current: <strong>${esc(curVal)}</strong> · Peer Med: <strong>${esc(peerVal)}</strong>
+          </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  }
 }
 
 // Benchmarking Library Renderer
 function renderBenchmarks(benchmarks) {
   if (!benchmarks) return;
   const grid = $('benchmarksCardsGrid');
-  grid.innerHTML = benchmarks.map(bm => `
-    <div class="benchmark-card ${bm.id === selectedBenchmarkId ? 'selected' : ''}" onclick="selectBenchmark('${bm.id}')">
-      <div>
-        <div class="bm-author">${esc(bm.author)}</div>
-        <div class="bm-name">${esc(bm.name)}</div>
-        <p class="bm-desc">${esc(bm.description)}</p>
+  if (grid) {
+    grid.innerHTML = benchmarks.map(bm => `
+      <div class="benchmark-card ${bm.id === selectedBenchmarkId ? 'selected' : ''}" onclick="selectBenchmark('${bm.id}')">
+        <div>
+          <div class="bm-author">${esc(bm.author)}</div>
+          <div class="bm-name">${esc(bm.name)}</div>
+          <p class="bm-desc">${esc(bm.description)}</p>
+        </div>
+        <div class="bm-metrics-grid">
+          <div>Growth: <strong>${pct(bm.revenue_growth)}</strong></div>
+          <div>OpMargin: <strong>${pct(bm.operating_margin)}</strong></div>
+          <div>S&M: <strong>${pct(bm.sales_marketing_ratio)}</strong></div>
+          <div>R&D: <strong>${pct(bm.rd_ratio)}</strong></div>
+          <div>Gross: <strong>${pct(bm.gross_margin)}</strong></div>
+          <div>Rule of 40: <strong>${bm.rule_of_40.toFixed(1)}</strong></div>
+        </div>
+        <button class="btn primary" type="button" style="font-size:11px; padding:6px 10px;">
+          ${bm.id === selectedBenchmarkId ? '✓ Active on Radar' : 'Benchmark Against This'}
+        </button>
       </div>
-      <div class="bm-metrics-grid">
-        <div>Growth: <strong>${pct(bm.revenue_growth)}</strong></div>
-        <div>OpMargin: <strong>${pct(bm.operating_margin)}</strong></div>
-        <div>S&M: <strong>${pct(bm.sales_marketing_ratio)}</strong></div>
-        <div>R&D: <strong>${pct(bm.rd_ratio)}</strong></div>
-        <div>Gross: <strong>${pct(bm.gross_margin)}</strong></div>
-        <div>Rule of 40: <strong>${bm.rule_of_40.toFixed(1)}</strong></div>
-      </div>
-      <button class="btn primary" type="button" style="font-size:11px; padding:6px 10px;">
-        ${bm.id === selectedBenchmarkId ? '✓ Active on Radar' : 'Benchmark Against This'}
-      </button>
-    </div>
-  `).join('');
+    `).join('');
+  }
 
   renderBenchmarkComparisonTable(benchmarks);
 }
@@ -603,6 +646,7 @@ function selectBenchmark(id) {
 
 function renderBenchmarkComparisonTable(benchmarks) {
   const table = $('benchmarkComparisonTable');
+  if (!table) return;
   const selBm = benchmarks.find(b => b.id === selectedBenchmarkId) || benchmarks[0];
   if (!selBm) return;
 
@@ -664,6 +708,7 @@ function renderBenchmarkComparisonTable(benchmarks) {
 // Recommendations Renderer
 function renderRecommendations(recs) {
   const row = $('recommendationsRow');
+  if (!row) return;
   if (!recs || !recs.length) {
     row.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Run analysis to generate peer-grounded recommendations.</p>';
     return;
@@ -836,20 +881,22 @@ function render(r) {
   });
 
   html += `<div class="warn">${r.limitations.map(esc).join('<br>')}<br>Snapshot: ${esc(r.snapshot)}</div>`;
-  $('results').innerHTML = html;
-  $('results').style.opacity = '1';
+  if ($('results')) {
+    $('results').innerHTML = html;
+    $('results').style.opacity = '1';
+  }
 
-  // Render components
-  renderEvidenceDock(r.peers);
-  renderRecommendations(r.recommendations);
-  renderBenchmarks(r.benchmarks);
-  renderRadarChart(r.radar);
-  updateLocalKPIs();
+  // Render components defensively
+  try { renderEvidenceDock(r.peers); } catch (e) { console.warn('renderEvidenceDock error:', e); }
+  try { renderRecommendations(r.recommendations); } catch (e) { console.warn('renderRecommendations error:', e); }
+  try { renderBenchmarks(r.benchmarks); } catch (e) { console.warn('renderBenchmarks error:', e); }
+  try { renderRadarChart(r.radar); } catch (e) { console.warn('renderRadarChart error:', e); }
+  try { updateLocalKPIs(); } catch (e) { console.warn('updateLocalKPIs error:', e); }
 
   if (r.peers && r.peers.items && r.peers.items.length) {
-    $('peerCohortSummary').textContent = `${r.peers.items.length} Peers Matched`;
+    if ($('peerCohortSummary')) $('peerCohortSummary').textContent = `${r.peers.items.length} Peers Matched`;
     const namesList = r.peers.items.slice(0, 3).map(p => p.company_name || p.ticker).join(', ');
-    $('peerCohortSub').textContent = namesList;
+    if ($('peerCohortSub')) $('peerCohortSub').textContent = namesList;
   }
 }
 
@@ -1031,17 +1078,17 @@ function switchTab(tabId) {
   });
   document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
 
-  if (tabId === 'tab-hierarchy') $('view-hierarchy').style.display = 'block';
-  if (tabId === 'tab-spider') {
+  if (tabId === 'tab-hierarchy' && $('view-hierarchy')) $('view-hierarchy').style.display = 'block';
+  if (tabId === 'tab-spider' && $('view-spider')) {
     $('view-spider').style.display = 'block';
     if (currentResult) renderRadarChart(currentResult.radar);
   }
-  if (tabId === 'tab-benchmarks') {
+  if (tabId === 'tab-benchmarks' && $('view-benchmarks')) {
     $('view-benchmarks').style.display = 'block';
     if (currentResult) renderBenchmarks(currentResult.benchmarks);
   }
-  if (tabId === 'tab-evidence') $('view-evidence').style.display = 'block';
-  if (tabId === 'tab-company-flow') {
+  if (tabId === 'tab-evidence' && $('view-evidence')) $('view-evidence').style.display = 'block';
+  if (tabId === 'tab-company-flow' && $('view-company-flow')) {
     $('view-company-flow').style.display = 'block';
     if (!currentCompanyFlowData) {
       loadCompanyFlow($('companyFlowSelect')?.value || 'DDOG');
@@ -2242,19 +2289,29 @@ window.adoptTargetLevers = function(pbId) {
 };
 
 function adoptDiligenceLeversIntoPlan(params) {
+  if (!params) return;
   if ($('name')) $('name').value = params.name || 'Diligence Plan';
-  if ($('revenue')) $('revenue').value = params.revenue.toFixed(1);
-  if ($('growth')) $('growth').value = params.growth.toFixed(0);
-  if ($('margin')) $('margin').value = params.margin.toFixed(0);
-  if ($('gross')) $('gross').value = params.gross.toFixed(0);
-  if ($('sales')) $('sales').value = params.sales.toFixed(0);
-  if ($('rd')) $('rd').value = params.rd.toFixed(0);
+  if ($('revenue') && params.revenue != null) $('revenue').value = Number(params.revenue).toFixed(1);
+  if ($('growth') && params.growth != null) $('growth').value = Number(params.growth).toFixed(0);
+  if ($('margin') && params.margin != null) $('margin').value = Number(params.margin).toFixed(0);
+  if ($('gross') && params.gross != null) $('gross').value = Number(params.gross).toFixed(0);
+  if ($('sales') && params.sales != null) $('sales').value = Number(params.sales).toFixed(0);
+  if ($('rd') && params.rd != null) $('rd').value = Number(params.rd).toFixed(0);
 
-  // Switch to canvas and recalculate
+  if ($('salesTarget') && params.sales != null) $('salesTarget').value = Number(params.sales).toFixed(0);
+  if ($('rdTarget') && params.rd != null) $('rdTarget').value = Number(params.rd).toFixed(0);
+  if ($('salesOn')) $('salesOn').checked = true;
+  if ($('rdOn')) $('rdOn').checked = true;
+
+  // Switch to canvas view
   const canvasBtn = $('viewCanvasBtn');
   if (canvasBtn) canvasBtn.click();
+
+  updateLocalKPIs();
   run(false);
-  toast.success('Levers Adopted', `Transferred financial profile into Startup Plan & Strategy Flowchart.`);
+  if (typeof toast !== 'undefined') {
+    toast.success('Levers Adopted', `Transferred financial profile into Startup Plan & Strategy Flowchart.`);
+  }
 }
 
 function renderPillar3FinancialModel(modelData) {
