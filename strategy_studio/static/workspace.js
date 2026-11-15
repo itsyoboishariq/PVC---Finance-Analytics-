@@ -1161,6 +1161,7 @@ function initSidebar() {
   const backdrop = $('sidebarBackdrop');
   const railLogoBtn = $('railLogoBtn');
   const railToggleBtn = $('railToggleBtn');
+  const railUserBtn = $('railUserBtn');
 
   function setSidebarState(state) {
     if (!sidebar) return;
@@ -1189,6 +1190,7 @@ function initSidebar() {
   if (topbarTrigger) topbarTrigger.onclick = toggleSidebar;
   if (railLogoBtn) railLogoBtn.onclick = toggleSidebar;
   if (railToggleBtn) railToggleBtn.onclick = toggleSidebar;
+  if (railUserBtn) railUserBtn.onclick = toggleSidebar;
   if (backdrop) backdrop.onclick = () => setSidebarState('collapsed');
 
   function scrollToSidebarSection(secId) {
@@ -1498,39 +1500,12 @@ async function initCompanyFlow() {
     };
   }
 
-  // Shadcn Flow Right Sidebar Toggle Handlers
-  const flowRightSidebar = $('flowRightSidebar');
-  const toggleRightSidebarBtn = $('toggleRightSidebarBtn');
-  const collapsedRightTrigger = $('collapsedRightSidebarTrigger');
-  const toggleRightSidebarTopbarBtn = $('toggleRightSidebarTopbarBtn');
-
-  function setRightSidebarState(expand) {
-    if (!flowRightSidebar) return;
-    if (expand) {
-      flowRightSidebar.classList.remove('collapsed');
-      flowRightSidebar.setAttribute('data-state', 'expanded');
-      flowRightSidebar.style.display = 'flex';
-      if (collapsedRightTrigger) collapsedRightTrigger.style.display = 'none';
-      if (toggleRightSidebarTopbarBtn) toggleRightSidebarTopbarBtn.classList.add('active');
-    } else {
-      flowRightSidebar.classList.add('collapsed');
-      flowRightSidebar.setAttribute('data-state', 'collapsed');
-      flowRightSidebar.style.display = 'none';
-      if (collapsedRightTrigger) collapsedRightTrigger.style.display = 'flex';
-      if (toggleRightSidebarTopbarBtn) toggleRightSidebarTopbarBtn.classList.remove('active');
-    }
-  }
-
-  if (toggleRightSidebarBtn) {
-    toggleRightSidebarBtn.onclick = () => setRightSidebarState(false);
-  }
-  if (collapsedRightTrigger) {
-    collapsedRightTrigger.onclick = () => setRightSidebarState(true);
-  }
-  if (toggleRightSidebarTopbarBtn) {
-    toggleRightSidebarTopbarBtn.onclick = () => {
-      const isExpanded = flowRightSidebar && flowRightSidebar.getAttribute('data-state') === 'expanded' && flowRightSidebar.style.display !== 'none';
-      setRightSidebarState(!isExpanded);
+  // Sidebar Diligence quick-jump button
+  const sidebarOpenDiligenceBtn = $('sidebarOpenDiligenceBtn');
+  if (sidebarOpenDiligenceBtn) {
+    sidebarOpenDiligenceBtn.onclick = () => {
+      const viewDiligenceBtn = $('viewDiligenceBtn');
+      if (viewDiligenceBtn) viewDiligenceBtn.click();
     };
   }
 

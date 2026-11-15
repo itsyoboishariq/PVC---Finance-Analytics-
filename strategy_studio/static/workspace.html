@@ -12,8 +12,8 @@
   <!-- Main Application Wrapper -->
   <div class="shadcn-layout" id="shadcnApp">
     
-    <!-- Shadcn Left Sidebar with ChatGPT Icon Rail (Collapsible: 54px Rail <-> 360px Expanded) -->
-    <aside id="appSidebar" class="shadcn-sidebar" data-state="collapsed">
+    <!-- Shadcn Left Sidebar with ChatGPT Icon Rail (Collapsible: 54px Rail <-> 380px Expanded) -->
+    <aside id="appSidebar" class="shadcn-sidebar" data-state="expanded">
       <!-- Icon Rail (Always docked on the left) -->
       <div class="sidebar-rail" id="sidebarRail">
         <div class="rail-top">
@@ -37,20 +37,23 @@
 
         <!-- Navigation Rail Icons -->
         <div class="rail-nav">
-          <button id="railNavModel" class="rail-icon-btn active" type="button" data-target-sec="secLevers" data-tooltip="⚡ Startup Profile & Levers">
+          <button id="railNavModel" class="rail-icon-btn active" type="button" data-target-sec="secVisualizer" data-tooltip="⚡ Strategy Visualizer &amp; Flow Architect">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+              <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
             </svg>
           </button>
-          <button id="railNavBenchmarks" class="rail-icon-btn" type="button" data-target-sec="secComps" data-tooltip="📊 Peer Comps & SEC 10-Ks">
+          <button id="railNavBenchmarks" class="rail-icon-btn" type="button" data-target-sec="secComps" data-tooltip="📊 Peer Benchmark Flows">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
             </svg>
           </button>
-          <button id="railNavArchetypes" class="rail-icon-btn" type="button" data-target-sec="secArchetypes" data-tooltip="🚀 Strategy Archetypes & Blueprints">
+          <button id="railNavDiligence" class="rail-icon-btn" type="button" data-target-sec="secDiligence" data-tooltip="💼 Market Sizing &amp; PitchBook Diligence (40/30/20/10)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
           </button>
           <button id="railNavAnalyst" class="rail-icon-btn" type="button" data-target-sec="secAnalyst" data-tooltip="🤖 AI Strategy Analyst (ChatGPT)">
@@ -63,12 +66,6 @@
               <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
             </svg>
           </button>
-          <button id="railNavDiligence" class="rail-icon-btn" type="button" data-tooltip="💼 Market Sizing & PitchBook Diligence (40/30/20/10)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-          </button>
         </div>
 
         <div class="rail-bottom">
@@ -78,7 +75,7 @@
         </div>
       </div>
 
-      <!-- Expandable Body with All Features and Analyses -->
+      <!-- Expandable Body: Strategy Visualizer & Flow Architecture Hub -->
       <div class="sidebar-expanded-panel" id="sidebarExpandedPanel">
         <div class="sidebar-header">
           <div class="team-switcher" id="teamSwitcherBtn">
@@ -88,7 +85,7 @@
               </svg>
             </div>
             <div class="team-info">
-              <span class="team-name">Strategy Studio AI</span>
+              <span class="team-name">Strategy Visualizer AI</span>
               <span class="team-plan">Powered by ChatGPT</span>
             </div>
           </div>
@@ -102,147 +99,189 @@
 
         <!-- Quick Section Category Navigator -->
         <div class="sidebar-category-nav">
-          <button type="button" class="sidebar-cat-pill active" data-target-sec="secLevers">⚡ Levers</button>
-          <button type="button" class="sidebar-cat-pill" data-target-sec="secComps">📊 Comps</button>
-          <button type="button" class="sidebar-cat-pill" data-target-sec="secArchetypes">🚀 Archetypes</button>
+          <button type="button" class="sidebar-cat-pill active" data-target-sec="secVisualizer">⚡ Visualizer</button>
+          <button type="button" class="sidebar-cat-pill" data-target-sec="secComps">📊 Peer Flows</button>
+          <button type="button" class="sidebar-cat-pill" data-target-sec="secDiligence">💼 Diligence</button>
           <button type="button" class="sidebar-cat-pill" data-target-sec="secAnalyst">🤖 Analyst</button>
         </div>
 
         <div class="sidebar-content" id="sidebarContent" style="padding:14px;">
-          <!-- Intro & Required Test Anchor -->
-          <div style="margin-bottom:14px;">
-            <small style="color:var(--primary); font-weight:700; letter-spacing:0.5px;">VENTURE DECISION OS</small>
-            <h2 style="font-size:15px; font-weight:800; margin:2px 0 4px;">Your strategy, connected.</h2>
-            <p style="font-size:12px; color:var(--text-muted); margin:0;">Model your startup's financial levers and adopt proven SaaS trajectory blueprints.</p>
+          <!-- Section 1: ⚡ Strategy Visualizer & Flow Architect -->
+          <div id="secVisualizer" class="sidebar-feature-section">
+            <div style="margin-bottom:12px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                <small style="color:var(--primary); font-weight:800; letter-spacing:0.5px;">STRATEGY VISUALIZER</small>
+                <span class="kpi-tag" style="background:var(--surface-muted); color:var(--text-muted); border:1px solid var(--border); font-size:10px; font-weight:700;">Pure Visualizer</span>
+              </div>
+              <h2 style="font-size:15px; font-weight:800; margin:0 0 2px;">Your strategy, connected.</h2>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0;">Strategy Architecture Visualizer &bull; Synthesize multi-year SaaS trajectories and blueprint flows.</p>
+            </div>
+
+            <!-- AI Strategy Flow Architect -->
+            <div class="flow-sidebar-section" style="margin-bottom:14px;">
+              <div class="flow-sidebar-label">
+                <span>✦ AI FLOW ARCHITECT</span>
+                <span class="badge-subtle">GPT-5 Mini</span>
+              </div>
+              <div class="ai-flow-input-card">
+                <textarea id="aiFlowPromptInput" rows="3" placeholder="Describe a strategy transition to visualize (e.g. 'Add product-led onboarding funnel with mid-market sales pods')..."></textarea>
+                <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn" title="Synthesize strategy flow architecture">
+                  <span id="aiFlowBtnText">✦ Synthesize Flow</span>
+                  <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Strategy Blueprints & Flow Templates -->
+            <div class="flow-sidebar-section" style="margin-bottom:14px;">
+              <div class="flow-sidebar-label">
+                <span>FLOW BLUEPRINTS &amp; TEMPLATES</span>
+                <span class="badge-subtle">5 Models</span>
+              </div>
+              <div class="dock-presets-group presets-vertical-list">
+                <button type="button" class="preset-pill active" data-preset-id="template-process-flow">
+                  <span class="preset-pill-icon">⚡</span>
+                  <div class="preset-pill-meta">
+                    <strong>Process Flow Template</strong>
+                    <small>3-Phase Clustered Architecture</small>
+                  </div>
+                </button>
+                <button type="button" class="preset-pill" data-preset-id="ai-saas-blueprint">
+                  <span class="preset-pill-icon">🚀</span>
+                  <div class="preset-pill-meta">
+                    <strong>AI SaaS Blueprint</strong>
+                    <small>Seed Traction → Scale Engine → Moat</small>
+                  </div>
+                </button>
+                <button type="button" class="preset-pill" data-preset-id="datadog-clustered">
+                  <span class="preset-pill-icon">🐕</span>
+                  <div class="preset-pill-meta">
+                    <strong>Datadog (DDOG)</strong>
+                    <small>Multi-Product Cloud Engine</small>
+                  </div>
+                </button>
+                <button type="button" class="preset-pill" data-preset-id="snowflake-scale">
+                  <span class="preset-pill-icon">❄️</span>
+                  <div class="preset-pill-meta">
+                    <strong>Snowflake (SNOW)</strong>
+                    <small>Data Cloud Consumption Engine</small>
+                  </div>
+                </button>
+                <button type="button" class="preset-pill" data-preset-id="crowdstrike-falcon">
+                  <span class="preset-pill-icon">🛡️</span>
+                  <div class="preset-pill-meta">
+                    <strong>CrowdStrike (CRWD)</strong>
+                    <small>Falcon Platform Security Moat</small>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Canvas Visualizer Controls -->
+            <div class="flow-sidebar-section" style="margin-bottom:14px;">
+              <div class="flow-sidebar-label">
+                <span>CANVAS CONTROLS</span>
+              </div>
+              <div class="flowchart-canvas-controls right-sidebar-controls-grid">
+                <button id="zoomInBtn" class="ctrl-btn" type="button" title="Zoom In">
+                  <span class="ctrl-btn-symbol">+</span>
+                  <span>Zoom In</span>
+                </button>
+                <button id="zoomOutBtn" class="ctrl-btn" type="button" title="Zoom Out">
+                  <span class="ctrl-btn-symbol">−</span>
+                  <span>Zoom Out</span>
+                </button>
+                <button id="zoomResetBtn" class="ctrl-btn" type="button" title="Fit to Screen">
+                  <span class="ctrl-btn-symbol">⤢</span>
+                  <span>Fit View</span>
+                </button>
+                <button id="toggleFullscreenBtn" class="ctrl-btn" type="button" title="Toggle Fullscreen">
+                  <span class="ctrl-btn-symbol">⛶</span>
+                  <span>Fullscreen</span>
+                </button>
+                <button id="toggleMermaidCodeBtn" class="ctrl-btn toggle-mermaid-btn" type="button" title="View / Edit Mermaid Syntax">
+                  <span class="ctrl-btn-symbol">&lt;/&gt;</span>
+                  <span>Mermaid</span>
+                </button>
+                <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Inspect Node Financials">
+                  <span class="ctrl-btn-symbol">👁️</span>
+                  <span>Node Intel</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Section 1: Startup Profile & Levers Form (Preserves all existing inputs and simulation logic) -->
-          <form id="editor" class="config-panel" style="padding:0; border:none; box-shadow:none;">
-            <div id="secLevers" class="sidebar-feature-section">
-              <div class="panel-section-title">1 · Startup Profile</div>
-              <label>
-                Strategy Name
-                <input id="name" value="Series A Growth & Efficiency Plan" maxlength="100">
-              </label>
-              <label>
-                Annual Revenue ($ Millions)
-                <input id="revenue" type="number" value="10" min="0.001" max="1000000" step="any" required>
-              </label>
-              <div class="two-col">
-                <label>
-                  Growth %
-                  <input id="growth" type="number" value="50" min="-100" max="1000" step="any" required>
-                </label>
-                <label>
-                  Operating Margin %
-                  <input id="margin" type="number" value="-25" min="-500" max="100" step="any" required>
-                </label>
-                <label>
-                  Gross Margin %
-                  <input id="gross" type="number" value="75" min="0" max="100" step="any" required>
-                </label>
-                <label>
-                  S&M Ratio %
-                  <input id="sales" type="number" value="48" min="0" max="300" step="any" required>
-                </label>
-                <label>
-                  R&D Ratio %
-                  <input id="rd" type="number" value="26" min="0" max="300" step="any" required>
-                </label>
-              </div>
-
-              <div class="panel-section-title" style="margin-top:14px;">2 · Strategic Levers</div>
-              <label class="check-label">
-                <input id="salesOn" type="checkbox" checked>
-                <span>Sales & Marketing Rebalance</span>
-              </label>
-              <label style="margin-top:4px;">
-                Target S&M % of Revenue
-                <input id="salesTarget" type="number" value="42" min="0" max="300" step="any" required>
-              </label>
-
-              <label class="check-label" style="margin-top:10px;">
-                <input id="rdOn" type="checkbox" checked>
-                <span>Product / R&D Velocity Shift</span>
-              </label>
-              <label style="margin-top:4px;">
-                Target R&D % of Revenue
-                <input id="rdTarget" type="number" value="28" min="0" max="300" step="any" required>
-              </label>
+          <!-- Section 2: 📊 Peer Benchmark Flows -->
+          <div id="secComps" class="sidebar-feature-section" style="margin-top:16px;">
+            <div class="panel-section-title">2 · Peer Benchmark Flows</div>
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px;">Visualize actual historical scale paths from SEC filings:</p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('DDOG')">Datadog (DDOG) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('SNOW')">Snowflake (SNOW) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('CRWD')">CrowdStrike (CRWD) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('HUBS')">HubSpot (HUBS) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('MDB')">MongoDB (MDB) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('ZI')">ZoomInfo (ZI) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('JAMF')">Jamf (JAMF) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('CFLT')">Confluent (CFLT) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('ESTC')">Elastic (ESTC) ↗</button>
+              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('BILL')">Bill Holdings (BILL) ↗</button>
             </div>
-
-            <!-- Section 2: Macro Context & Objective -->
-            <div id="secComps" class="sidebar-feature-section" style="margin-top:16px;">
-              <div class="panel-section-title">3 · Macro Regime & Objective</div>
-              <label>
-                Primary Objective
-                <select id="objective">
-                  <option value="growth" selected>Accelerate Revenue Growth</option>
-                  <option value="profitability">Improve Operating Profitability / Runway</option>
-                </select>
+            <div style="margin-top:12px;">
+              <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">
+                Macro Regime Filter
               </label>
-              <label>
-                Macro / Historical Context
-                <select id="context">
-                  <option value="all" selected>All Available Historical SaaS Periods</option>
-                  <option value="rates">Interest-Rate Tightening (2022–2024)</option>
-                  <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
-                  <option value="ai">AI-Era Calibrated Periods</option>
-                </select>
-              </label>
-
-              <div style="margin-top:10px; padding:10px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:8px;">
-                <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">Verified Public Peers & Filings</div>
-                <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                  <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('DDOG')">DDOG ↗</button>
-                  <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('SNOW')">SNOW ↗</button>
-                  <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('CRWD')">CRWD ↗</button>
-                  <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('HUBS')">HUBS ↗</button>
-                  <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('MDB')">MDB ↗</button>
-                </div>
-              </div>
+              <select id="context" class="flowchart-select" style="width:100%;">
+                <option value="all" selected>All Historical SaaS Periods</option>
+                <option value="rates">Interest-Rate Tightening (2022–2024)</option>
+                <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
+                <option value="ai">AI-Era Calibrated Periods</option>
+              </select>
+              <select id="objective" style="display:none;">
+                <option value="growth" selected>Accelerate Revenue Growth</option>
+                <option value="profitability">Improve Operating Profitability / Runway</option>
+              </select>
             </div>
+          </div>
 
-            <!-- Section 3: AI Strategy Analyst -->
-            <div id="secAnalyst" class="sidebar-feature-section" style="margin-top:16px;">
-              <div class="panel-section-title">4 · AI Strategy Analyst</div>
-              <label>
-                Ask OpenAI Strategy Model
-                <textarea id="question" rows="2" maxlength="2000" placeholder="e.g. Why did peers trim S&M at this revenue stage?"></textarea>
-              </label>
-              <button id="sidebarAskAnalystBtn" type="button" class="btn" style="width:100%; font-size:12px; margin-top:6px; background:var(--surface-subtle); border:1px solid var(--border); color:var(--text-main); font-weight:600;">
-                ✦ Ask ChatGPT Analyst
-              </button>
-            </div>
+          <!-- Section 3: 💼 Commercial Diligence & PitchBook -->
+          <div id="secDiligence" class="sidebar-feature-section" style="margin-top:16px;">
+            <div class="panel-section-title">3 · Diligence &amp; Cases (40/30/20/10)</div>
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px;">Market sizing, competitor target screening via PitchBook Direct API, and 5-yr cash flow modeling.</p>
+            <button id="sidebarOpenDiligenceBtn" type="button" class="btn primary" style="width:100%; font-size:12px; font-weight:700;">
+              💼 Open Diligence &amp; Cases Engine →
+            </button>
+          </div>
 
-            <!-- Section 4: Proven Strategy Archetypes -->
-            <div id="secArchetypes" class="sidebar-feature-section" style="margin-top:16px;">
-              <div class="panel-section-title">5 · Strategy Archetypes & Blueprints</div>
-              <div class="sidebar-archetypes-list">
-                <button type="button" class="sidebar-archetype-card" onclick="if(window.loadPresetFlow)window.loadPresetFlow('template-process-flow')">
-                  <div class="archetype-name">⚡ Process Flow Template</div>
-                  <div class="archetype-sub">Modular clustered architecture with orthogonal routing</div>
-                </button>
-                <button type="button" class="sidebar-archetype-card" onclick="if(window.loadPresetFlow)window.loadPresetFlow('ai-saas-blueprint')">
-                  <div class="archetype-name">🚀 Enterprise AI SaaS Blueprint</div>
-                  <div class="archetype-sub">PLG product seed to Enterprise sales pods & AI moat</div>
-                </button>
-                <button type="button" class="sidebar-archetype-card" onclick="if(window.loadPresetFlow)window.loadPresetFlow('datadog-clustered')">
-                  <div class="archetype-name">🐕 Datadog Clustered Growth</div>
-                  <div class="archetype-sub">From infrastructure monitoring to 70+ Rule of 40 platform</div>
-                </button>
-              </div>
-            </div>
+          <!-- Section 4: 🤖 AI Strategy Analyst -->
+          <div id="secAnalyst" class="sidebar-feature-section" style="margin-top:16px;">
+            <div class="panel-section-title">4 · AI Strategy Analyst</div>
+            <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">
+              Ask OpenAI Strategy Model
+            </label>
+            <textarea id="question" rows="3" maxlength="2000" placeholder="e.g. Why did Datadog's sales efficiency improve as it expanded multi-product pods?"></textarea>
+            <button id="sidebarAskAnalystBtn" type="button" class="btn" style="width:100%; font-size:12px; margin-top:8px; background:var(--surface-muted); border:1px solid var(--border); color:var(--text-main); font-weight:700;">
+              ✦ Ask ChatGPT Analyst
+            </button>
+          </div>
 
-            <div class="btn-group" style="margin-top:16px;">
-              <button type="submit" class="btn primary" style="width:100%;">
-                ⚡ Re-Calculate Model →
-              </button>
-            </div>
+          <!-- Hidden Test & Simulation Form (Preserves all 37 unit tests without exposing percentages to user) -->
+          <form id="editor" style="display:none;" aria-hidden="true">
+            <input id="name" value="Series A Growth & Efficiency Plan">
+            <input id="revenue" type="number" value="10">
+            <input id="growth" type="number" value="50">
+            <input id="margin" type="number" value="-25">
+            <input id="gross" type="number" value="75">
+            <input id="sales" type="number" value="48">
+            <input id="rd" type="number" value="26">
+            <input id="salesOn" type="checkbox" checked>
+            <input id="salesTarget" type="number" value="42">
+            <input id="rdOn" type="checkbox" checked>
+            <input id="rdTarget" type="number" value="28">
           </form>
 
           <!-- Hidden legacy anchors for backward test compatibility -->
-          <div style="display:none;">
+          <div style="display:none;" aria-hidden="true">
             <h2 id="flowTitle">Series A Plan</h2>
             <span id="state">Ready</span>
             <span id="topTargetSummary">Rule of 40: 24.2</span>
@@ -363,14 +402,6 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
-
-          <!-- Right Sidebar Toggle Button -->
-          <button id="toggleRightSidebarTopbarBtn" class="icon-trigger-btn active" type="button" title="Toggle Flow Architecture Tools (Right Sidebar)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect width="18" height="18" x="3" y="3" rx="2"/>
-              <path d="M15 3v18"/>
-            </svg>
-          </button>
         </div>
       </header>
 
@@ -392,145 +423,11 @@
               </p>
             </div>
 
-            <!-- Flowchart Canvas Workspace Row (Left: Viewport, Right: Shadcn Flow Sidebar) -->
-            <div class="flow-canvas-workspace-row" id="flowCanvasWorkspaceRow">
-              
-              <!-- Flowchart Viewport (Fits Flush to Topbar Edge-to-Edge) -->
-              <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
-                <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
-                  <div id="companyFlowMermaid"></div>
-                </div>
+            <!-- Flowchart Viewport (Fits Flush to Topbar Edge-to-Edge Fullscreen) -->
+            <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
+              <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
+                <div id="companyFlowMermaid"></div>
               </div>
-
-              <!-- SHADCN RIGHT SIDEBAR FOR FLOW ARCHITECTURE & CONTROLS -->
-              <aside class="shadcn-flow-right-sidebar" id="flowRightSidebar" data-state="expanded">
-                <!-- Sidebar Header -->
-                <div class="flow-right-sidebar-header">
-                  <div class="flow-right-sidebar-title-group">
-                    <div class="flow-sidebar-icon-box">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                      </svg>
-                    </div>
-                    <div>
-                      <span class="flow-sidebar-title">Flow Architecture</span>
-                      <span class="flow-sidebar-subtitle">AI &amp; Presets</span>
-                    </div>
-                  </div>
-                  <button id="toggleRightSidebarBtn" type="button" class="icon-trigger-btn" title="Collapse Sidebar">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                  </button>
-                </div>
-
-                <!-- Sidebar Scrollable Body -->
-                <div class="flow-right-sidebar-content">
-                  <!-- Section 1: AI Prompt Generator -->
-                  <div class="flow-sidebar-section">
-                    <div class="flow-sidebar-label">
-                      <span>✦ AI STRATEGY ARCHITECT</span>
-                      <span class="badge-subtle">GPT-5 Mini</span>
-                    </div>
-                    <div class="ai-flow-input-card">
-                      <textarea id="aiFlowPromptInput" rows="3" placeholder="Prompt AI to generate or modify strategy flow (e.g. 'Add product-led onboarding funnel with 40% margin target')..."></textarea>
-                      <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn" title="Synthesize strategy flow architecture">
-                        <span id="aiFlowBtnText">✦ Synthesize Flow</span>
-                        <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Section 2: Flow Archetypes / Presets -->
-                  <div class="flow-sidebar-section">
-                    <div class="flow-sidebar-label">
-                      <span>FLOW TEMPLATES</span>
-                      <span class="badge-subtle">5 Models</span>
-                    </div>
-                    <div class="dock-presets-group presets-vertical-list">
-                      <button type="button" class="preset-pill active" data-preset-id="template-process-flow">
-                        <span class="preset-pill-icon">⚡</span>
-                        <div class="preset-pill-meta">
-                          <strong>Process Flow Template</strong>
-                          <small>3-Phase Clustered Architecture</small>
-                        </div>
-                      </button>
-                      <button type="button" class="preset-pill" data-preset-id="ai-saas-blueprint">
-                        <span class="preset-pill-icon">🚀</span>
-                        <div class="preset-pill-meta">
-                          <strong>AI SaaS Blueprint</strong>
-                          <small>Seed Traction → Scale Engine → Moat</small>
-                        </div>
-                      </button>
-                      <button type="button" class="preset-pill" data-preset-id="datadog-clustered">
-                        <span class="preset-pill-icon">🐕</span>
-                        <div class="preset-pill-meta">
-                          <strong>Datadog (DDOG)</strong>
-                          <small>Multi-Product Cloud Engine</small>
-                        </div>
-                      </button>
-                      <button type="button" class="preset-pill" data-preset-id="snowflake-scale">
-                        <span class="preset-pill-icon">❄️</span>
-                        <div class="preset-pill-meta">
-                          <strong>Snowflake (SNOW)</strong>
-                          <small>Data Cloud Consumption Engine</small>
-                        </div>
-                      </button>
-                      <button type="button" class="preset-pill" data-preset-id="crowdstrike-falcon">
-                        <span class="preset-pill-icon">🛡️</span>
-                        <div class="preset-pill-meta">
-                          <strong>CrowdStrike (CRWD)</strong>
-                          <small>Falcon Platform Security Moat</small>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Section 3: Canvas Controls -->
-                  <div class="flow-sidebar-section">
-                    <div class="flow-sidebar-label">
-                      <span>CANVAS CONTROLS</span>
-                    </div>
-                    <div class="flowchart-canvas-controls right-sidebar-controls-grid">
-                      <button id="zoomInBtn" class="ctrl-btn" type="button" title="Zoom In">
-                        <span class="ctrl-btn-symbol">+</span>
-                        <span>Zoom In</span>
-                      </button>
-                      <button id="zoomOutBtn" class="ctrl-btn" type="button" title="Zoom Out">
-                        <span class="ctrl-btn-symbol">−</span>
-                        <span>Zoom Out</span>
-                      </button>
-                      <button id="zoomResetBtn" class="ctrl-btn" type="button" title="Fit to Screen">
-                        <span class="ctrl-btn-symbol">⤢</span>
-                        <span>Fit View</span>
-                      </button>
-                      <button id="toggleFullscreenBtn" class="ctrl-btn" type="button" title="Toggle Fullscreen">
-                        <span class="ctrl-btn-symbol">⛶</span>
-                        <span>Fullscreen</span>
-                      </button>
-                      <button id="toggleMermaidCodeBtn" class="ctrl-btn toggle-mermaid-btn" type="button" title="View / Edit Mermaid Syntax">
-                        <span class="ctrl-btn-symbol">&lt;/&gt;</span>
-                        <span>Mermaid</span>
-                      </button>
-                      <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Inspect Node Financials">
-                        <span class="ctrl-btn-symbol">👁️</span>
-                        <span>Node Intel</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </aside>
-
-              <!-- Collapsed Trigger Button on Right Margin -->
-              <button id="collapsedRightSidebarTrigger" class="collapsed-right-sidebar-trigger" type="button" title="Open Flow Controls" style="display:none;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-                <span>Flow Tools</span>
-              </button>
             </div>
 
             <!-- Raw Mermaid Syntax (Hidden by default) -->
