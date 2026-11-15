@@ -335,6 +335,72 @@ def make_app(db_path=DB):
         path.write_text(json.dumps(data, indent=2), encoding='utf-8')
         return {'status': 'ok', 'model': new_model}
 
+    # =========================================================================
+    # PitchBook Direct Data API & Screening Endpoints
+    # =========================================================================
+    @app.get('/api/pitchbook/status')
+    def pitchbook_status():
+        import pitchbook
+        return pitchbook.get_pitchbook_status()
+
+    @app.get('/api/pitchbook/screen')
+    def pitchbook_screen(
+        sector: str = Query(None),
+        query: str = Query(None),
+        entity_type: str = Query(None),
+        min_growth: float = Query(None),
+        max_ev_rev: float = Query(None),
+        min_fit_score: int = Query(None)
+    ):
+        import pitchbook
+        return {'items': pitchbook.screen_companies(
+            sector=sector,
+            query=query,
+            entity_type=entity_type,
+            min_growth=min_growth,
+            max_ev_rev=max_ev_rev,
+            min_fit_score=min_fit_score
+        )}
+
+    @app.get('/api/pitchbook/companies/{pb_id}')
+    def pitchbook_company_detail(pb_id: str):
+        import pitchbook
+        detail = pitchbook.get_company_detail(pb_id)
+        if not detail:
+            raise HTTPException(404, f"Company {pb_id} not found in PitchBook catalog")
+        return detail
+
+    @app.get('/api/pitchbook/deals')
+    def pitchbook_deals(sector: str = Query(None)):
+        import pitchbook
+        return {'items': pitchbook.get_deal_comps(sector=sector)}
+
+    # =========================================================================
+    # Commercial Diligence & 4-Pillar Financial Strategy Engine
+    # =========================================================================
+    @app.get('/api/diligence/spaces')
+    def diligence_spaces():
+        import commercial_diligence
+        return {'items': commercial_diligence.list_strategic_spaces()}
+
+    @app.get('/api/diligence/agent-guide')
+    def diligence_agent_guide(space_id: str = 'prediction-markets'):
+        import commercial_diligence
+        return commercial_diligence.get_agent_guiding_questions(space_id=space_id)
+
+    @app.post('/api/diligence/generate')
+    def diligence_generate(body: dict = None):
+        import commercial_diligence
+        payload = body or {}
+        return commercial_diligence.generate_diligence_package(
+            space_id=payload.get('space_id', 'prediction-markets'),
+            mandate=payload.get('mandate', 'ma_acquisition'),
+            data_source=payload.get('data_source', 'hybrid_diligence'),
+            monetization=payload.get('monetization', 'blended_exchange'),
+            financial_ambition=payload.get('financial_ambition', 'balanced_growth'),
+            custom_inputs=payload.get('custom_inputs')
+        )
+
     @app.get('/advanced')
     def advanced():return FileResponse(ROOT/'static/index.html')
 

@@ -1518,25 +1518,43 @@ async function initCompanyFlow() {
   const dashView = $('executiveDashboardView');
   const breadcrumb = $('currentTopBreadcrumb');
 
+  const viewDiligenceBtn = $('viewDiligenceBtn');
+  const diligenceView = $('commercialDiligenceView');
+
   function switchView(mode) {
     if (mode === 'dashboard') {
       if (canvasCard) canvasCard.style.display = 'none';
+      if (diligenceView) diligenceView.style.display = 'none';
       if (dashView) dashView.style.display = 'flex';
       viewCanvasBtn?.classList.remove('active');
       viewDashboardBtn?.classList.add('active');
+      viewDiligenceBtn?.classList.remove('active');
       if (breadcrumb) breadcrumb.textContent = 'Executive Dashboard';
       if (currentDeepdiveData) renderPhaseDeepdive(currentDeepdiveData);
+    } else if (mode === 'diligence') {
+      if (canvasCard) canvasCard.style.display = 'none';
+      if (dashView) dashView.style.display = 'none';
+      if (diligenceView) diligenceView.style.display = 'flex';
+      viewCanvasBtn?.classList.remove('active');
+      viewDashboardBtn?.classList.remove('active');
+      viewDiligenceBtn?.classList.add('active');
+      if (breadcrumb) breadcrumb.textContent = 'Diligence & Cases (40/30/20/10)';
+      initCommercialDiligence();
     } else {
       if (canvasCard) canvasCard.style.display = 'flex';
       if (dashView) dashView.style.display = 'none';
+      if (diligenceView) diligenceView.style.display = 'none';
       viewCanvasBtn?.classList.add('active');
       viewDashboardBtn?.classList.remove('active');
+      viewDiligenceBtn?.classList.remove('active');
       if (breadcrumb) breadcrumb.textContent = 'Strategy Canvas';
     }
   }
 
   if (viewCanvasBtn) viewCanvasBtn.onclick = () => switchView('canvas');
   if (viewDashboardBtn) viewDashboardBtn.onclick = () => switchView('dashboard');
+  if (viewDiligenceBtn) viewDiligenceBtn.onclick = () => switchView('diligence');
+  if ($('railNavDiligence')) $('railNavDiligence').onclick = () => switchView('diligence');
 
   // AI Model Selector Handler
   const aiModelSelect = $('aiModelSelect');
@@ -1792,6 +1810,567 @@ async function initCompanyFlow() {
 
   // Default initial load: Process Flow Diagram Template matching reference image!
   loadPresetFlow('template-process-flow');
+}
+
+// ==========================================================================
+// Corporate Strategy, Market Sizing & Commercial Diligence Studio (40/30/20/10)
+// ==========================================================================
+let diligenceInitialized = false;
+let currentDiligenceData = null;
+let currentSlideIndex = 0;
+let activePillarTab = 'pillar-tam';
+let selectedGuidingAnswers = {
+  space_id: 'prediction-markets',
+  mandate: 'ma_acquisition',
+  data_source: 'hybrid_diligence',
+  monetization: 'blended_exchange',
+  financial_ambition: 'balanced_growth'
+};
+
+async function initCommercialDiligence() {
+  if (diligenceInitialized) return;
+  diligenceInitialized = true;
+
+  // Space Switcher Chips
+  document.querySelectorAll('.diligence-space-chip').forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll('.diligence-space-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedGuidingAnswers.space_id = chip.dataset.spaceId;
+      loadDiligenceGuide(selectedGuidingAnswers.space_id);
+      runDiligenceSynthesis();
+    };
+  });
+
+  // Pillar Tab Navigation
+  document.querySelectorAll('.diligence-pillar-btn').forEach(btn => {
+    btn.onclick = () => {
+      const tabId = btn.dataset.pillarTab;
+      activePillarTab = tabId;
+      document.querySelectorAll('.diligence-pillar-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.diligence-panel').forEach(p => {
+        p.style.display = p.id === tabId ? 'flex' : 'none';
+      });
+      if (tabId === 'pillar-pitchbook') {
+        executePitchbookQuery();
+      }
+    };
+  });
+
+  // Slide Deck Navigation
+  const prevBtn = $('deckPrevSlideBtn');
+  const nextBtn = $('deckNextSlideBtn');
+  if (prevBtn) prevBtn.onclick = () => changeSlide(currentSlideIndex - 1);
+  if (nextBtn) nextBtn.onclick = () => changeSlide(currentSlideIndex + 1);
+
+  document.querySelectorAll('.deck-pill').forEach(pill => {
+    pill.onclick = () => {
+      const idx = parseInt(pill.dataset.slideIndex, 10);
+      changeSlide(idx);
+    };
+  });
+
+  const fullBtn = $('deckFullscreenBtn');
+  if (fullBtn) {
+    fullBtn.onclick = () => {
+      const slide = $('activeSlideCard');
+      if (slide) {
+        if (!document.fullscreenElement) {
+          slide.requestFullscreen().catch(e => console.warn(e));
+        } else {
+          document.exitFullscreen().catch(e => console.warn(e));
+        }
+      }
+    };
+  }
+
+  // Target Filter Pills
+  document.querySelectorAll('.screening-filter-pill').forEach(pill => {
+    pill.onclick = () => {
+      document.querySelectorAll('.screening-filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      renderScreeningTable(pill.dataset.targetFilter);
+    };
+  });
+
+  // PitchBook Explorer Executor
+  const pbBtn = $('pbExecuteQueryBtn');
+  if (pbBtn) pbBtn.onclick = executePitchbookQuery;
+  const pbSelect = $('pbEndpointSelect');
+  if (pbSelect) pbSelect.onchange = executePitchbookQuery;
+
+  const pbCopy = $('pbCopyJsonBtn');
+  if (pbCopy) {
+    pbCopy.onclick = () => {
+      const raw = $('pbJsonResponseBox')?.textContent;
+      if (raw) {
+        navigator.clipboard.writeText(raw);
+        toast.success('Copied', 'PitchBook JSON copied to clipboard');
+      }
+    };
+  }
+
+  // Synthesis CTA button
+  const synthBtn = $('runDiligenceSynthesisBtn');
+  if (synthBtn) synthBtn.onclick = runDiligenceSynthesis;
+
+  // Adopt Levers CTA button
+  const adoptBtn = $('adoptDiligenceLeversBtn');
+  if (adoptBtn) {
+    adoptBtn.onclick = () => {
+      if (currentDiligenceData && currentDiligenceData.pillar_3_financial_model) {
+        const m = currentDiligenceData.pillar_3_financial_model.projections_table[0];
+        adoptDiligenceLeversIntoPlan({
+          name: `${currentDiligenceData.space.name} - 5-Yr Plan`,
+          revenue: m.revenue_usd_m,
+          growth: 50.0,
+          margin: m.ebitda_margin_pct,
+          gross: m.gross_margin_pct,
+          sales: 38.0,
+          rd: 24.0
+        });
+      }
+    };
+  }
+
+  // Initial load
+  await loadDiligenceGuide(selectedGuidingAnswers.space_id);
+  await runDiligenceSynthesis();
+}
+
+async function loadDiligenceGuide(spaceId) {
+  const container = $('copilotQuestionsList');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`/api/diligence/agent-guide?space_id=${encodeURIComponent(spaceId)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    container.innerHTML = '';
+    (data.questions || []).forEach(q => {
+      const qDiv = document.createElement('div');
+      qDiv.className = 'copilot-q-item';
+
+      const stepBadge = document.createElement('span');
+      stepBadge.className = 'copilot-q-step-badge';
+      stepBadge.textContent = `STEP ${q.step} · ${q.pillar}`;
+
+      const title = document.createElement('div');
+      title.className = 'copilot-q-title';
+      title.textContent = q.question;
+
+      const helper = document.createElement('div');
+      helper.className = 'copilot-q-helper';
+      helper.textContent = q.helper_text;
+
+      const optsDiv = document.createElement('div');
+      optsDiv.className = 'copilot-q-options';
+
+      // Map question id to selectedGuidingAnswers field
+      const fieldMap = {
+        'q_space': 'space_id',
+        'q_mandate': 'mandate',
+        'q_data_source': 'data_source',
+        'q_monetization': 'monetization',
+        'q_financial_target': 'financial_ambition'
+      };
+      const stateKey = fieldMap[q.id] || 'space_id';
+
+      (q.options || []).forEach(opt => {
+        const optBtn = document.createElement('button');
+        optBtn.type = 'button';
+        optBtn.className = 'copilot-opt-btn';
+        if (selectedGuidingAnswers[stateKey] === opt.value) {
+          optBtn.classList.add('active');
+        }
+
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = opt.label;
+
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'opt-badge';
+        badgeSpan.textContent = opt.badge;
+
+        optBtn.appendChild(labelSpan);
+        optBtn.appendChild(badgeSpan);
+
+        optBtn.onclick = () => {
+          optsDiv.querySelectorAll('.copilot-opt-btn').forEach(b => b.classList.remove('active'));
+          optBtn.classList.add('active');
+          selectedGuidingAnswers[stateKey] = opt.value;
+
+          // If space changed, also sync chips
+          if (stateKey === 'space_id') {
+            document.querySelectorAll('.diligence-space-chip').forEach(c => {
+              c.classList.toggle('active', c.dataset.spaceId === opt.value);
+            });
+          }
+
+          runDiligenceSynthesis();
+        };
+
+        optsDiv.appendChild(optBtn);
+      });
+
+      qDiv.appendChild(stepBadge);
+      qDiv.appendChild(title);
+      qDiv.appendChild(helper);
+      qDiv.appendChild(optsDiv);
+      container.appendChild(qDiv);
+    });
+  } catch (err) {
+    console.warn('Failed to load diligence guide:', err);
+  }
+}
+
+async function runDiligenceSynthesis() {
+  toast.info('Strategy Copilot', 'Synthesizing market TAM, PitchBook screening, and 5-year FCF business case...');
+
+  try {
+    const res = await fetch('/api/diligence/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(selectedGuidingAnswers)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentDiligenceData = data;
+
+    // 1. Render Pillar 1: Market Sizing (40%)
+    renderPillar1MarketSizing(data.pillar_1_market_sizing, data.space);
+
+    // 2. Render Pillar 2: Competitor & Target Screening (30%)
+    renderPillar2Screening(data.pillar_2_target_screening);
+
+    // 3. Render Pillar 3: 5-Year Financial Model & Business Case (20%)
+    renderPillar3FinancialModel(data.pillar_3_financial_model);
+
+    // 4. Render Pillar 4: Executive Slide Deck (10%)
+    currentSlideIndex = 0;
+    renderSlide(0);
+
+    toast.success('Diligence Synthesized', `Complete business case generated for ${data.space.name}`);
+  } catch (err) {
+    console.error('Synthesis failed:', err);
+    toast.error('Synthesis Failed', err.message);
+  }
+}
+
+function renderPillar1MarketSizing(tamData, space) {
+  if (!tamData) return;
+
+  const topDown = tamData.top_down || {};
+  const bottomUp = tamData.bottom_up || {};
+  const adoption = tamData.adoption || {};
+  const reg = tamData.regulatory || {};
+  const verdict = tamData.verdict || {};
+
+  // Top KPI Cards
+  if ($('tamVal')) $('tamVal').textContent = `$${topDown.implied_tam_usd_bn || space.tam_bn}B`;
+  if ($('samVal')) $('samVal').textContent = `$${topDown.sam_usd_bn || space.sam_bn}B`;
+  if ($('somVal')) $('somVal').textContent = `$${topDown.som_target_usd_bn || space.som_bn}B`;
+  if ($('cagrVal')) $('cagrVal').textContent = `+${space.cagr_pct}%`;
+  if ($('adoptionPhaseText')) $('adoptionPhaseText').textContent = adoption.current_lifecycle_stage || space.adoption_phase;
+
+  // Sizing Waterfall Breakdown
+  const waterfallBox = $('tamWaterfallContent');
+  if (waterfallBox) {
+    waterfallBox.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-muted);">Global Financial Derivatives Contracts (Annual):</span>
+          <span style="font-weight:700;">${topDown.global_derivatives_contracts_annual_bn}B contracts</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-muted);">Addressable Retail & Hedging Penetration:</span>
+          <span style="font-weight:700;">${topDown.addressable_retail_event_hedging_share_pct}%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-muted);">Serviceable Available Market (SAM):</span>
+          <span style="font-weight:700; color:var(--sky);">$${topDown.sam_usd_bn}B (${topDown.sam_to_tam_penetration_pct}% of TAM)</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-muted);">Target Obtainable SOM (5-Year Target):</span>
+          <span style="font-weight:800; color:var(--emerald);">$${topDown.som_target_usd_bn}B (${topDown.som_target_share_of_sam_pct}% of SAM)</span>
+        </div>
+        <div style="margin-top:6px; padding:8px 10px; background:var(--surface-subtle); border-radius:6px; font-size:11.5px;">
+          <strong>Bottom-Up Unit Economics:</strong> ${bottomUp.target_active_retail_hedgers_millions}M target users × ${bottomUp.avg_annual_contracts_per_user} contracts/yr = <strong>${bottomUp.total_annual_contract_volume_m}M contracts</strong> at $${bottomUp.avg_take_rate_per_contract_usd} avg fee = <strong>$${bottomUp.implied_annual_gross_fee_pool_usd_m}M gross fee pool</strong>.
+        </div>
+      </div>
+    `;
+  }
+
+  // Regulatory Moat Content
+  const regBox = $('regulatoryMoatContent');
+  if (regBox) {
+    regBox.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div>
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Primary Federal Jurisdiction:</span>
+          <div style="font-weight:700; color:var(--text-main); font-size:13px; margin-top:2px;">${reg.primary_jurisdiction}</div>
+        </div>
+        <div>
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Required Regulatory Licenses:</span>
+          <div style="font-weight:600; font-size:12.5px; color:#0284c7; margin-top:2px;">${reg.required_licenses}</div>
+        </div>
+        <div>
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Legal Precedent & Catalysts:</span>
+          <div style="font-size:12px; color:var(--text-main); margin-top:2px; line-height:1.45;">${reg.key_legal_milestones}</div>
+        </div>
+        <div style="padding:8px 10px; background:rgba(2,132,199,0.06); border:1px solid rgba(2,132,199,0.2); border-radius:6px; font-size:11.5px; color:#0369a1;">
+          <strong>Compliance Strategy:</strong> ${reg.compliance_strategy}
+        </div>
+      </div>
+    `;
+  }
+
+  // Verdict Banner
+  if ($('verdictStatusText')) $('verdictStatusText').textContent = verdict.status || 'APPROVED FOR EXECUTION';
+  if ($('verdictMoatText')) $('verdictMoatText').textContent = `Strategic Moat: ${verdict.strategic_moat_strength || 'High Network Effects'}`;
+  const killBox = $('verdictKillCriteria');
+  if (killBox) {
+    killBox.innerHTML = `
+      <span style="font-weight:700;">Kill Criteria (Risk Guardrails):</span>
+      <ul style="margin:4px 0 0; padding-left:18px;">
+        ${(verdict.kill_criteria || []).map(k => `<li>${k}</li>`).join('')}
+      </ul>
+    `;
+  }
+}
+
+function renderPillar2Screening(screeningData) {
+  if (!screeningData) return;
+  renderScreeningTable('all');
+
+  // Precedent Deals Table
+  const dealsBox = $('precedentDealsContent');
+  if (dealsBox) {
+    const deals = screeningData.summary?.deal_comps_referenced || [];
+    dealsBox.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead>
+          <tr style="border-bottom:1.5px solid var(--border); text-align:left; color:var(--text-muted); font-size:10.5px; text-transform:uppercase;">
+            <th style="padding:6px 8px;">Target</th>
+            <th style="padding:6px 8px;">Acquirer</th>
+            <th style="padding:6px 8px;">Deal Size</th>
+            <th style="padding:6px 8px;">Multiple (EV/Rev)</th>
+            <th style="padding:6px 8px;">Deal Type & Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${deals.map(d => `
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px; font-weight:700;">${d.target_name}</td>
+              <td style="padding:8px;">${d.acquirer_name}</td>
+              <td style="padding:8px; font-weight:700; color:var(--text-main);">$${d.deal_size_usd ? (d.deal_size_usd / 1e6).toFixed(1) + 'M' : 'Undisclosed'}</td>
+              <td style="padding:8px; color:var(--emerald); font-weight:700;">${d.implied_ev_revenue ? d.implied_ev_revenue + 'x' : 'N/A'}</td>
+              <td style="padding:8px; font-size:11.5px; color:var(--text-muted);">${d.deal_rationale}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+function renderScreeningTable(filter) {
+  const tbody = $('screeningTableBody');
+  if (!tbody || !currentDiligenceData) return;
+
+  const allTargets = currentDiligenceData.pillar_2_target_screening?.screened_targets || [];
+  const filtered = allTargets.filter(t => {
+    if (!filter || filter === 'all') return true;
+    if (filter === 'Private') return t.entity_type === 'Private' || t.entity_type === 'Acquired';
+    if (filter === 'Public Incumbent') return t.entity_type === 'Public Incumbent';
+    return true;
+  });
+
+  tbody.innerHTML = filtered.map(t => {
+    const rev = t.est_revenue_2024_usd ? `$${(t.est_revenue_2024_usd / 1e6).toFixed(1)}M` : 'N/A';
+    const growth = t.revenue_growth_yoy !== null && t.revenue_growth_yoy !== undefined ? `+${(t.revenue_growth_yoy * 100).toFixed(0)}%` : 'N/A';
+    const val = t.last_valuation_usd ? `$${(t.last_valuation_usd >= 1e9 ? (t.last_valuation_usd / 1e9).toFixed(1) + 'B' : (t.last_valuation_usd / 1e6).toFixed(0) + 'M')}` : 'N/A';
+    const mult = t.ev_to_revenue ? `${t.ev_to_revenue}x` : 'N/A';
+    const fitScore = t.strategic_fit_score || 80;
+    const scoreColor = fitScore >= 90 ? 'color:#059669; font-weight:800;' : 'color:#0284c7; font-weight:700;';
+
+    return `
+      <tr>
+        <td style="font-weight:700; white-space:nowrap;">
+          ${t.name}
+          <div style="font-size:10.5px; color:var(--text-dim); font-weight:500;">${t.pb_id}</div>
+        </td>
+        <td>
+          <span style="font-size:11px; font-weight:600; padding:2px 6px; border-radius:4px; background:var(--surface-subtle); border:1px solid var(--border);">
+            ${t.entity_type}
+          </span>
+          <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">${t.sub_vertical}</div>
+        </td>
+        <td style="font-weight:700; text-align:right;">${rev}</td>
+        <td style="color:#059669; font-weight:700; text-align:right;">${growth}</td>
+        <td style="font-weight:700; text-align:right;">${val}</td>
+        <td style="font-weight:700; text-align:right; color:#7c3aed;">${mult}</td>
+        <td style="text-align:center; ${scoreColor}">${fitScore}/100</td>
+        <td style="font-size:11px; color:var(--text-muted); max-width:240px;">${t.strategic_rationale}</td>
+        <td style="white-space:nowrap; text-align:center;">
+          <button type="button" class="btn" style="font-size:10.5px; padding:3px 8px;" onclick="window.adoptTargetLevers('${t.pb_id}')">
+            📋 Adopt Levers
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.adoptTargetLevers = function(pbId) {
+  if (!currentDiligenceData) return;
+  const targets = currentDiligenceData.pillar_2_target_screening?.screened_targets || [];
+  const target = targets.find(t => t.pb_id === pbId);
+  if (!target) return;
+
+  const revM = target.est_revenue_2024_usd ? target.est_revenue_2024_usd / 1e6 : 25.0;
+  const growthPct = target.revenue_growth_yoy ? target.revenue_growth_yoy * 100 : 45.0;
+  const grossPct = target.gross_margin ? target.gross_margin * 100 : 80.0;
+
+  adoptDiligenceLeversIntoPlan({
+    name: `${target.name} Strategic Comps Plan`,
+    revenue: revM,
+    growth: growthPct,
+    margin: 18.0,
+    gross: grossPct,
+    sales: 38.0,
+    rd: 26.0
+  });
+};
+
+function adoptDiligenceLeversIntoPlan(params) {
+  if ($('name')) $('name').value = params.name || 'Diligence Plan';
+  if ($('revenue')) $('revenue').value = params.revenue.toFixed(1);
+  if ($('growth')) $('growth').value = params.growth.toFixed(0);
+  if ($('margin')) $('margin').value = params.margin.toFixed(0);
+  if ($('gross')) $('gross').value = params.gross.toFixed(0);
+  if ($('sales')) $('sales').value = params.sales.toFixed(0);
+  if ($('rd')) $('rd').value = params.rd.toFixed(0);
+
+  // Switch to canvas and recalculate
+  const canvasBtn = $('viewCanvasBtn');
+  if (canvasBtn) canvasBtn.click();
+  run(false);
+  toast.success('Levers Adopted', `Transferred financial profile into Startup Plan & Strategy Flowchart.`);
+}
+
+function renderPillar3FinancialModel(modelData) {
+  if (!modelData) return;
+
+  // Highlights
+  if ($('modelY5Rev')) $('modelY5Rev').textContent = `$${modelData.year_5_revenue_m}M`;
+  if ($('modelY5Ebitda')) $('modelY5Ebitda').textContent = `$${modelData.year_5_ebitda_m}M`;
+  if ($('modelY5Margin')) $('modelY5Margin').textContent = `${modelData.year_5_ebitda_margin_pct}% EBITDA Margin`;
+  if ($('modelCumFcf')) $('modelCumFcf').textContent = `$${modelData.cumulative_5yr_fcf_m}M`;
+  if ($('modelIrrVal')) $('modelIrrVal').textContent = `${modelData.projected_5yr_irr_pct}% / ${modelData.multiple_on_invested_capital_moic}x`;
+  if ($('modelExitVal')) $('modelExitVal').textContent = `Terminal Value: $${modelData.terminal_valuation_usd_m}M (${modelData.implied_exit_multiple})`;
+
+  // Projections Table
+  const tbody = $('financialModelTableBody');
+  if (!tbody) return;
+
+  const rows = modelData.projections_table || [];
+  const metrics = [
+    { label: 'Contract Volume (M)', key: 'contract_volume_millions', format: v => v ? `${v}M` : '-' },
+    { label: 'Revenue ($M)', key: 'revenue_usd_m', format: v => `$${v.toFixed(1)}M`, bold: true },
+    { label: 'YoY Revenue Growth %', key: 'revenue_growth_yoy_pct', format: v => v ? `+${v}%` : '-' },
+    { label: 'Gross Profit ($M)', key: 'gross_profit_usd_m', format: v => `$${v.toFixed(1)}M` },
+    { label: 'Gross Margin %', key: 'gross_margin_pct', format: v => `${v}%` },
+    { label: 'Sales & Marketing ($M)', key: 'sales_marketing_usd_m', format: v => `$${v.toFixed(1)}M` },
+    { label: 'R&D / Technology ($M)', key: 'rd_technology_usd_m', format: v => `$${v.toFixed(1)}M` },
+    { label: 'G&A / Compliance ($M)', key: 'ga_compliance_usd_m', format: v => `$${v.toFixed(1)}M` },
+    { label: 'EBITDA ($M)', key: 'ebitda_usd_m', format: v => `$${v.toFixed(1)}M`, bold: true, color: '#059669' },
+    { label: 'EBITDA Margin %', key: 'ebitda_margin_pct', format: v => `${v}%` },
+    { label: 'CapEx ($M)', key: 'capex_usd_m', format: v => `($${v.toFixed(1)}M)` },
+    { label: 'Free Cash Flow (FCF) ($M)', key: 'free_cash_flow_usd_m', format: v => `$${v.toFixed(1)}M`, bold: true, color: '#0284c7' },
+    { label: 'Cumulative FCF ($M)', key: 'cumulative_fcf_usd_m', format: v => `$${v.toFixed(1)}M`, bold: true }
+  ];
+
+  tbody.innerHTML = metrics.map(m => `
+    <tr style="${m.bold ? 'font-weight:700; background:rgba(0,0,0,0.015);' : ''}">
+      <td style="color:${m.color || 'inherit'};">${m.label}</td>
+      ${rows.map(r => `<td style="color:${m.color || 'inherit'};">${m.format(r[m.key])}</td>`).join('')}
+    </tr>
+  `).join('');
+}
+
+function changeSlide(newIdx) {
+  const slides = currentDiligenceData?.pillar_4_executive_slides || [];
+  if (!slides.length) return;
+  if (newIdx < 0) newIdx = 0;
+  if (newIdx >= slides.length) newIdx = slides.length - 1;
+  currentSlideIndex = newIdx;
+  renderSlide(newIdx);
+}
+
+function renderSlide(idx) {
+  const slides = currentDiligenceData?.pillar_4_executive_slides || [];
+  if (!slides.length || !slides[idx]) return;
+
+  const s = slides[idx];
+  if ($('deckSlideCounter')) $('deckSlideCounter').textContent = `Slide ${idx + 1} of ${slides.length}`;
+
+  document.querySelectorAll('.deck-pill').forEach((pill, i) => {
+    pill.classList.toggle('active', i === idx);
+  });
+
+  const slideCard = $('activeSlideCard');
+  if (slideCard) {
+    slideCard.innerHTML = `
+      <div>
+        <div class="slide-kicker">${s.kicker}</div>
+        <h2 class="slide-title">${s.title}</h2>
+        <div class="slide-subtitle">${s.subtitle}</div>
+
+        <div class="slide-metrics-row">
+          ${(s.metrics || []).map(m => `
+            <div class="slide-metric-box">
+              <span class="d-kpi-label">${m.label}</span>
+              <div style="font-size:20px; font-weight:900; color:var(--text-main); margin-top:2px;">${m.value}</div>
+              <div class="d-kpi-sub">${m.sub}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="slide-bullets-list">
+          ${(s.bullet_points || []).map(b => `
+            <div class="slide-bullet">
+              <span class="slide-bullet-dot">▪</span>
+              <span>${b}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="slide-footer-strip">
+        <span>CONFIDENTIAL · PVC STRATEGY STUDIO · SENIOR LEADERSHIP CAPSTONE</span>
+        <span>${idx + 1} / ${slides.length}</span>
+      </div>
+    `;
+  }
+}
+
+async function executePitchbookQuery() {
+  const select = $('pbEndpointSelect');
+  const box = $('pbJsonResponseBox');
+  if (!select || !box) return;
+
+  const endpoint = select.value;
+  box.textContent = `Sending request to ${endpoint}...`;
+
+  try {
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    box.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    box.textContent = `Error executing PitchBook query: ${err.message}`;
+  }
 }
 
 async function loadPresetFlow(presetId) {

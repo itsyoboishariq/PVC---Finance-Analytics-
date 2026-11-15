@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Strategy Studio · Interactive Multi-Year Strategy Flowchart</title>
-  <link rel="stylesheet" href="/static/workspace.css?v=5.0">
+  <link rel="stylesheet" href="/static/workspace.css?v=5.5">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="/static/analysis-job.js"></script>
 </head>
@@ -61,6 +61,12 @@
           <button id="railNavDashboard" class="rail-icon-btn" type="button" data-tooltip="📋 Executive Bento Dashboard">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
+            </svg>
+          </button>
+          <button id="railNavDiligence" class="rail-icon-btn" type="button" data-tooltip="💼 Market Sizing & PitchBook Diligence (40/30/20/10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
           </button>
         </div>
@@ -293,6 +299,10 @@
             <button id="viewDashboardBtn" type="button" class="view-switch-btn" title="Executive Strategy Bento Dashboard">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
               <span>Executive Dashboard</span>
+            </button>
+            <button id="viewDiligenceBtn" type="button" class="view-switch-btn" title="Corporate Strategy, Market Sizing & PitchBook Diligence (40/30/20/10)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              <span>Diligence & Cases (40/30/20/10)</span>
             </button>
           </div>
         </div>
@@ -545,6 +555,346 @@
             </div>
           </section>
 
+          <!-- ==========================================================================
+               CORPORATE STRATEGY, MARKET SIZING & COMMERCIAL DILIGENCE STUDIO (40/30/20/10)
+               ========================================================================== -->
+          <section id="commercialDiligenceView" class="commercial-diligence-studio" style="display:none;">
+            <!-- Diligence Header Banner -->
+            <div class="diligence-header-strip">
+              <div>
+                <div class="inspector-badge-strip" style="margin-bottom:6px;">
+                  <span class="inspector-phase-badge" style="background:#0f172a; color:#f8fafc;">VENTURE & CORP DEV OS</span>
+                  <span class="inspector-kpi-badge">Market Sizing 40%</span>
+                  <span class="inspector-kpi-badge">Screening 30%</span>
+                  <span class="inspector-kpi-badge">Financial Model 20%</span>
+                  <span class="inspector-kpi-badge badge-green">Slide Decks 10%</span>
+                </div>
+                <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; letter-spacing:-0.4px;">
+                  Commercial Diligence, Target Screening & Business Case Studio
+                </h2>
+                <p style="font-size:12.5px; color:var(--text-muted); margin:0;" id="diligenceHeaderSub">
+                  Research TAM, evaluate regulatory moats, screen PitchBook targets, model 3–5 year Free Cash Flow, and generate presentation slide decks.
+                </p>
+              </div>
+
+              <!-- Quick Space Switcher Chips -->
+              <div class="diligence-spaces-chips">
+                <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">SPACES:</span>
+                <button type="button" class="diligence-space-chip active" data-space-id="prediction-markets">
+                  🎯 Prediction Markets
+                </button>
+                <button type="button" class="diligence-space-chip" data-space-id="retail-derivatives">
+                  📈 Retail Derivatives
+                </button>
+                <button type="button" class="diligence-space-chip" data-space-id="international-clearing">
+                  🌐 International Clearing
+                </button>
+              </div>
+            </div>
+
+            <!-- Two-Column Master Layout: Guiding Copilot (Left) + 4-Pillar Workspace (Right) -->
+            <div class="diligence-layout-split">
+              
+              <!-- LEFT COLUMN: STRATEGY & DILIGENCE GUIDING COPILOT -->
+              <div class="diligence-copilot-pane">
+                <div class="copilot-card-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="ai-sparkle-pill" style="padding:3px 8px;">
+                      <span class="sparkle">✦</span>
+                      <span class="sparkle-text">Agent Advisor</span>
+                    </div>
+                    <span style="font-size:13px; font-weight:700; color:var(--text-main);">Guiding Strategy Interview</span>
+                  </div>
+                  <span class="copilot-status-dot" title="Agent Active"></span>
+                </div>
+
+                <div class="copilot-instruction-box">
+                  <p style="font-size:12px; color:var(--text-muted); margin:0; line-height:1.45;">
+                    Answer the guiding questions below to calibrate the commercial thesis, PitchBook target screening criteria, and 5-year financial model based on your company type and available data.
+                  </p>
+                </div>
+
+                <!-- Guided Questions Container (Dynamic) -->
+                <div class="copilot-questions-list" id="copilotQuestionsList">
+                  <!-- Loaded via JS -->
+                </div>
+
+                <!-- Run Synthesis CTA -->
+                <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+                  <button type="button" class="btn primary" id="runDiligenceSynthesisBtn" style="width:100%; font-size:13px; padding:10px; font-weight:700;">
+                    ⚡ Synthesize Full Business Case (40/30/20/10) →
+                  </button>
+                  <p style="font-size:11px; color:var(--text-dim); text-align:center; margin:6px 0 0;">
+                    Recalculates TAM waterfall, PitchBook screening, 5-Yr FCF & Slide Deck
+                  </p>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: 4-PILLAR WORKSPACE & PITCHBOOK EXPLORER -->
+              <div class="diligence-workspace-pane">
+                <!-- Pillar Tabs Navigation Strip -->
+                <div class="diligence-pillar-nav">
+                  <button type="button" class="diligence-pillar-btn active" data-pillar-tab="pillar-tam">
+                    🌐 1. Market Sizing (40%)
+                  </button>
+                  <button type="button" class="diligence-pillar-btn" data-pillar-tab="pillar-screening">
+                    🎯 2. Competitor Screening (30%)
+                  </button>
+                  <button type="button" class="diligence-pillar-btn" data-pillar-tab="pillar-model">
+                    📊 3. 5-Yr Model & FCF (20%)
+                  </button>
+                  <button type="button" class="diligence-pillar-btn" data-pillar-tab="pillar-deck">
+                    📑 4. Executive Slide Deck (10%)
+                  </button>
+                  <button type="button" class="diligence-pillar-btn" data-pillar-tab="pillar-pitchbook">
+                    🔌 PitchBook API Explorer
+                  </button>
+                </div>
+
+                <!-- PILLAR 1: MARKET SIZING & COMMERCIAL DILIGENCE (40%) -->
+                <div id="pillar-tam" class="diligence-panel">
+                  <!-- Top TAM KPI Cards -->
+                  <div class="diligence-kpi-grid">
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">TOTAL ADDRESSABLE MARKET (TAM)</span>
+                      <div class="d-kpi-val" id="tamVal">$65.0B</div>
+                      <div class="d-kpi-sub" id="tamSub">Global contract velocity & hedging pool</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">SERVICEABLE MARKET (SAM)</span>
+                      <div class="d-kpi-val text-sky" id="samVal">$18.5B</div>
+                      <div class="d-kpi-sub" id="samSub">28.5% penetration of global TAM</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">OBTAINABLE TARGET (SOM)</span>
+                      <div class="d-kpi-val text-emerald" id="somVal">$3.8B</div>
+                      <div class="d-kpi-sub" id="somSub">20.5% target share of SAM over 5 years</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">PROJECTED 5-YR CAGR</span>
+                      <div class="d-kpi-val text-purple" id="cagrVal">+42.5%</div>
+                      <div class="d-kpi-sub" id="adoptionPhaseText">Crossing the Chasm</div>
+                    </div>
+                  </div>
+
+                  <!-- Two-Column Analysis: Sizing Waterfall + Regulatory Moat -->
+                  <div class="diligence-cards-split">
+                    <!-- Sizing Waterfall Card -->
+                    <div class="diligence-card">
+                      <div class="d-card-header">
+                        <span style="font-weight:700; font-size:13px;">📐 TOP-DOWN & BOTTOM-UP SIZING WATERFALL</span>
+                      </div>
+                      <div class="d-card-body" id="tamWaterfallContent">
+                        <!-- Loaded dynamically -->
+                      </div>
+                    </div>
+
+                    <!-- Regulatory Landscape Card -->
+                    <div class="diligence-card">
+                      <div class="d-card-header">
+                        <span style="font-weight:700; font-size:13px;">🏛️ REGULATORY LANDSCAPE & LICENSING MOAT</span>
+                      </div>
+                      <div class="d-card-body" id="regulatoryMoatContent">
+                        <!-- Loaded dynamically -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Commercial Viability Verdict Banner -->
+                  <div class="diligence-verdict-banner" id="commercialVerdictBanner">
+                    <div class="verdict-icon">🛡️</div>
+                    <div class="verdict-body">
+                      <div class="verdict-title" id="verdictStatusText">APPROVED FOR ADVANCED DILIGENCE & EXECUTION</div>
+                      <p class="verdict-desc" id="verdictMoatText">
+                        Strategic Moat: High network liquidity lock-in combined with dual CFTC DCM & DCO regulatory license barrier.
+                      </p>
+                      <div class="verdict-kill-criteria" id="verdictKillCriteria"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PILLAR 2: COMPETITOR & TARGET SCREENING (30%) -->
+                <div id="pillar-screening" class="diligence-panel" style="display:none;">
+                  <div class="screening-toolbar">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span style="font-size:12px; font-weight:700; color:var(--text-main);">Filter Targets:</span>
+                      <button type="button" class="screening-filter-pill active" data-target-filter="all">All Profiles</button>
+                      <button type="button" class="screening-filter-pill" data-target-filter="Private">Private Acquisition Targets</button>
+                      <button type="button" class="screening-filter-pill" data-target-filter="Public Incumbent">Public Incumbents (CME/ICE/Nasdaq)</button>
+                    </div>
+                    <div>
+                      <span style="font-size:11px; color:var(--text-muted); font-weight:600;">Data Source: PitchBook Direct API + SEC 10-K Filings</span>
+                    </div>
+                  </div>
+
+                  <!-- Screening Matrix Table -->
+                  <div class="screening-table-wrap">
+                    <table class="screening-matrix-table" id="screeningMatrixTable">
+                      <thead>
+                        <tr>
+                          <th>Target / Competitor</th>
+                          <th>Type & Vertical</th>
+                          <th>Est. Revenue</th>
+                          <th>YoY Growth</th>
+                          <th>EV / Valuation</th>
+                          <th>EV / Rev</th>
+                          <th>Fit Score</th>
+                          <th>Strategic Rationale</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="screeningTableBody">
+                        <!-- Loaded dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Precedent M&A and Deal Comps Card -->
+                  <div class="diligence-card" style="margin-top:16px;">
+                    <div class="d-card-header">
+                      <span style="font-weight:700; font-size:13px;">🤝 PRECEDENT M&A AND VALUATION MULTIPLES BENCHMARK</span>
+                    </div>
+                    <div class="d-card-body" id="precedentDealsContent">
+                      <!-- Loaded dynamically -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PILLAR 3: FINANCIAL MODELING & 3–5 YR FCF WATERFALL (20%) -->
+                <div id="pillar-model" class="diligence-panel" style="display:none;">
+                  <!-- Financial Return Highlights -->
+                  <div class="diligence-kpi-grid">
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">YEAR 5 REVENUE</span>
+                      <div class="d-kpi-val" id="modelY5Rev">$105.8M</div>
+                      <div class="d-kpi-sub" id="modelY5Growth">+30.0% YoY Scale</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">YEAR 5 EBITDA</span>
+                      <div class="d-kpi-val text-emerald" id="modelY5Ebitda">$48.2M</div>
+                      <div class="d-kpi-sub" id="modelY5Margin">45.6% EBITDA Margin</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">5-YR CUMULATIVE FCF</span>
+                      <div class="d-kpi-val text-sky" id="modelCumFcf">$74.5M</div>
+                      <div class="d-kpi-sub">Breakeven Year 2</div>
+                    </div>
+                    <div class="diligence-kpi-card">
+                      <span class="d-kpi-label">PROJECTED 5-YR IRR / MOIC</span>
+                      <div class="d-kpi-val text-purple" id="modelIrrVal">36.8% / 4.8x</div>
+                      <div class="d-kpi-sub" id="modelExitVal">Terminal Value: $899M</div>
+                    </div>
+                  </div>
+
+                  <!-- 5-Year Excel-Style Financial Model Table -->
+                  <div class="financial-model-table-wrap">
+                    <table class="financial-model-table" id="financialModelTable">
+                      <thead>
+                        <tr>
+                          <th>Financial Metric ($M)</th>
+                          <th>Year 1</th>
+                          <th>Year 2</th>
+                          <th>Year 3</th>
+                          <th>Year 4</th>
+                          <th>Year 5</th>
+                        </tr>
+                      </thead>
+                      <tbody id="financialModelTableBody">
+                        <!-- Loaded dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Copy Financial Levers to Startup Plan Action Bar -->
+                  <div class="model-action-bar">
+                    <div>
+                      <span style="font-weight:700; font-size:13px;">Adopt Financial Levers into Startup Profile</span>
+                      <p style="font-size:11.5px; color:var(--text-muted); margin:2px 0 0;">
+                        Transfers Year 1–3 revenue, growth %, and S&M/R&D ratios directly into your active Strategy Model and Flowchart.
+                      </p>
+                    </div>
+                    <button type="button" class="btn primary" id="adoptDiligenceLeversBtn" style="font-size:12px; padding:8px 16px;">
+                      📋 Adopt Levers into My Strategy Plan
+                    </button>
+                  </div>
+                </div>
+
+                <!-- PILLAR 4: EXECUTIVE SLIDE DECKS & CAPSTONE PROJECT (10%) -->
+                <div id="pillar-deck" class="diligence-panel" style="display:none;">
+                  <!-- Presentation Toolbar -->
+                  <div class="deck-toolbar">
+                    <div class="deck-pagination">
+                      <button type="button" class="ctrl-btn" id="deckPrevSlideBtn" title="Previous Slide (←)">←</button>
+                      <span class="deck-counter" id="deckSlideCounter">Slide 1 of 5</span>
+                      <button type="button" class="ctrl-btn" id="deckNextSlideBtn" title="Next Slide (→)">→</button>
+                    </div>
+
+                    <!-- Slide Tabs -->
+                    <div class="deck-slide-pills" id="deckSlidePills">
+                      <button type="button" class="deck-pill active" data-slide-index="0">1. Executive Summary</button>
+                      <button type="button" class="deck-pill" data-slide-index="1">2. Market Sizing (40%)</button>
+                      <button type="button" class="deck-pill" data-slide-index="2">3. Target Screening (30%)</button>
+                      <button type="button" class="deck-pill" data-slide-index="3">4. Financial Model (20%)</button>
+                      <button type="button" class="deck-pill" data-slide-index="4">5. Execution Plan (10%)</button>
+                    </div>
+
+                    <div>
+                      <button type="button" class="btn" id="deckFullscreenBtn" style="font-size:12px; padding:6px 12px;">
+                        ⛶ Presenter Mode
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Executive Slide Canvas Container -->
+                  <div class="executive-slide-container" id="executiveSlideContainer">
+                    <div class="powerpoint-slide" id="activeSlideCard">
+                      <!-- Active slide content loaded dynamically -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PILLAR 5: PITCHBOOK API LIVE EXPLORER -->
+                <div id="pillar-pitchbook" class="diligence-panel" style="display:none;">
+                  <div class="pitchbook-explorer-card">
+                    <div class="pb-status-header">
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="pb-badge">PitchBook Direct Data API</span>
+                        <span class="pb-status-indicator" id="pbStatusIndicator">Connected (Enterprise Catalog)</span>
+                      </div>
+                      <span style="font-size:11px; color:var(--text-muted);" id="pbBaseUrlText">Base URL: https://api.pitchbook.com</span>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
+                      <span style="font-size:12px; font-weight:700;">Query Endpoint:</span>
+                      <select id="pbEndpointSelect" class="flowchart-select" style="font-size:12px; padding:6px 10px;">
+                        <option value="/api/pitchbook/screen?sector=prediction" selected>GET /companies/search (Prediction Markets)</option>
+                        <option value="/api/pitchbook/screen?sector=derivatives">GET /companies/search (Retail Derivatives)</option>
+                        <option value="/api/pitchbook/screen?sector=clearing">GET /companies/search (International Clearing)</option>
+                        <option value="/api/pitchbook/companies/PB-KALSHI-01">GET /companies/PB-KALSHI-01 (Kalshi Financials & Cap Table)</option>
+                        <option value="/api/pitchbook/companies/PB-APEX-07">GET /companies/PB-APEX-07 (Apex Clearing Financials)</option>
+                        <option value="/api/pitchbook/deals">GET /deals/search (Precedent M&A Transactions)</option>
+                        <option value="/api/pitchbook/status">GET /system/status (API Coverage & Quota)</option>
+                      </select>
+                      <button type="button" class="btn primary" id="pbExecuteQueryBtn" style="font-size:12px; padding:6px 14px;">
+                        Execute API Call ↗
+                      </button>
+                    </div>
+
+                    <!-- JSON Response Viewer -->
+                    <div class="pb-json-viewer-wrap" style="margin-top:14px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">RESPONSE PAYLOAD (JSON)</span>
+                        <button type="button" class="btn" id="pbCopyJsonBtn" style="font-size:10px; padding:2px 8px;">Copy JSON</button>
+                      </div>
+                      <pre class="pb-json-box" id="pbJsonResponseBox">Loading PitchBook API query...</pre>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
         </main>
       </div>
     </div>
@@ -669,7 +1019,7 @@
   <div id="sonnerContainer" class="sonner-toast-container"></div>
 
   <!-- Scripts -->
-  <script src="/static/workspace.js?v=5.0"></script>
+  <script src="/static/workspace.js?v=5.5"></script>
   <link rel="stylesheet" href="/static/side-agent.css?v=4.0">
   <script src="/static/side-agent.js"></script>
 </body>
