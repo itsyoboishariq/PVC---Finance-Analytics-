@@ -8,7 +8,14 @@ import uuid
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-from fastapi import FastAPI, HTTPException, Request, status
+import re
+from fastapi import FastAPI, HTTPException, status
+
+def validate_scenario_id(scenario_id: str):
+    # Allow only standard UUID format (hex digits and hyphens)
+    if not re.fullmatch(r"[0-9a-fA-F-]{36}", scenario_id):
+        raise HTTPException(status_code=400, detail="Invalid scenario ID format")
+
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -124,6 +131,7 @@ def save_scenario(payload: Dict[str, Any]):
     """
     name = payload.get("name", "Untitled Scenario").strip()
     scenario_id = payload.get("id") or str(uuid.uuid4())
+    validate_scenario_id(scenario_id)
     assumptions_dict = payload.get("assumptions")
     description = payload.get("description", "")
     
@@ -170,6 +178,7 @@ def save_scenario(payload: Dict[str, Any]):
 
 @app.get("/api/scenarios/{scenario_id}")
 def get_scenario(scenario_id: str):
+    validate_scenario_id(scenario_id)
     """Retrieves full scenario details by ID."""
     file_path = SCENARIOS_DIR / f"{scenario_id}.json"
     if not file_path.exists():
@@ -184,6 +193,7 @@ def get_scenario(scenario_id: str):
 @app.delete("/api/scenarios/{scenario_id}")
 def delete_scenario(scenario_id: str):
     """Deletes a saved scenario."""
+    validate_scenario_id(scenario_id)
     file_path = SCENARIOS_DIR / f"{scenario_id}.json"
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found.")

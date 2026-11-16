@@ -237,12 +237,50 @@ export default function App() {
     }
   };
 
-  const handleDuplicateScenario = (id) => {
+  const handleDuplicateScenario = async (id) => {
     const target = savedScenarios.find(s => s.id === id);
     if (!target) return;
-    const dupName = `${target.name} (Copy)`;
-    handleSaveScenario(dupName, target.description || '');
+
+    // Fetch full scenario data from backend (including assumptions)
+    let scenarioData = target; // fallback to local copy
+    try {
+      const res = await fetch(`/api/scenarios/${id}`);
+      if (res.ok) {
+        scenarioData = await res.json();
+      }
+    } catch (e) {
+      console.warn('Backend fetch for duplication failed, using local copy');
+    }
+
+    const dupName = `${scenarioData.name} (Copy)`;
+    // Directly POST a new scenario with the same assumptions
+    const payload = {
+      name: dupName,
+      description: scenarioData.description || '',
+      assumptions: scenarioData.assumptions || target.assumptions || {},
+    };
+    try {
+      const dupRes = await fetch('/api/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (dupRes.ok) {
+        // Refresh the scenario list from backend
+        const listRes = await fetch('/api/scenarios');
+        if (listRes.ok) {
+          const list = await listRes.json();
+          setSavedScenarios(list);
+        }
+        return;
+      }
+    } catch (e) {
+      console.warn('Backend duplicate failed');
+    }
+    // Fallback: use existing client-side save (may duplicate current assumptions)
+    handleSaveScenario(dupName, scenarioData.description || '');
   };
+
 
   const handleDeleteScenario = async (id) => {
     if (id === 'baseline') return;

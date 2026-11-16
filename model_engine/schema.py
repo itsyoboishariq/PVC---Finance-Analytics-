@@ -2,7 +2,7 @@
 Pydantic Schemas for Financial Model Engine
 """
 from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class CellMetadata(BaseModel):
@@ -24,17 +24,16 @@ class PricingTiersInput(BaseModel):
     pro: PricingTierInput
     enterprise: PricingTierInput
 
-    @field_validator("enterprise")
-    @classmethod
-    def check_sum_pct(cls, v, info):
-        # We allow slight float leeway around 1.0
-        data = info.data
-        if "trial" in data and "pro" in data:
-            total_pct = data["trial"].customer_pct + data["pro"].customer_pct + v.customer_pct
-            if abs(total_pct - 1.0) > 0.05:
-                # Warning or notice, but keep responsive
-                pass
-        return v
+    @model_validator(mode="after")
+    def check_sum_pct(self):
+        # Ensure trial, pro, enterprise percentages sum to approx 1.0 (tolerance 0.001)
+        trial = self.trial.customer_pct
+        pro = self.pro.customer_pct
+        enterprise = self.enterprise.customer_pct
+        total = trial + pro + enterprise
+        if abs(total - 1.0) > 0.001:
+            raise ValueError(f"Pricing tier allocations must sum to 1.0 (100%); got {total:.4f}")
+        return self
 
 
 class COGSInput(BaseModel):
