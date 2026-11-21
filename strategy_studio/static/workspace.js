@@ -1780,6 +1780,150 @@ async function initCompanyFlow() {
     };
   }
 
+  // =========================================================================
+  // Guided Strategy Flow Builder Event Listeners (Incremental & Periodic)
+  // =========================================================================
+  const flowAppendBtn = $('flowAppendPhaseBtn');
+  if (flowAppendBtn) {
+    flowAppendBtn.onclick = async () => {
+      const modelType = $('builderModelMotion')?.value || 'enterprise_sales';
+      const peerTicker = $('builderPeerCompany')?.value || 'DDOG';
+      const horizon = $('builderHorizonPhase')?.value || 'phase_2';
+      const focus = $('builderLeverFocus')?.value || 'growth';
+      const customLabel = ($('builderCustomLabel')?.value || '').trim();
+
+      flowAppendBtn.disabled = true;
+      flowAppendBtn.innerHTML = '<span>⏳ Appending Phase...</span>';
+      toast.info('Strategy Builder', `Appending new ${modelType.replace(/_/g, ' ')} milestone grounded in ${peerTicker}...`);
+
+      try {
+        const res = await fetch('/api/strategy/extend-flow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'append',
+            model_type: modelType,
+            company_ticker: peerTicker,
+            horizon_phase: horizon,
+            strategic_focus: focus,
+            custom_label: customLabel,
+            current_flow: currentCompanyFlowData
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        currentCompanyFlowData = data;
+        renderCompanyFlow(data);
+        if (data.added_stage) {
+          toast.success('Phase Appended', `Added ${data.added_stage.year} · ${data.added_stage.phase_title}`);
+          loadPhaseDeepdive(data.added_stage.index);
+        }
+      } catch (err) {
+        console.error('Append phase failed:', err);
+        toast.error('Builder Error', err.message);
+      } finally {
+        flowAppendBtn.disabled = false;
+        flowAppendBtn.innerHTML = '<span>➕ Append Next Phase</span>';
+      }
+    };
+  }
+
+  const flowBranchBtn = $('flowAddBranchBtn');
+  if (flowBranchBtn) {
+    flowBranchBtn.onclick = async () => {
+      const modelType = $('builderModelMotion')?.value || 'enterprise_sales';
+      const peerTicker = $('builderPeerCompany')?.value || 'DDOG';
+      const horizon = $('builderHorizonPhase')?.value || 'phase_2';
+      const focus = $('builderLeverFocus')?.value || 'moat';
+      const customLabel = ($('builderCustomLabel')?.value || '').trim();
+      const activeStageId = currentDeepdiveData?.id || (currentCompanyFlowData?.stages?.[currentCompanyFlowData.stages.length - 1]?.id);
+
+      flowBranchBtn.disabled = true;
+      flowBranchBtn.innerHTML = '<span>⏳ Branching...</span>';
+      toast.info('Strategy Builder', `Branching alternative trajectory from stage ${activeStageId || 'latest'}...`);
+
+      try {
+        const res = await fetch('/api/strategy/extend-flow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'branch',
+            model_type: modelType,
+            company_ticker: peerTicker,
+            horizon_phase: horizon,
+            strategic_focus: focus,
+            custom_label: customLabel,
+            branch_from_id: activeStageId,
+            current_flow: currentCompanyFlowData
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        currentCompanyFlowData = data;
+        renderCompanyFlow(data);
+        if (data.added_stage) {
+          toast.success('Branch Added', `Created ${data.added_stage.year} · ${data.added_stage.phase_title}`);
+          loadPhaseDeepdive(data.added_stage.index);
+        }
+      } catch (err) {
+        console.error('Add branch failed:', err);
+        toast.error('Builder Error', err.message);
+      } finally {
+        flowBranchBtn.disabled = false;
+        flowBranchBtn.innerHTML = '<span>🌿 Branch from Phase</span>';
+      }
+    };
+  }
+
+  const flowBuildBtn = $('flowBuildCompleteBtn');
+  if (flowBuildBtn) {
+    flowBuildBtn.onclick = async () => {
+      const modelType = $('builderModelMotion')?.value || 'enterprise_sales';
+      const peerTicker = $('builderPeerCompany')?.value || 'DDOG';
+      const horizon = $('builderHorizonPhase')?.value || 'phase_2';
+      const focus = $('builderLeverFocus')?.value || 'growth';
+      const customLabel = ($('builderCustomLabel')?.value || '').trim();
+
+      flowBuildBtn.disabled = true;
+      flowBuildBtn.innerHTML = '<span>⏳ Synthesizing...</span>';
+      toast.info('Strategy Builder', `Building full fresh flow grounded in ${peerTicker} data...`);
+
+      try {
+        const res = await fetch('/api/strategy/extend-flow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'build',
+            model_type: modelType,
+            company_ticker: peerTicker,
+            horizon_phase: horizon,
+            strategic_focus: focus,
+            custom_label: customLabel
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        currentCompanyFlowData = data;
+        renderCompanyFlow(data);
+        toast.success('Complete Flow Synthesized', `Generated full multi-phase blueprint for ${peerTicker}`);
+      } catch (err) {
+        console.error('Build complete flow failed:', err);
+        toast.error('Builder Error', err.message);
+      } finally {
+        flowBuildBtn.disabled = false;
+        flowBuildBtn.innerHTML = '<span>✦ Build Complete Flow</span>';
+      }
+    };
+  }
+
+  const flowResetBtn = $('flowResetBtn');
+  if (flowResetBtn) {
+    flowResetBtn.onclick = () => {
+      loadPresetFlow('template-process-flow');
+      toast.info('Canvas Reset', 'Reset flowchart canvas to baseline template.');
+    };
+  }
+
   // Handle syntax toggle
   document.querySelectorAll('#toggleMermaidCodeBtn, #toggleMermaidCodeBtnTopbar, .toggle-mermaid-btn').forEach(btn => {
     btn.onclick = () => {
@@ -2496,13 +2640,64 @@ async function loadPhaseDeepdive(stageIdxOrYear) {
   if (inspector) inspector.style.opacity = '0.7';
 
   try {
+    let data = null;
     const res = await fetch(`/api/strategy/phase-deepdive/${encodeURIComponent(currentCompany)}/${encodeURIComponent(stageIdxOrYear)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    currentDeepdiveData = data;
-    renderPhaseDeepdive(data);
-    highlightFlowchartNode(data.stage_index);
-    if (window.openInspectorSheet) window.openInspectorSheet();
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      // Graceful fallback for dynamic / appended / branched stages
+      const sIdx = parseInt(stageIdxOrYear, 10);
+      const stage = currentCompanyFlowData?.stages?.find(s => s.index === sIdx || s.id === stageIdxOrYear || s.year === stageIdxOrYear) ||
+                    currentCompanyFlowData?.stages?.[sIdx - 1];
+      if (stage) {
+        data = {
+          stage_index: stage.index || sIdx,
+          year: stage.year,
+          phase_title: stage.phase_title,
+          phase_desc: stage.phase_desc,
+          revenue_formatted: stage.revenue_formatted,
+          growth_formatted: stage.growth_formatted,
+          sales_marketing_formatted: stage.sales_marketing_formatted,
+          rd_formatted: stage.rd_formatted,
+          operating_margin_formatted: stage.operating_margin_formatted,
+          rule_of_40: stage.rule_of_40,
+          strategic_why: stage.strategic_why || {
+            executive_summary: `${stage.phase_title}: Scaled trajectory milestone targeting ${stage.revenue_formatted} ARR.`,
+            sm_why: `S&M intensity maintained at ${stage.sales_marketing_formatted} to execute GTM motions.`,
+            rd_why: `R&D investment maintained at ${stage.rd_formatted} to protect product moat.`
+          },
+          financial_strategy: {
+            revenue: stage.revenue_formatted,
+            revenue_growth: stage.growth_formatted,
+            sales_marketing: stage.sales_marketing_formatted,
+            rd: stage.rd_formatted,
+            operating_margin: stage.operating_margin_formatted,
+            rule_of_40: stage.rule_of_40
+          },
+          frameworks: {
+            ansoff: {
+              strategy: stage.is_branch ? 'Diversification & Alternative Branch' : 'Market Penetration & Scaling Engine',
+              why: stage.phase_desc || 'Executing strategic market expansion.'
+            },
+            porter: {
+              primary_force: 'Threat of New Entrants & Substitutes',
+              countermeasure: `Moat fortified via R&D reinvestment (${stage.rd_formatted}) and customer retention.`
+            },
+            moat: {
+              type: 'High Switching Costs & Platform Integration',
+              evidence: 'Sticky multi-product footprint with expanding contract value.'
+            }
+          },
+          company: currentCompanyFlowData?.company || { name: currentCompany, ticker: currentCompany }
+        };
+      }
+    }
+    if (data) {
+      currentDeepdiveData = data;
+      renderPhaseDeepdive(data);
+      highlightFlowchartNode(data.stage_index);
+      if (window.openInspectorSheet) window.openInspectorSheet();
+    }
   } catch (err) {
     console.error('Failed to load phase deepdive:', err);
   } finally {

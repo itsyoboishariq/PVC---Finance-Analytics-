@@ -117,19 +117,110 @@
               <p style="font-size:11.5px; color:var(--text-muted); margin:0;">Strategy Architecture Visualizer &bull; Synthesize multi-year SaaS trajectories and blueprint flows.</p>
             </div>
 
-            <!-- AI Strategy Flow Architect -->
-            <div class="flow-sidebar-section" style="margin-bottom:14px;">
-              <div class="flow-sidebar-label">
-                <span>✦ AI FLOW ARCHITECT</span>
-                <span class="badge-subtle">GPT-5 Mini</span>
+            <!-- Guided Strategy Flow Builder Card -->
+            <div class="guided-flow-builder-card" style="margin-bottom:14px;">
+              <div class="flow-sidebar-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:800; font-size:11px; letter-spacing:0.5px; color:var(--text-main);">✦ GUIDED STRATEGY FLOW BUILDER</span>
+                <span class="badge-subtle" style="font-size:10px;">SEC 10-K Grounded</span>
               </div>
-              <div class="ai-flow-input-card">
-                <textarea id="aiFlowPromptInput" rows="3" placeholder="Describe a strategy transition to visualize (e.g. 'Add product-led onboarding funnel with mid-market sales pods')..."></textarea>
-                <button id="aiFlowGenerateBtn" type="button" class="btn primary ai-gen-btn" title="Synthesize strategy flow architecture">
-                  <span id="aiFlowBtnText">✦ Synthesize Flow</span>
-                  <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.4;">
+                Select strategy motion models and peer company benchmarks to incrementally construct or expand multi-year strategy trajectories.
+              </p>
+
+              <!-- Question 1: Strategic Motion / Model Type -->
+              <div class="builder-field-group">
+                <label for="builderModelMotion" class="builder-field-label">
+                  <span class="builder-q-num">1</span>
+                  <span>Strategic Motion / Model Type</span>
+                </label>
+                <select id="builderModelMotion" class="builder-select">
+                  <option value="plg_wedge">PLG Wedge &amp; Developer Self-Serve (Low Initial CAC)</option>
+                  <option value="enterprise_sales" selected>Enterprise Outbound &amp; Field Sales Pods (High ACV)</option>
+                  <option value="multi_product">Multi-Product Expansion &amp; Platform Cross-Sell (125%+ NDR)</option>
+                  <option value="consumption_infra">Usage-Based Consumption &amp; Infra Scale (Cloud Compute)</option>
+                  <option value="marketplace">Hyperscaler Co-Sell &amp; Marketplace (AWS/Azure/GCP Drawdown)</option>
+                  <option value="international">International Expansion &amp; Cross-Border (EMEA/APAC)</option>
+                  <option value="rule_40_moat">Rule of 40 Margin Leverage &amp; FCF Machine (Op Leverage)</option>
+                </select>
+              </div>
+
+              <!-- Question 2: Grounding Peer Company (SEC 10-K Data) -->
+              <div class="builder-field-group">
+                <label for="builderPeerCompany" class="builder-field-label">
+                  <span class="builder-q-num">2</span>
+                  <span>Grounding Peer Company (SEC 10-K Data)</span>
+                </label>
+                <select id="builderPeerCompany" class="builder-select">
+                  <option value="DDOG" selected>Datadog (DDOG) &bull; Multi-Product Cloud Observability</option>
+                  <option value="SNOW">Snowflake (SNOW) &bull; Consumption Data Cloud</option>
+                  <option value="CRWD">CrowdStrike (CRWD) &bull; Falcon Security Platform</option>
+                  <option value="HUBS">HubSpot (HUBS) &bull; Inbound to Enterprise Sales</option>
+                  <option value="MDB">MongoDB (MDB) &bull; Dev Wedge to Atlas Cloud</option>
+                  <option value="ZI">ZoomInfo (ZI) &bull; B2B Intelligence &amp; FCF Cash Cow</option>
+                </select>
+              </div>
+
+              <!-- Question 3: Strategic Horizon / Stage -->
+              <div class="builder-field-group">
+                <label for="builderHorizonPhase" class="builder-field-label">
+                  <span class="builder-q-num">3</span>
+                  <span>Strategic Horizon / Scale Stage</span>
+                </label>
+                <select id="builderHorizonPhase" class="builder-select">
+                  <option value="phase_1">Phase 1: Seed / Traction Wedge ($1M – $15M ARR)</option>
+                  <option value="phase_2" selected>Phase 2: GTM Engine &amp; Expansion ($15M – $80M ARR)</option>
+                  <option value="phase_3">Phase 3: Enterprise Platform &amp; Multi-Product ($80M – $250M ARR)</option>
+                  <option value="phase_4">Phase 4: Market Hegemony &amp; FCF Moat ($250M – $800M+ ARR)</option>
+                </select>
+              </div>
+
+              <!-- Question 4: Strategic Lever Focus -->
+              <div class="builder-field-group">
+                <label for="builderLeverFocus" class="builder-field-label">
+                  <span class="builder-q-num">4</span>
+                  <span>Strategic Lever Focus</span>
+                </label>
+                <select id="builderLeverFocus" class="builder-select">
+                  <option value="growth" selected>Aggressive Growth Reinvestment (45%+ S&amp;M)</option>
+                  <option value="moat">Engineering &amp; Tech Moat (30%+ R&amp;D Reinvestment)</option>
+                  <option value="rule40">Balanced Rule of 40 Compounding</option>
+                  <option value="fcf">Free Cash Flow Maximization &amp; Operating Leverage</option>
+                </select>
+              </div>
+
+              <!-- Optional Custom Milestone Label -->
+              <div class="builder-field-group" style="margin-bottom:12px;">
+                <label for="builderCustomLabel" class="builder-field-label">
+                  <span class="builder-q-num">5</span>
+                  <span>Custom Milestone Title (Optional)</span>
+                </label>
+                <input id="builderCustomLabel" type="text" class="builder-input" placeholder="e.g. Launch AI Security Fabric, Open EMEA HQ..." />
+              </div>
+
+              <!-- Action Matrix: Incremental Periodic Additions vs Fresh Synthesis -->
+              <div class="builder-action-matrix">
+                <button id="flowAppendPhaseBtn" type="button" class="btn primary builder-action-btn" title="Append this strategy milestone as the next stage in your current flow">
+                  <span>➕ Append Next Phase</span>
                 </button>
+                <button id="flowAddBranchBtn" type="button" class="btn secondary builder-action-btn" title="Add a branching alternative leg diverging from the active stage">
+                  <span>🌿 Branch from Phase</span>
+                </button>
+                <div style="display:flex; gap:6px;">
+                  <button id="flowBuildCompleteBtn" type="button" class="btn secondary builder-action-btn" style="flex:1;" title="Synthesize complete 3-phase flow from scratch for this model">
+                    <span>✦ Build Complete Flow</span>
+                  </button>
+                  <button id="flowResetBtn" type="button" class="btn ghost builder-action-btn" style="padding:6px 10px;" title="Reset flow to standard template">
+                    <span>↺ Reset</span>
+                  </button>
+                </div>
               </div>
+
+              <!-- Hidden elements for test & legacy script compatibility -->
+              <textarea id="aiFlowPromptInput" style="display:none;" aria-hidden="true"></textarea>
+              <button id="aiFlowGenerateBtn" type="button" style="display:none;" aria-hidden="true">
+                <span id="aiFlowBtnText">✦ Synthesize Flow</span>
+                <span id="aiFlowSpinner" class="spinner-small" style="display:none;"></span>
+              </button>
             </div>
 
             <!-- Strategy Blueprints & Flow Templates -->

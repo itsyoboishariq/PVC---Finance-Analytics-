@@ -307,6 +307,21 @@ def make_app(db_path=DB):
         except Exception as exc:
             raise HTTPException(500, f"AI generation failed: {str(exc)}") from exc
 
+    @app.post('/api/strategy/extend-flow')
+    def extend_flow(body: dict):
+        import ai_flow
+        return ai_flow.extend_strategy_flow(
+            action=body.get('action', 'append'),
+            model_type=body.get('model_type', 'enterprise_sales'),
+            company_ticker=body.get('company_ticker', 'DDOG'),
+            horizon_phase=body.get('horizon_phase', 'phase_2'),
+            strategic_focus=body.get('strategic_focus', 'growth'),
+            custom_label=body.get('custom_label', ''),
+            current_flow=body.get('current_flow'),
+            branch_from_id=body.get('branch_from_id'),
+            db_path=db_path
+        )
+
     @app.get('/api/ai/model-config')
     def get_model_config():
         import ai_flow
