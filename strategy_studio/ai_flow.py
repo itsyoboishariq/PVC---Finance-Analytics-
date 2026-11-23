@@ -461,22 +461,7 @@ def extend_strategy_flow(action: str = 'append', model_type: str = 'enterprise_s
     # Extract or initialize existing stages
     existing_stages = list(current_flow.get('stages', [])) if current_flow else []
     
-    if action == 'build' or not existing_stages:
-        # Full fresh flow build for this model & peer
-        if company_ticker and company_ticker.upper() in ('DDOG', 'SNOW', 'CRWD', 'HUBS', 'MDB', 'ZI'):
-            return get_clustered_company_flow(company_ticker.upper(), db_path=db_path)
-        return get_preset_flow('template-process-flow', db_path=db_path)
-
-    # Calculate next index and baseline numbers
-    next_idx = len(existing_stages) + 1
-    last_stage = existing_stages[-1]
-    last_rev = last_stage.get('revenue') or (motion_info['arr'] * 1e6 * 0.6)
-    
-    # ARR progression
-    multiplier = 1.6 if strategic_focus == 'growth' else 1.35
-    new_rev = max(last_rev * multiplier, motion_info['arr'] * 1e6)
-    
-    # Strategic adjustments
+    # Strategic adjustments for selected focus
     sm_ratio = motion_info['sm']
     rd_ratio = motion_info['rd']
     op_margin = motion_info['margin']
@@ -499,6 +484,148 @@ def extend_strategy_flow(action: str = 'append', model_type: str = 'enterprise_s
 
     r40_val = round((growth_rate + op_margin) * 100, 1)
     title = custom_label.strip() if custom_label and custom_label.strip() else motion_info['title']
+
+    if action == 'build' or not existing_stages:
+        # Synthesize a complete 3-phase strategic roadmap from scratch grounded in peer data & motion
+        stg1_rev = 12e6
+        stg2_rev = motion_info['arr'] * 1e6
+        stg3_rev = max(stg2_rev * 2.8, 450e6)
+        
+        stg3_sm = max(0.24, round(sm_ratio - 0.08, 2))
+        stg3_rd = max(0.18, round(rd_ratio - 0.05, 2))
+        stg3_growth = max(0.28, round(growth_rate * 0.55, 2))
+        stg3_margin = min(0.26, round(op_margin + 0.22, 2))
+        stg3_r40 = round((stg3_growth + stg3_margin) * 100, 1)
+        
+        built_stages = [
+            {
+                'id': 'N_1',
+                'index': 1,
+                'year': 'Phase 1',
+                'phase_title': f"Developer Traction & Initial Wedge",
+                'phase_desc': f"Bottom-up adoption and self-serve validation grounded in {comp_name} early architecture.",
+                'revenue': stg1_rev,
+                'revenue_formatted': _money(stg1_rev),
+                'growth': 1.30,
+                'growth_formatted': _pct(1.30),
+                'sales_marketing_ratio': 0.48,
+                'sales_marketing_formatted': _pct(0.48),
+                'rd_ratio': 0.34,
+                'rd_formatted': _pct(0.34),
+                'operating_margin': -0.32,
+                'operating_margin_formatted': _pct(-0.32),
+                'rule_of_40': 98.0,
+                'is_branch': False,
+                'branch_from': None,
+                'deltas': {'sm_pp': 0.0, 'rd_pp': 0.0, 'growth_pp': 0.0},
+                'strategic_why': {
+                    'executive_summary': f"Initial market wedge establishing practitioner product-market fit grounded in {comp_name}.",
+                    'sm_why': "Low initial CAC through self-serve and engineering developer advocacy.",
+                    'rd_why': "Heavy initial R&D reinvestment (34%) to secure foundational architecture differentiation."
+                },
+                'copy_payload': {'sales_marketing_ratio': 48.0, 'rd_ratio': 34.0, 'objective': 'growth', 'strategy_name': 'Phase 1 (Wedge)'}
+            },
+            {
+                'id': 'N_2',
+                'index': 2,
+                'year': 'Phase 2',
+                'phase_title': motion_info['title'],
+                'phase_desc': motion_info['desc'],
+                'revenue': stg2_rev,
+                'revenue_formatted': _money(stg2_rev),
+                'growth': growth_rate,
+                'growth_formatted': _pct(growth_rate),
+                'sales_marketing_ratio': sm_ratio,
+                'sales_marketing_formatted': _pct(sm_ratio),
+                'rd_ratio': rd_ratio,
+                'rd_formatted': _pct(rd_ratio),
+                'operating_margin': op_margin,
+                'operating_margin_formatted': _pct(op_margin),
+                'rule_of_40': r40_val,
+                'is_branch': False,
+                'branch_from': None,
+                'deltas': {
+                    'sm_pp': round((sm_ratio - 0.48) * 100, 1),
+                    'rd_pp': round((rd_ratio - 0.34) * 100, 1),
+                    'growth_pp': round((growth_rate - 1.30) * 100, 1)
+                },
+                'strategic_why': {
+                    'executive_summary': f"{motion_info['title']} scaling upmarket to {_money(stg2_rev)} ARR.",
+                    'sm_why': f"Sales & marketing allocation at {_pct(sm_ratio)} to ramp repeatable pipeline.",
+                    'rd_why': f"R&D intensity maintained at {_pct(rd_ratio)} to expand feature modules."
+                },
+                'copy_payload': {'sales_marketing_ratio': round(sm_ratio * 100, 1), 'rd_ratio': round(rd_ratio * 100, 1), 'objective': 'growth', 'strategy_name': f"Phase 2 ({motion_info['title']})"}
+            },
+            {
+                'id': 'N_3',
+                'index': 3,
+                'year': 'Phase 3',
+                'phase_title': title if title != motion_info['title'] else f"Enterprise Platform Moat & FCF Machine",
+                'phase_desc': f"Wall-to-wall enterprise customer expansion, operating leverage absorption, and durable Rule of 40 compounding.",
+                'revenue': stg3_rev,
+                'revenue_formatted': _money(stg3_rev),
+                'growth': stg3_growth,
+                'growth_formatted': _pct(stg3_growth),
+                'sales_marketing_ratio': stg3_sm,
+                'sales_marketing_formatted': _pct(stg3_sm),
+                'rd_ratio': stg3_rd,
+                'rd_formatted': _pct(stg3_rd),
+                'operating_margin': stg3_margin,
+                'operating_margin_formatted': _pct(stg3_margin),
+                'rule_of_40': stg3_r40,
+                'is_branch': False,
+                'branch_from': None,
+                'deltas': {
+                    'sm_pp': round((stg3_sm - sm_ratio) * 100, 1),
+                    'rd_pp': round((stg3_rd - rd_ratio) * 100, 1),
+                    'growth_pp': round((stg3_growth - growth_rate) * 100, 1)
+                },
+                'strategic_why': {
+                    'executive_summary': f"Enterprise scale at {_money(stg3_rev)} ARR with {stg3_r40} Rule of 40 score.",
+                    'sm_why': f"S&M leverage down to {_pct(stg3_sm)} as expansion revenue and net retention drive growth.",
+                    'rd_why': f"R&D maintained at {_pct(stg3_rd)} defending competitive moat."
+                },
+                'copy_payload': {'sales_marketing_ratio': round(stg3_sm * 100, 1), 'rd_ratio': round(stg3_rd * 100, 1), 'objective': 'profitability', 'strategy_name': 'Phase 3 (Enterprise Moat)'}
+            }
+        ]
+        
+        m_lines = [
+            "flowchart LR",
+            "  classDef card fill:#111927,stroke:#334155,stroke-width:1.5px,color:#f8fafc,rx:8px;",
+            "  classDef cyanCard fill:#0d2331,stroke:#06b6d4,stroke-width:2px,color:#ffffff,rx:8px;",
+            "  classDef purpleCard fill:#211233,stroke:#a855f7,stroke-width:2px,color:#ffffff,rx:8px;",
+            "  classDef blueCard fill:#0e203b,stroke:#3b82f6,stroke-width:2px,color:#ffffff,rx:8px;"
+        ]
+        for s in built_stages:
+            cls = "cyanCard" if s['index'] == 1 else ("purpleCard" if s['index'] == 2 else "blueCard")
+            r40_t = f" | R40: {s['rule_of_40']}" if s.get('rule_of_40') else ""
+            lbl = f"\"<b>{s['year']} · {s['phase_title']}</b><br/>ARR: {s['revenue_formatted']} · Growth: {s['growth_formatted']}<br/><i>S&M: {s['sales_marketing_formatted']} | R&D: {s['rd_formatted']}{r40_t}</i>\""
+            m_lines.append(f"  {s['id']}[{lbl}]:::{cls}")
+            
+        m_lines.append(f"  N_1 -->|\"{'+' if built_stages[1]['deltas']['sm_pp'] >= 0 else ''}{built_stages[1]['deltas']['sm_pp']}pp S&M<br/>ARR {built_stages[1]['growth_formatted']}\"| N_2")
+        m_lines.append(f"  N_2 -->|\"{'+' if built_stages[2]['deltas']['sm_pp'] >= 0 else ''}{built_stages[2]['deltas']['sm_pp']}pp S&M<br/>ARR {built_stages[2]['growth_formatted']}\"| N_3")
+        for s in built_stages:
+            m_lines.append(f'  click {s["id"]} selectFlowPhase "Inspect {s["year"]} Strategic Why & Frameworks"')
+            
+        return {
+            'id': f"{company_ticker.lower()}-synthesized-flow",
+            'title': f"{comp_name} ({company_ticker.upper()}) Strategic Trajectory",
+            'subtitle': f"3-Phase strategic roadmap synthesized from scratch for {motion_info['title']}.",
+            'company': {'name': comp_name, 'ticker': company_ticker.upper()},
+            'stages': built_stages,
+            'stages_count': 3,
+            'mermaid_code': "\n".join(m_lines),
+            'action': 'build'
+        }
+
+    # Calculate next index and baseline numbers
+    next_idx = len(existing_stages) + 1
+    last_stage = existing_stages[-1]
+    last_rev = last_stage.get('revenue') or (motion_info['arr'] * 1e6 * 0.6)
+    
+    # ARR progression
+    multiplier = 1.6 if strategic_focus == 'growth' else 1.35
+    new_rev = max(last_rev * multiplier, motion_info['arr'] * 1e6)
     
     # Check if this is a branch
     is_branch = (action == 'branch')
