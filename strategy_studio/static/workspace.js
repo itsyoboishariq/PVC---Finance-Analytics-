@@ -1482,14 +1482,260 @@ function initCommandPalette() {
 let currentCompanyFlowData = null;
 let currentDeepdiveData = null;
 let activeInspTab = 'insp-why';
+let activeHoveredStage = null;
+let hideHoverTimeout = null;
+
+// =========================================================================
+// Floating Hovered Node Preview Popover Box Handlers
+// =========================================================================
+function showNodeHoverPopover(nodeEl, stageData) {
+  if (hideHoverTimeout) {
+    clearTimeout(hideHoverTimeout);
+    hideHoverTimeout = null;
+  }
+  activeHoveredStage = stageData;
+  const popover = $('flowNodeHoverPopover');
+  if (!popover || !nodeEl) return;
+
+  if ($('hoverPopoverStagePill')) $('hoverPopoverStagePill').textContent = stageData.year || `Phase ${stageData.index}`;
+  if ($('hoverPopoverR40Pill')) $('hoverPopoverR40Pill').textContent = `Rule of 40: ${stageData.rule_of_40 != null ? stageData.rule_of_40 : 70}`;
+  if ($('hoverPopoverTitle')) $('hoverPopoverTitle').textContent = stageData.phase_title || 'Strategy Milestone';
+  if ($('hoverPopoverArr')) $('hoverPopoverArr').textContent = stageData.revenue_formatted || '$45.0M';
+  if ($('hoverPopoverGrowth')) $('hoverPopoverGrowth').textContent = stageData.growth_formatted || '+85%';
+  if ($('hoverPopoverSm')) $('hoverPopoverSm').textContent = stageData.sales_marketing_formatted || '42%';
+  if ($('hoverPopoverRd')) $('hoverPopoverRd').textContent = stageData.rd_formatted || '28%';
+  if ($('hoverPopoverWhy')) $('hoverPopoverWhy').textContent = stageData.strategic_why?.executive_summary || stageData.phase_desc || 'Executing GTM milestone.';
+
+  const rect = nodeEl.getBoundingClientRect();
+  const viewport = $('companyFlowDiagramBox');
+  const vRect = viewport ? viewport.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+  let leftPos = rect.left - vRect.left + (rect.width / 2) - 145;
+  leftPos = Math.max(10, Math.min(leftPos, (vRect.width || window.innerWidth) - 310));
+  
+  let topPos = rect.top - vRect.top - 185;
+  if (topPos < 10) {
+    topPos = rect.bottom - vRect.top + 15;
+  }
+
+  popover.style.left = `${leftPos}px`;
+  popover.style.top = `${topPos}px`;
+  popover.style.display = 'block';
+}
+
+function scheduleHideNodeHoverPopover() {
+  if (hideHoverTimeout) clearTimeout(hideHoverTimeout);
+  hideHoverTimeout = setTimeout(() => {
+    const popover = $('flowNodeHoverPopover');
+    if (popover) popover.style.display = 'none';
+  }, 220);
+}
+
+function cancelHideNodeHoverPopover() {
+  if (hideHoverTimeout) {
+    clearTimeout(hideHoverTimeout);
+    hideHoverTimeout = null;
+  }
+}
+
+function hideNodeHoverPopoverImmediate() {
+  if (hideHoverTimeout) {
+    clearTimeout(hideHoverTimeout);
+    hideHoverTimeout = null;
+  }
+  const popover = $('flowNodeHoverPopover');
+  if (popover) popover.style.display = 'none';
+}
+
+// =========================================================================
+// Exploding Full Screen Stage Intelligence Modal
+// =========================================================================
+function openExplodeModal(stageData) {
+  if (!stageData) return;
+  const modal = $('stageExplodeModal');
+  const backdrop = $('stageExplodeBackdrop');
+  if (!modal || !backdrop) return;
+
+  const comp = stageData.company || currentCompanyFlowData?.company || { name: 'SaaS Platform', ticker: 'SAAS' };
+  const stageYear = stageData.year || `Phase ${stageData.index || 1}`;
+  const why = stageData.strategic_why || {};
+  const fin = stageData.financial_strategy || {};
+
+  if ($('explodeModalStageBadge')) $('explodeModalStageBadge').textContent = stageYear;
+  if ($('explodeModalCompanyBadge')) $('explodeModalCompanyBadge').textContent = `${comp.name || ''} (${comp.ticker || ''})`;
+  if ($('explodeModalR40Badge')) $('explodeModalR40Badge').textContent = `Rule of 40: ${stageData.rule_of_40 != null ? stageData.rule_of_40 : 70}`;
+  if ($('explodeModalTitle')) $('explodeModalTitle').textContent = stageData.phase_title || 'Strategy Trajectory Phase';
+  if ($('explodeModalSubtitle')) $('explodeModalSubtitle').textContent = stageData.phase_desc || 'GTM scaling and capital allocation architecture.';
+
+  if ($('explodeArrVal')) $('explodeArrVal').textContent = stageData.revenue_formatted || fin.revenue || '$45.0M';
+  if ($('explodeGrowthVal')) $('explodeGrowthVal').textContent = `${stageData.growth_formatted || fin.revenue_growth || '+80%'} YoY Growth`;
+  if ($('explodeSmVal')) $('explodeSmVal').textContent = stageData.sales_marketing_formatted || fin.sales_marketing || '42.0%';
+  if ($('explodeRdVal')) $('explodeRdVal').textContent = stageData.rd_formatted || fin.rd || '28.0%';
+  if ($('explodeMarginVal')) $('explodeMarginVal').textContent = stageData.operating_margin_formatted || fin.operating_margin || '-15.0%';
+  if ($('explodeFcfVal')) $('explodeFcfVal').textContent = fin.fcf_margin || stageData.fcf_margin || '+18.0%';
+
+  if ($('explodeExecutiveSummary')) $('explodeExecutiveSummary').textContent = why.executive_summary || stageData.phase_desc || 'Execution roadmap phase.';
+  if ($('explodeSmWhy')) $('explodeSmWhy').textContent = why.sm_why || 'GTM scaling and quota ramp.';
+  if ($('explodeRdWhy')) $('explodeRdWhy').textContent = why.rd_why || 'R&D investment defending technical differentiation.';
+  if ($('explodeMarginWhy')) $('explodeMarginWhy').textContent = why.margin_why || 'Operating leverage and fixed cost absorption.';
+
+  const fw = stageData.frameworks || {};
+  if ($('explodeAnsoffStrategy')) $('explodeAnsoffStrategy').textContent = fw.ansoff?.strategy || 'Market Penetration & Platform Expansion';
+  if ($('explodeAnsoffWhy')) $('explodeAnsoffWhy').textContent = fw.ansoff?.why || stageData.phase_desc || 'Deepening enterprise customer wallet share.';
+
+  if ($('explodePorterForce')) $('explodePorterForce').textContent = fw.porter?.primary_force || 'Threat of New Entrants & Substitutes';
+  if ($('explodePorterCounter')) $('explodePorterCounter').textContent = fw.porter?.countermeasure || 'Moat fortified through proprietary product lock-in and high switching costs.';
+
+  if ($('explodeMoatType')) $('explodeMoatType').textContent = fw.moat?.type || 'High Switching Costs & Multi-Product Integration';
+  if ($('explodeMoatEvidence')) $('explodeMoatEvidence').textContent = fw.moat?.evidence || 'Enterprise multi-year agreements driving strong net revenue retention.';
+
+  if ($('explodeHorizonLabel')) $('explodeHorizonLabel').textContent = fw.mckinsey?.horizon || (stageData.index <= 1 ? 'Horizon 1: Core Wedge' : (stageData.index <= 2 ? 'Horizon 2: Scale Engines' : 'Horizon 3: Global Moat'));
+  if ($('explodeHorizonWhy')) $('explodeHorizonWhy').textContent = fw.mckinsey?.why || 'Expanding addressable market and extending sustainable unit economics.';
+
+  const vitalsEl = $('explodeSecVitals');
+  if (vitalsEl) {
+    vitalsEl.innerHTML = `
+      <div class="explode-sec-item"><small>Revenue</small><strong>${stageData.revenue_formatted || '$45.0M'}</strong></div>
+      <div class="explode-sec-item"><small>YoY Growth</small><strong class="text-emerald">${stageData.growth_formatted || '+80%'}</strong></div>
+      <div class="explode-sec-item"><small>S&M Ratio</small><strong class="text-sky">${stageData.sales_marketing_formatted || '42.0%'}</strong></div>
+      <div class="explode-sec-item"><small>R&D Ratio</small><strong class="text-purple">${stageData.rd_formatted || '28.0%'}</strong></div>
+      <div class="explode-sec-item"><small>Op Margin</small><strong>${stageData.operating_margin_formatted || '-15.0%'}</strong></div>
+      <div class="explode-sec-item"><small>Rule of 40</small><strong class="text-emerald">${stageData.rule_of_40 || 70}</strong></div>
+    `;
+  }
+
+  const adoptBtn = $('explodeModalAdoptBtn');
+  if (adoptBtn) {
+    adoptBtn.onclick = () => {
+      adoptStageLevers(stageData);
+      toast.success('Levers Adopted', `Loaded ${stageYear} financial ratios into your startup model.`);
+      closeExplodeModal();
+    };
+  }
+
+  modal.style.display = 'flex';
+  backdrop.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExplodeModal() {
+  const modal = $('stageExplodeModal');
+  const backdrop = $('stageExplodeBackdrop');
+  if (modal) modal.style.display = 'none';
+  if (backdrop) backdrop.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+window.openExplodeModal = openExplodeModal;
+window.closeExplodeModal = closeExplodeModal;
+
+// =========================================================================
+// Interactive Strategy Copilot (Live Coaching & Benchmarks)
+// =========================================================================
+const MODEL_MOTIONS_CLIENT = {
+  plg_wedge: {
+    title: 'Product-Led Growth (PLG) & Developer Wedge',
+    arr: '$12.0M', growth: '+120%', r40: '90.0',
+    advice: 'Bottom-up practitioner land validates core product-market fit with low initial CAC. Reinvest 34% in R&D to expand platform capabilities before hiring enterprise reps.',
+    suggestMotion: 'enterprise_sales', suggestLabel: '💡 Next: Layer Enterprise Sales Pods (High ACV)'
+  },
+  enterprise_sales: {
+    title: 'Enterprise Outbound & Field Sales Pods',
+    arr: '$45.0M', growth: '+85%', r40: '70.0',
+    advice: 'Deploying paired SDR/AE pods targeting mid-market and enterprise accounts unlocks six-figure ACVs. S&M increases to ~42% during initial territory ramp.',
+    suggestMotion: 'multi_product', suggestLabel: '💡 Next: Multi-Product Platform Cross-Sell (125%+ NDR)'
+  },
+  multi_product: {
+    title: 'Multi-Product Platform Cross-Sell',
+    arr: '$125.0M', growth: '+65%', r40: '60.0',
+    advice: 'Second core product module turns single-point tool into an enterprise system of record, driving Net Dollar Retention over 125% and drastically raising customer switching costs.',
+    suggestMotion: 'consumption_infra', suggestLabel: '💡 Next: Usage-Based Cloud Infrastructure Scale'
+  },
+  consumption_infra: {
+    title: 'Usage-Based Consumption & Cloud Infra Scale',
+    arr: '$240.0M', growth: '+55%', r40: '60.0',
+    advice: 'Elastic compute credit consumption expands automatically alongside customer workload data volume, eliminating annual contract renegotiation friction.',
+    suggestMotion: 'marketplace', suggestLabel: '💡 Next: Hyperscaler Marketplace Co-Sell Drawdown'
+  },
+  marketplace: {
+    title: 'Hyperscaler Co-Sell & Cloud Marketplaces',
+    arr: '$180.0M', growth: '+60%', r40: '62.0',
+    advice: 'Listing on AWS, Azure, and Google Cloud Marketplaces allows enterprise buyers to drawdown committed cloud spend, accelerating procurement cycles by ~40%.',
+    suggestMotion: 'international', suggestLabel: '💡 Next: Cross-Border International Expansion'
+  },
+  international: {
+    title: 'International Expansion & Cross-Border Clearing',
+    arr: '$310.0M', growth: '+48%', r40: '56.0',
+    advice: 'Establishing EMEA and APAC regional sales headquarters with sovereign in-region data residency unlocks massive non-US addressable enterprise demand.',
+    suggestMotion: 'rule_40_moat', suggestLabel: '💡 Next: Rule of 40 Margin Leverage & FCF Compounding'
+  },
+  rule_40_moat: {
+    title: 'Rule of 40 Margin Leverage & FCF Machine',
+    arr: '$650.0M', growth: '+32%', r40: '54.0',
+    advice: 'Fixed G&A leverage and high gross margin retention generate substantial free cash flow (25%+), creating an elite self-funding compounder.',
+    suggestMotion: 'multi_product', suggestLabel: '💡 Next: Platform Suite Add-On Acquisitions'
+  }
+};
+
+function updateBuilderAgentCopilot() {
+  const motion = $('builderModelMotion')?.value || 'enterprise_sales';
+  const peer = $('builderPeerCompany')?.value || 'DDOG';
+  const focus = $('builderLeverFocus')?.value || 'growth';
+
+  const mInfo = MODEL_MOTIONS_CLIENT[motion] || MODEL_MOTIONS_CLIENT.enterprise_sales;
+
+  if ($('copilotPeerTag')) $('copilotPeerTag').textContent = `${peer} SEC Grounded`;
+  if ($('copilotEstArr')) $('copilotEstArr').textContent = mInfo.arr;
+  if ($('copilotEstGrowth')) $('copilotEstGrowth').textContent = mInfo.growth;
+  if ($('copilotEstR40')) $('copilotEstR40').textContent = mInfo.r40;
+
+  let advice = mInfo.advice;
+  if (peer === 'SNOW') advice += ` Grounded in Snowflake's consumption expansion curves.`;
+  else if (peer === 'CRWD') advice += ` Matches CrowdStrike's Falcon security module expansion.`;
+  else if (peer === 'DDOG') advice += ` Aligned with Datadog's multi-product infrastructure observability.`;
+  else if (peer === 'HUBS') advice += ` Reflects HubSpot's inbound upmarket journey.`;
+
+  if ($('copilotInsightText')) $('copilotInsightText').textContent = advice;
+
+  const pillsContainer = $('copilotPillsContainer');
+  if (pillsContainer) {
+    pillsContainer.innerHTML = `
+      <button type="button" class="copilot-pill" data-copilot-motion="${mInfo.suggestMotion}" data-copilot-focus="${focus}">
+        ${mInfo.suggestLabel}
+      </button>
+      <button type="button" class="copilot-pill" data-copilot-motion="${motion}" data-copilot-focus="rule40">
+        🎯 Optimize S&M for Rule of 40 Efficiency (+8 pp)
+      </button>
+    `;
+
+    pillsContainer.querySelectorAll('.copilot-pill').forEach(pill => {
+      pill.onclick = () => {
+        const mot = pill.dataset.copilotMotion;
+        const foc = pill.dataset.copilotFocus;
+        if (mot && $('builderModelMotion')) $('builderModelMotion').value = mot;
+        if (foc && $('builderLeverFocus')) $('builderLeverFocus').value = foc;
+        updateBuilderAgentCopilot();
+        toast.info('Copilot Applied', `Updated builder to ${mot ? mot.replace(/_/g, ' ') : ''}`);
+      };
+    });
+  }
+}
+
+function initBuilderAgentCopilot() {
+  ['builderModelMotion', 'builderPeerCompany', 'builderHorizonPhase', 'builderLeverFocus'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('change', updateBuilderAgentCopilot);
+  });
+  updateBuilderAgentCopilot();
+}
 
 // Global callback for Mermaid click binding
 window.selectFlowPhase = function(nodeId) {
-  if (window.openInspectorSheet) window.openInspectorSheet();
+  hideNodeHoverPopoverImmediate();
   if (currentCompanyFlowData && currentCompanyFlowData.stages) {
     const stage = currentCompanyFlowData.stages.find(s => s.id === nodeId || String(s.index) === String(nodeId).replace(/\D/g, ''));
     if (stage) {
-      renderPhaseDeepdive(stage);
+      openExplodeModal(stage);
       highlightFlowchartNode(stage.index || nodeId);
       return;
     }
@@ -1923,6 +2169,30 @@ async function initCompanyFlow() {
       toast.info('Canvas Reset', 'Reset flowchart canvas to baseline template.');
     };
   }
+
+  // Initialize Interactive Agent Strategy Copilot
+  initBuilderAgentCopilot();
+
+  // Initialize Floating Hover Popover listeners
+  const hoverPopover = $('flowNodeHoverPopover');
+  if (hoverPopover) {
+    hoverPopover.addEventListener('mouseenter', cancelHideNodeHoverPopover);
+    hoverPopover.addEventListener('mouseleave', scheduleHideNodeHoverPopover);
+    hoverPopover.onclick = (e) => {
+      e.stopPropagation();
+      if (activeHoveredStage) {
+        openExplodeModal(activeHoveredStage);
+        hideNodeHoverPopoverImmediate();
+      }
+    };
+  }
+
+  // Explode Modal Event Handlers
+  if ($('closeExplodeModalBtn')) $('closeExplodeModalBtn').onclick = closeExplodeModal;
+  if ($('stageExplodeBackdrop')) $('stageExplodeBackdrop').onclick = closeExplodeModal;
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeExplodeModal();
+  });
 
   // Handle syntax toggle
   document.querySelectorAll('#toggleMermaidCodeBtn, #toggleMermaidCodeBtnTopbar, .toggle-mermaid-btn').forEach(btn => {
@@ -2696,7 +2966,7 @@ async function loadPhaseDeepdive(stageIdxOrYear) {
       currentDeepdiveData = data;
       renderPhaseDeepdive(data);
       highlightFlowchartNode(data.stage_index);
-      if (window.openInspectorSheet) window.openInspectorSheet();
+      if (window.openExplodeModal) window.openExplodeModal(data);
     }
   } catch (err) {
     console.error('Failed to load phase deepdive:', err);
@@ -2958,21 +3228,40 @@ function bindMermaidNodeClicks() {
   const container = $('companyFlowMermaid');
   if (!container) return;
 
-  // Direct click bindings on all Mermaid flowchart nodes
+  // Direct click and hover bindings on all Mermaid flowchart nodes
   container.querySelectorAll('g.node').forEach((nodeEl, idx) => {
     nodeEl.style.cursor = 'pointer';
-    nodeEl.onclick = () => {
-      loadPhaseDeepdive(idx + 1);
-      if (window.openInspectorSheet) window.openInspectorSheet();
+
+    nodeEl.addEventListener('mouseenter', () => {
+      const stage = currentCompanyFlowData?.stages?.[idx] || (currentCompanyFlowData?.stages?.find(s => String(s.index) === String(idx + 1)));
+      if (stage) {
+        showNodeHoverPopover(nodeEl, stage);
+      }
+    });
+
+    nodeEl.addEventListener('mouseleave', () => {
+      scheduleHideNodeHoverPopover();
+    });
+
+    nodeEl.onclick = (e) => {
+      e.stopPropagation();
+      hideNodeHoverPopoverImmediate();
+      const stage = currentCompanyFlowData?.stages?.[idx] || (currentCompanyFlowData?.stages?.find(s => String(s.index) === String(idx + 1)));
+      if (stage) {
+        openExplodeModal(stage);
+        loadPhaseDeepdive(stage.index || idx + 1);
+      } else {
+        loadPhaseDeepdive(idx + 1);
+      }
     };
   });
 
   // Direct click bindings on edge labels
   container.querySelectorAll('.edgeLabel').forEach((edgeEl, idx) => {
     edgeEl.style.cursor = 'pointer';
-    edgeEl.onclick = () => {
+    edgeEl.onclick = (e) => {
+      e.stopPropagation();
       loadPhaseDeepdive(idx + 2);
-      if (window.openInspectorSheet) window.openInspectorSheet();
     };
   });
 }
@@ -2983,9 +3272,28 @@ function bindSvgNodeClicks() {
 
   container.querySelectorAll('.flow-svg-node').forEach((nodeEl, idx) => {
     nodeEl.style.cursor = 'pointer';
-    nodeEl.onclick = () => {
-      loadPhaseDeepdive(idx + 1);
-      if (window.openInspectorSheet) window.openInspectorSheet();
+
+    nodeEl.addEventListener('mouseenter', () => {
+      const stage = currentCompanyFlowData?.stages?.[idx] || (currentCompanyFlowData?.stages?.find(s => String(s.index) === String(idx + 1)));
+      if (stage) {
+        showNodeHoverPopover(nodeEl, stage);
+      }
+    });
+
+    nodeEl.addEventListener('mouseleave', () => {
+      scheduleHideNodeHoverPopover();
+    });
+
+    nodeEl.onclick = (e) => {
+      e.stopPropagation();
+      hideNodeHoverPopoverImmediate();
+      const stage = currentCompanyFlowData?.stages?.[idx] || (currentCompanyFlowData?.stages?.find(s => String(s.index) === String(idx + 1)));
+      if (stage) {
+        openExplodeModal(stage);
+        loadPhaseDeepdive(stage.index || idx + 1);
+      } else {
+        loadPhaseDeepdive(idx + 1);
+      }
     };
   });
 }

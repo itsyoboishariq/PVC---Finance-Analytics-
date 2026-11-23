@@ -197,6 +197,41 @@
                 <input id="builderCustomLabel" type="text" class="builder-input" placeholder="e.g. Launch AI Security Fabric, Open EMEA HQ..." />
               </div>
 
+              <!-- Interactive Agent Strategy Copilot (Live Guidance, Projections & Benchmarks) -->
+              <div class="builder-agent-copilot" id="builderAgentCopilot">
+                <div class="copilot-header">
+                  <div class="copilot-title">
+                    <span class="copilot-pulsing-dot"></span>
+                    <span>✦ AGENT STRATEGY COPILOT</span>
+                  </div>
+                  <span class="copilot-peer-badge" id="copilotPeerTag">DDOG SEC Grounded</span>
+                </div>
+                <div class="copilot-insight-box" id="copilotInsightText">
+                  Datadog (DDOG) established initial enterprise dominance by pairing bottom-up developer wedge with dedicated outbound enterprise pods. Appending this phase targets $45.0M ARR with 85% YoY growth.
+                </div>
+                <div class="copilot-projections-strip">
+                  <div class="copilot-proj-item">
+                    <small>Target ARR</small>
+                    <strong id="copilotEstArr">$45.0M</strong>
+                  </div>
+                  <div class="copilot-proj-item">
+                    <small>YoY Growth</small>
+                    <strong id="copilotEstGrowth" class="text-emerald">+85.0%</strong>
+                  </div>
+                  <div class="copilot-proj-item">
+                    <small>Rule of 40</small>
+                    <strong id="copilotEstR40" class="text-sky">70.0</strong>
+                  </div>
+                </div>
+                <div class="copilot-suggested-pills" id="copilotSuggestedPills">
+                  <span class="copilot-pills-label">Proactive Agent Suggestions:</span>
+                  <div class="copilot-pills-row" id="copilotPillsContainer">
+                    <button type="button" class="copilot-pill" data-copilot-motion="multi_product" data-copilot-focus="growth">💡 Next: Multi-Product Platform (125% NDR)</button>
+                    <button type="button" class="copilot-pill" data-copilot-motion="rule_40_moat" data-copilot-focus="rule40">🎯 Boost Rule of 40 (+8 pp)</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Action Matrix: Incremental Periodic Additions vs Fresh Synthesis -->
               <div class="builder-action-matrix">
                 <button id="flowAppendPhaseBtn" type="button" class="btn primary builder-action-btn" title="Append this strategy milestone as the next stage in your current flow">
@@ -518,6 +553,40 @@
             <div class="flowchart-viewport full-height-viewport" id="companyFlowDiagramBox">
               <div id="canvasTransformContainer" class="canvas-pan-zoom-wrap">
                 <div id="companyFlowMermaid"></div>
+              </div>
+
+              <!-- Floating Hovered Node Preview Popover Card -->
+              <div id="flowNodeHoverPopover" class="flow-hover-popover" style="display:none;" role="tooltip">
+                <div class="hover-popover-header">
+                  <span class="hover-popover-stage-pill" id="hoverPopoverStagePill">PHASE 2</span>
+                  <span class="hover-popover-r40-pill" id="hoverPopoverR40Pill">Rule of 40: 70.0</span>
+                </div>
+                <h4 class="hover-popover-title" id="hoverPopoverTitle">Enterprise Outbound &amp; Field Sales Pods</h4>
+                <div class="hover-popover-metrics-strip">
+                  <div class="h-metric-item">
+                    <small>ARR</small>
+                    <strong id="hoverPopoverArr">$45.0M</strong>
+                  </div>
+                  <div class="h-metric-item">
+                    <small>YoY Growth</small>
+                    <strong id="hoverPopoverGrowth" class="text-emerald">+85.0%</strong>
+                  </div>
+                  <div class="h-metric-item">
+                    <small>S&amp;M</small>
+                    <strong id="hoverPopoverSm">42.0%</strong>
+                  </div>
+                  <div class="h-metric-item">
+                    <small>R&amp;D</small>
+                    <strong id="hoverPopoverRd">28.0%</strong>
+                  </div>
+                </div>
+                <p class="hover-popover-why" id="hoverPopoverWhy">
+                  Account-based outbound targeting mid-market and enterprise accounts unlocks large multi-seat ACVs.
+                </p>
+                <div class="hover-popover-footer-hint">
+                  <span>✦ Click into card to explode full-screen intelligence</span>
+                  <span class="hover-explode-icon">⛶</span>
+                </div>
               </div>
             </div>
 
@@ -1099,6 +1168,136 @@
       </button>
     </div>
   </aside>
+
+  <!-- FULL-SCREEN EXPLODING STAGE INTELLIGENCE MODAL -->
+  <div id="stageExplodeBackdrop" class="explode-modal-backdrop" style="display:none;"></div>
+  <div id="stageExplodeModal" class="explode-modal-container" role="dialog" aria-modal="true" style="display:none;">
+    <!-- Modal Top Header -->
+    <header class="explode-modal-header">
+      <div class="explode-header-left">
+        <div class="explode-badge-group">
+          <span class="explode-phase-pill" id="explodeModalStageBadge">PHASE 2 · SCALE ENGINE</span>
+          <span class="explode-company-pill" id="explodeModalCompanyBadge">DATADOG (DDOG)</span>
+          <span class="explode-r40-pill" id="explodeModalR40Badge">Rule of 40: 70.0</span>
+        </div>
+        <h2 class="explode-hero-title" id="explodeModalTitle">Enterprise Outbound &amp; Field Sales Pods</h2>
+        <p class="explode-hero-subtitle" id="explodeModalSubtitle">Full Strategic Architecture, Financial Levers, Management Frameworks &amp; SEC Evidence</p>
+      </div>
+      <div class="explode-header-actions">
+        <button type="button" class="btn primary explode-action-btn" id="explodeModalAdoptBtn">
+          📋 Adopt Levers into Plan
+        </button>
+        <button type="button" class="icon-trigger-btn explode-close-btn" id="closeExplodeModalBtn" title="Close Full Screen (ESC)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Ribbon Strip -->
+    <div class="explode-kpi-ribbon">
+      <div class="explode-kpi-card">
+        <span class="ex-kpi-label">ANNUAL REVENUE (ARR)</span>
+        <div class="ex-kpi-val" id="explodeArrVal">$45.0M</div>
+        <div class="ex-kpi-sub text-emerald" id="explodeGrowthVal">+85.0% YoY Growth</div>
+      </div>
+      <div class="explode-kpi-card">
+        <span class="ex-kpi-label">SALES &amp; MARKETING RATIO</span>
+        <div class="ex-kpi-val text-sky" id="explodeSmVal">42.0%</div>
+        <div class="ex-kpi-sub" id="explodeSmSub">Quota Ramp Intensity</div>
+      </div>
+      <div class="explode-kpi-card">
+        <span class="ex-kpi-label">R&amp;D REINVESTMENT RATIO</span>
+        <div class="ex-kpi-val text-purple" id="explodeRdVal">28.0%</div>
+        <div class="ex-kpi-sub" id="explodeRdSub">Platform Architecture Moat</div>
+      </div>
+      <div class="explode-kpi-card">
+        <span class="ex-kpi-label">OPERATING MARGIN</span>
+        <div class="ex-kpi-val" id="explodeMarginVal">-15.0%</div>
+        <div class="ex-kpi-sub" id="explodeMarginSub">Growth Reinvestment Stage</div>
+      </div>
+      <div class="explode-kpi-card">
+        <span class="ex-kpi-label">FREE CASH FLOW (FCF)</span>
+        <div class="ex-kpi-val text-emerald" id="explodeFcfVal">+18.0%</div>
+        <div class="ex-kpi-sub" id="explodeFcfSub">Self-Funding Expansion</div>
+      </div>
+    </div>
+
+    <!-- Explode Modal Scrollable Bento Body -->
+    <div class="explode-modal-body">
+      <div class="explode-bento-grid">
+        <!-- Card 1: Strategic Execution & Executive Why -->
+        <article class="explode-bento-card col-span-2">
+          <div class="ex-card-header">
+            <span class="ex-card-icon">💡</span>
+            <h3>Strategic Execution &amp; Executive "Why"</h3>
+          </div>
+          <div class="ex-narrative-box" id="explodeExecutiveSummary">
+            Analyzing strategic scaling trajectory...
+          </div>
+          <div class="ex-drivers-list">
+            <div class="ex-driver-item">
+              <strong>📈 GTM &amp; Sales Trajectory:</strong>
+              <p id="explodeSmWhy">Analyzing go-to-market motions...</p>
+            </div>
+            <div class="ex-driver-item">
+              <strong>🔬 R&amp;D &amp; Tech Moat:</strong>
+              <p id="explodeRdWhy">Analyzing technological moat reinvestment...</p>
+            </div>
+            <div class="ex-driver-item">
+              <strong>⚖️ Operating Margin &amp; Leverage:</strong>
+              <p id="explodeMarginWhy">Analyzing operating leverage and fixed cost absorption...</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2: Strategic Management Frameworks -->
+        <article class="explode-bento-card col-span-2">
+          <div class="ex-card-header">
+            <span class="ex-card-icon">🎯</span>
+            <h3>Strategic Frameworks &amp; Moat Architecture</h3>
+          </div>
+          <div class="ex-frameworks-grid">
+            <div class="ex-framework-box">
+              <div class="fw-badge">Ansoff Growth Matrix</div>
+              <h4 id="explodeAnsoffStrategy">Market Penetration &amp; Platform Expansion</h4>
+              <p id="explodeAnsoffWhy">Aggressive market capture within core enterprise customer segments.</p>
+            </div>
+            <div class="ex-framework-box">
+              <div class="fw-badge">Porter's 5 Forces Defense</div>
+              <h4 id="explodePorterForce">Threat of New Entrants &amp; Substitutes</h4>
+              <p id="explodePorterCounter">High barrier erected through proprietary R&amp;D integrations and deep workflow stickiness.</p>
+            </div>
+            <div class="ex-framework-box">
+              <div class="fw-badge">Moat Classification</div>
+              <h4 id="explodeMoatType">High Switching Costs &amp; Multi-Product Integration</h4>
+              <p id="explodeMoatEvidence">Enterprise contracts with 125%+ Net Dollar Retention creating durable renewal loops.</p>
+            </div>
+            <div class="ex-framework-box">
+              <div class="fw-badge">McKinsey Horizons</div>
+              <h4 id="explodeHorizonLabel">Horizon 2: Emerging Growth Engines</h4>
+              <p id="explodeHorizonWhy">Scaling proven product wedge into repeatable global enterprise outbound channels.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3: Peer Context & Verified SEC 10-K Evidence -->
+        <article class="explode-bento-card col-span-4">
+          <div class="ex-card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="ex-card-icon">📊</span>
+              <h3>Audited SEC 10-K Historical Evidence &amp; Peer Benchmark</h3>
+            </div>
+            <a id="explodeSecLink" href="#" target="_blank" rel="noopener noreferrer" class="ex-sec-anchor">
+              Open SEC 10-K Filing ↗
+            </a>
+          </div>
+          <div class="explode-sec-grid" id="explodeSecVitals">
+            <!-- Dynamically populated vital items -->
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
 
         </main>
       </div>
