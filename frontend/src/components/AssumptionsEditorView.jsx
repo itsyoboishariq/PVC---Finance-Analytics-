@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { formatCurrency, formatPercent } from '../utils/formatters';
-import { RotateCcw, Sliders, DollarSign, Users, Cpu, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { RotateCcw, Sliders, DollarSign, Users, Cpu, FileSpreadsheet, AlertCircle, PlusCircle, Trash2 } from 'lucide-react';
 
 export default function AssumptionsEditorView({
   assumptions,
   onChange,
   onResetDefaults,
   onInspectCell,
-  baselineAssumptions
+  baselineAssumptions,
+  periods = []
 }) {
   const [activeTab, setActiveTab] = useState('funnel');
 
@@ -44,6 +45,38 @@ export default function AssumptionsEditorView({
     const newOpex = [...assumptions.opex];
     newOpex[index] = { ...newOpex[index], value: val };
     onChange({ ...assumptions, opex: newOpex });
+  };
+
+  // --- Custom line items (user-added assumptions not in the workbook) ---
+  const customItems = assumptions.custom_items || [];
+
+  const setCustomItems = (items) => onChange({ ...assumptions, custom_items: items });
+
+  const addCustomItem = (kind) => {
+    const defaults = {
+      expense: 'New expense',
+      direct_cost: 'New direct cost',
+      revenue: 'New revenue stream',
+    };
+    setCustomItems([
+      ...customItems,
+      {
+        id: `custom_${Date.now()}`,
+        name: defaults[kind],
+        kind,
+        basis: 'per_month',
+        amount: 0,
+        start_month: 1,
+      },
+    ]);
+  };
+
+  const updateCustomItem = (id, field, val) => {
+    setCustomItems(customItems.map(item => (item.id === id ? { ...item, [field]: val } : item)));
+  };
+
+  const removeCustomItem = (id) => {
+    setCustomItems(customItems.filter(item => item.id !== id));
   };
 
   const updateMonthlyLead = (col, val) => {
@@ -101,6 +134,7 @@ export default function AssumptionsEditorView({
           { id: 'cogs', label: 'COGS Parameters', icon: Cpu },
           { id: 'opex', label: 'OPEX Line Items', icon: Sliders },
           { id: 'leads', label: 'Monthly Leads (M1–M23)', icon: FileSpreadsheet },
+          { id: 'custom', label: `Add Your Own${customItems.length ? ` (${customItems.length})` : ''}`, icon: PlusCircle },
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -387,6 +421,97 @@ export default function AssumptionsEditorView({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* TAB 6: CUSTOM LINE ITEMS */}
+      {activeTab === 'custom' && (
+        <div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.5 }}>
+            Add assumptions that aren't in the workbook, such as a new hire, a marketing campaign or a consulting revenue stream.
+            They flow straight into the forecast: expenses into OPEX, direct costs into COGS, and revenue into total revenue.
+            The workbook's own numbers are unchanged until you add something here.
+          </p>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <button className="btn-secondary" onClick={() => addCustomItem('expense')}>
+              <PlusCircle size={14} /> Add expense
+            </button>
+            <button className="btn-secondary" onClick={() => addCustomItem('direct_cost')}>
+              <PlusCircle size={14} /> Add direct cost
+            </button>
+            <button className="btn-secondary" onClick={() => addCustomItem('revenue')}>
+              <PlusCircle size={14} /> Add revenue
+            </button>
+          </div>
+
+          {customItems.length === 0 ? (
+            <div style={{ border: '1px dashed var(--border-subtle)', borderRadius: '10px', padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              No custom items yet. Use the buttons above to add one.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {customItems.map(item => (
+                <div key={item.id} className="glass-panel" style={{ padding: '14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', alignItems: 'end' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)', gridColumn: 'span 2' }}>
+                    Name
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={item.name}
+                      maxLength={80}
+                      onChange={e => updateCustomItem(item.id, 'name', e.target.value)}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Type
+                    <select className="form-input" value={item.kind} onChange={e => updateCustomItem(item.id, 'kind', e.target.value)}>
+                      <option value="expense">Expense (OPEX)</option>
+                      <option value="direct_cost">Direct cost (COGS)</option>
+                      <option value="revenue">Revenue</option>
+                    </select>
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Amount ($)
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={item.amount}
+                      min={0}
+                      step="any"
+                      onChange={e => updateCustomItem(item.id, 'amount', Math.max(0, parseFloat(e.target.value) || 0))}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Charged
+                    <select className="form-input" value={item.basis} onChange={e => updateCustomItem(item.id, 'basis', e.target.value)}>
+                      <option value="per_month">Per month</option>
+                      <option value="per_customer">Per active customer / month</option>
+                    </select>
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Starts
+                    <select className="form-input" value={item.start_month} onChange={e => updateCustomItem(item.id, 'start_month', parseInt(e.target.value, 10))}>
+                      {Array.from({ length: 23 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {periods[i]?.label || `Month ${i + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => removeCustomItem(item.id)}
+                    title={`Remove ${item.name}`}
+                    aria-label={`Remove ${item.name}`}
+                    style={{ color: '#fb7185', justifySelf: 'start' }}
+                  >
+                    <Trash2 size={14} /> Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

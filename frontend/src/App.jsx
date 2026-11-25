@@ -366,7 +366,8 @@ export default function App() {
     exportFinancialTableToCsv(
       calculationResults.monthly_results,
       periods,
-      `${activeScenarioName.replace(/[^a-zA-Z0-9_-]/g, '_')}_financial_model.csv`
+      `${activeScenarioName.replace(/[^a-zA-Z0-9_-]/g, '_')}_financial_model.csv`,
+      calculationResults.assumptions_echo?.custom_items || []
     );
   };
 
@@ -529,6 +530,7 @@ export default function App() {
           monthlyResults={calculationResults?.monthly_results}
           annualRollups={calculationResults?.annual_rollups}
           summaryKPIs={calculationResults?.summary_kpis}
+          customItems={calculationResults?.assumptions_echo?.custom_items || []}
           onInspectCell={setInspectorCell}
         />
       )}
@@ -546,6 +548,7 @@ export default function App() {
           onResetDefaults={handleResetDefaults}
           onInspectCell={setInspectorCell}
           baselineAssumptions={baselineAssumptions}
+          periods={periods}
         />
       )}
 

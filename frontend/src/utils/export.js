@@ -9,7 +9,7 @@ export function exportToJson(data, filename = 'financial_model.json') {
   URL.revokeObjectURL(url);
 }
 
-export function exportFinancialTableToCsv(monthlyResults, periods, filename = 'financial_model_output.csv') {
+export function exportFinancialTableToCsv(monthlyResults, periods, filename = 'financial_model_output.csv', customItems = []) {
   if (!monthlyResults || monthlyResults.length === 0) return;
 
   const headers = ['Line Item', 'Source / Cell', ...monthlyResults.map(m => m.label), 'Total / Summary'];
@@ -23,6 +23,15 @@ export function exportFinancialTableToCsv(monthlyResults, periods, filename = 'f
       totalVal = sum.toFixed(2);
     }
     rows.push([`"${name}"`, `"${cellRef}"`, ...vals, totalVal]);
+  };
+
+  // User-added line items, listed just above the total they feed into.
+  const addCustomRows = (kind) => {
+    customItems.filter(item => item.kind === kind).forEach(item => {
+      const vals = monthlyResults.map(m => m.custom_items_breakdown?.[item.id] ?? 0);
+      const name = `${item.name} (custom)`.replace(/"/g, '""');
+      rows.push([`"${name}"`, '"Custom"', ...vals, vals.reduce((a, b) => a + b, 0).toFixed(2)]);
+    });
   };
 
   // Funnel
@@ -47,6 +56,7 @@ export function exportFinancialTableToCsv(monthlyResults, periods, filename = 'f
   addRow('Basic Plan Revenue ($)', 'Row 32', 'basic_plan_revenue');
   addRow('Pro Plan Revenue ($)', 'Row 33', 'pro_plan_revenue');
   addRow('Enterprise Plan Revenue ($)', 'Row 34', 'enterprise_plan_revenue');
+  addCustomRows('revenue');
   addRow('Total MRR ($)', 'Row 35', 'total_mrr', true);
 
   // COGS
@@ -54,9 +64,11 @@ export function exportFinancialTableToCsv(monthlyResults, periods, filename = 'f
   addRow('Payment Processing ($)', 'Row 38', 'payment_processing');
   addRow('Third-Party APIs ($)', 'Row 39', 'third_party_apis');
   addRow('Other Direct Costs ($)', 'Row 40', 'other_direct_costs');
+  addCustomRows('direct_cost');
   addRow('Total COGS ($)', 'Row 41', 'total_cogs', true);
 
   // OPEX & EBIT
+  addCustomRows('expense');
   addRow('Total OPEX ($)', 'Row 53', 'total_opex', true);
   addRow('EBIT ($)', 'Row 56', 'ebit', true);
 

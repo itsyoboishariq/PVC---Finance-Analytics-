@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters';
 import { ChevronDown, ChevronRight, HelpCircle, Calendar, Table as TableIcon } from 'lucide-react';
 
-export default function FinancialTableView({ monthlyResults, annualRollups, summaryKPIs, onInspectCell }) {
+export default function FinancialTableView({ monthlyResults, annualRollups, summaryKPIs, customItems = [], onInspectCell }) {
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' | 'annual'
   const [expandedSections, setExpandedSections] = useState({
     funnel: true,
@@ -19,6 +19,29 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
   };
 
   if (!monthlyResults || monthlyResults.length === 0) return null;
+
+  const customOfKind = (kind) => customItems.filter(item => item.kind === kind);
+  // Rows for user-added line items, shown just above the section total they feed into.
+  const renderCustomRows = (kind) => customOfKind(kind).map(item => {
+    const values = monthlyResults.map(m => m.custom_items_breakdown?.[item.id] ?? 0);
+    const basisText = item.basis === 'per_customer'
+      ? `${formatCurrency(item.amount, 2)} per active customer per month`
+      : `${formatCurrency(item.amount, 0)} per month`;
+    return (
+      <ModelRow
+        key={item.id}
+        title={`${item.name} (custom)`}
+        cellRef="Custom"
+        formula={`${basisText}, starting month ${item.start_month}`}
+        values={values}
+        format={v => formatCurrency(v, 0)}
+        totalVal={formatCurrency(values.reduce((a, b) => a + b, 0), 0)}
+        onInspectCell={onInspectCell}
+        metaKey={null}
+        monthlyResults={monthlyResults}
+      />
+    );
+  });
 
   return (
     <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
@@ -314,8 +337,9 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
                     metaKey="enterprise_plan_revenue"
                     monthlyResults={monthlyResults}
                   />
+                  {renderCustomRows('revenue')}
                   <ModelRow
-                    title="Total MRR"
+                    title={customOfKind('revenue').length ? 'Total Revenue (MRR + custom)' : 'Total MRR'}
                     cellRef="Row 35"
                     formula="=SUM(Col32:Col34)"
                     values={monthlyResults.map(m => m.total_mrr)}
@@ -385,8 +409,9 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
                     metaKey="other_direct_costs"
                     monthlyResults={monthlyResults}
                   />
+                  {renderCustomRows('direct_cost')}
                   <ModelRow
-                    title="Total COGS"
+                    title={customOfKind('direct_cost').length ? 'Total COGS (incl. custom)' : 'Total COGS'}
                     cellRef="Row 41"
                     formula="=SUM(Col37:Col40)"
                     values={monthlyResults.map(m => m.total_cogs)}
@@ -411,8 +436,9 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
               </tr>
               {expandedSections.opex && (
                 <>
+                  {renderCustomRows('expense')}
                   <ModelRow
-                    title="Total OPEX (11 categories)"
+                    title={customOfKind('expense').length ? `Total OPEX (11 categories + ${customOfKind('expense').length} custom)` : 'Total OPEX (11 categories)'}
                     cellRef="Row 53"
                     formula="=SUM(Col42:Col52)"
                     values={monthlyResults.map(m => m.total_opex)}
