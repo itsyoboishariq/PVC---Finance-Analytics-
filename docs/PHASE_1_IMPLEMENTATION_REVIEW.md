@@ -66,3 +66,30 @@ Open http://127.0.0.1:8000 (this app, not `/strategy`). To work on the UI with l
 - Delete ignores server errors (also pre-existing).
 - Scenario writes are not atomic. No problem has been seen with a single local user.
 - The trial versus free-tier concern is documented but intentionally not modelled.
+
+## Addendum: custom line items (requested by the project lead)
+
+The Assumptions Editor has a new **Add Your Own** tab for assumptions that aren't in the workbook. Each item has:
+
+- a name
+- a type:
+  - **Expense** adds to OPEX
+  - **Direct cost** adds to COGS
+  - **Revenue** adds to total revenue, so payment processing (2.9%) also applies to it
+- an amount, charged either **per month** or **per active customer per month**
+- a **start month** (M1–M23)
+
+How it's built:
+
+- **Engine** (`model_engine/engine.py`, `schema.py`): `ModelAssumptions.custom_items` defaults to `[]`, so existing scenarios still load. Each month the engine works out every item's amount and adds it to the right total. When there are no items, every total is calculated exactly as before, and the Excel parity tests are unchanged. Each month's results also include `custom_items_breakdown`, plus totals for custom revenue, direct costs and expenses.
+- **Validation:**
+  - amount must be 0 or more
+  - start month must be 1–23
+  - type and basis must be one of the listed options
+  - name can't be empty
+  - item IDs must be unique
+- **Display:** custom items get their own rows, marked "(custom)", in the financial statement and the CSV export, just above the total they feed into. KPIs, charts, annual rollups, saved scenarios and scenario comparison all include them automatically.
+- **Tests:** `tests/test_custom_items.py` covers the math for each type and basis, start months, rollups, validation, the API and saving to a scenario, and older scenarios that have no custom items. Full suite: **99 passed**.
+- **Browser check:** a $1,000/month "Sales hire" starting in M7 lowered total EBIT by exactly $17,000 (17 months × $1,000) and appeared as its own row in the OPEX section.
+
+Not included (possible next steps): end dates or growth rates per item, one-time costs, and percent-of-revenue items.
