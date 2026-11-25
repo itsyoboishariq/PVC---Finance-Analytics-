@@ -439,6 +439,10 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
               <span>Diligence</span>
             </button>
+            <button id="viewBackpackBtn" type="button" class="view-switch-btn" title="Open Strategy Backpack & Custom Flow Editor">
+              <span>🎒 Backpack</span>
+              <span id="backpackCountBadge" class="backpack-count-badge">0</span>
+            </button>
           </div>
         </div>
 
@@ -530,8 +534,10 @@
                   Account-based outbound targeting mid-market and enterprise accounts unlocks large multi-seat ACVs.
                 </p>
                 <div class="hover-popover-footer-hint">
-                  <span>✦ Click into card to explode full-screen intelligence</span>
-                  <span class="hover-explode-icon">⛶</span>
+                  <button type="button" id="hoverPopoverSaveBackpackBtn" class="hover-save-backpack-btn" title="Save this connection & stage to your Strategy Backpack">
+                    🎒 Save to Backpack
+                  </button>
+                  <span style="display:inline-flex; align-items:center; gap:4px;">Expand <span class="hover-explode-icon">⛶</span></span>
                 </div>
               </div>
             </div>
@@ -1022,6 +1028,63 @@
             </div>
           </section>
 
+          <!-- ==========================================================================
+               STRATEGY BACKPACK & SEPARATE CUSTOM FLOW EDITOR
+               ========================================================================== -->
+          <section id="backpackEditorView" class="backpack-editor-studio" style="display:none;">
+            <div class="backpack-header-strip">
+              <div>
+                <div class="diligence-eyebrow">STRATEGY BACKPACK &amp; FLOW COMPOSER</div>
+                <h2 class="diligence-main-title" style="margin-bottom:4px;">Assemble Your Custom Strategy Flow</h2>
+                <p class="diligence-main-sub">Combine saved stages and connections from any company into a custom multi-stage strategy flow.</p>
+              </div>
+              <div class="backpack-header-actions">
+                <input id="backpackFlowTitleInput" type="text" class="builder-input backpack-title-input" value="Custom Multi-Company Strategy Flow" placeholder="Name your strategy flow..." />
+                <button type="button" id="backpackLoadToCanvasBtn" class="btn primary" style="padding:10px 18px; font-size:13.5px; font-weight:700;">
+                  ✦ Open in Main Canvas →
+                </button>
+              </div>
+            </div>
+
+            <div class="backpack-editor-split">
+              <!-- Left Column: Saved Backpack Connections Library -->
+              <aside class="backpack-library-pane">
+                <div class="backpack-pane-header">
+                  <div>
+                    <h3 style="margin:0; font-size:15px; font-weight:800;">🎒 Saved Connections</h3>
+                    <span id="backpackSavedCountText" style="font-size:12px; color:var(--text-muted);">0 items saved</span>
+                  </div>
+                  <button type="button" id="backpackClearAllBtn" class="btn ghost" style="font-size:11.5px; padding:5px 10px;">Clear All</button>
+                </div>
+
+                <div class="backpack-saved-list" id="backpackSavedList">
+                  <!-- Populated dynamically by workspace.js -->
+                </div>
+              </aside>
+
+              <!-- Right Column: Custom Flow Sequence Composer & Live Preview -->
+              <div class="backpack-composer-pane">
+                <div class="backpack-composer-bar">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                    <span style="font-size:12px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted);">
+                      FLOW SEQUENCE (<span id="backpackDraftCount">0</span> STAGES)
+                    </span>
+                    <button type="button" id="backpackClearDraftBtn" class="btn ghost" style="font-size:12px; padding:5px 10px;">
+                      ↺ Reset Sequence
+                    </button>
+                  </div>
+                  <div class="backpack-sequence-strip" id="backpackSequenceStrip">
+                    <!-- Ordered stage chips with reorder / branch / remove -->
+                  </div>
+                </div>
+
+                <div class="backpack-preview-canvas" id="backpackFlowPreview">
+                  <!-- Live interactive SVG flowchart of the assembled backpack sequence -->
+                </div>
+              </div>
+            </div>
+          </section>
+
         </main>
       </div>
     </div>
@@ -1152,6 +1215,9 @@
         <p class="explode-hero-subtitle" id="explodeModalSubtitle">Full Strategic Architecture, Financial Levers, Management Frameworks &amp; SEC Evidence</p>
       </div>
       <div class="explode-header-actions">
+        <button type="button" class="btn secondary explode-action-btn" id="explodeModalSaveBackpackBtn" title="Save this stage & connection to your Strategy Backpack">
+          🎒 Save to Backpack
+        </button>
         <button type="button" class="btn primary explode-action-btn" id="explodeModalAdoptBtn">
           📋 Adopt Levers into Plan
         </button>

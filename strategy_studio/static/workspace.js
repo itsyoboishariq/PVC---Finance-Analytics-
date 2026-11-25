@@ -1613,6 +1613,13 @@ function openExplodeModal(stageData) {
     };
   }
 
+  const saveBpBtn = $('explodeModalSaveBackpackBtn');
+  if (saveBpBtn) {
+    saveBpBtn.onclick = () => {
+      saveStageToBackpack(stageData);
+    };
+  }
+
   modal.style.display = 'flex';
   backdrop.style.display = 'block';
   document.body.style.overflow = 'hidden';
@@ -1811,43 +1818,66 @@ async function initCompanyFlow() {
 
   const viewDiligenceBtn = $('viewDiligenceBtn');
   const diligenceView = $('commercialDiligenceView');
+  const viewBackpackBtn = $('viewBackpackBtn');
+  const backpackView = $('backpackEditorView');
 
   function switchView(mode) {
     if (mode === 'dashboard') {
       if (canvasCard) canvasCard.style.display = 'none';
       if (diligenceView) diligenceView.style.display = 'none';
+      if (backpackView) backpackView.style.display = 'none';
       if (dashView) dashView.style.display = 'flex';
       viewCanvasBtn?.classList.remove('active');
       viewDashboardBtn?.classList.add('active');
       viewDiligenceBtn?.classList.remove('active');
+      viewBackpackBtn?.classList.remove('active');
       if (breadcrumb) breadcrumb.textContent = 'Executive Dashboard';
       if (currentDeepdiveData) renderPhaseDeepdive(currentDeepdiveData);
     } else if (mode === 'diligence') {
       if (canvasCard) canvasCard.style.display = 'none';
       if (dashView) dashView.style.display = 'none';
+      if (backpackView) backpackView.style.display = 'none';
       if (diligenceView) diligenceView.style.display = 'flex';
       viewCanvasBtn?.classList.remove('active');
       viewDashboardBtn?.classList.remove('active');
       viewDiligenceBtn?.classList.add('active');
+      viewBackpackBtn?.classList.remove('active');
       if (breadcrumb) breadcrumb.textContent = 'Commercial Diligence';
-      // Collapse main canvas sidebar so Diligence gets full screen
       const appSidebar = $('appSidebar');
       if (appSidebar) appSidebar.setAttribute('data-state', 'collapsed');
       initCommercialDiligence();
+    } else if (mode === 'backpack') {
+      if (canvasCard) canvasCard.style.display = 'none';
+      if (dashView) dashView.style.display = 'none';
+      if (diligenceView) diligenceView.style.display = 'none';
+      if (backpackView) backpackView.style.display = 'flex';
+      viewCanvasBtn?.classList.remove('active');
+      viewDashboardBtn?.classList.remove('active');
+      viewDiligenceBtn?.classList.remove('active');
+      viewBackpackBtn?.classList.add('active');
+      if (breadcrumb) breadcrumb.textContent = 'Strategy Backpack';
+      const appSidebar = $('appSidebar');
+      if (appSidebar) appSidebar.setAttribute('data-state', 'collapsed');
+      renderBackpackEditor();
     } else {
       if (canvasCard) canvasCard.style.display = 'flex';
       if (dashView) dashView.style.display = 'none';
       if (diligenceView) diligenceView.style.display = 'none';
+      if (backpackView) backpackView.style.display = 'none';
       viewCanvasBtn?.classList.add('active');
       viewDashboardBtn?.classList.remove('active');
       viewDiligenceBtn?.classList.remove('active');
+      viewBackpackBtn?.classList.remove('active');
       if (breadcrumb) breadcrumb.textContent = 'Strategy Canvas';
     }
   }
 
+  window.switchStudioView = switchView;
+
   if (viewCanvasBtn) viewCanvasBtn.onclick = () => switchView('canvas');
   if (viewDashboardBtn) viewDashboardBtn.onclick = () => switchView('dashboard');
   if (viewDiligenceBtn) viewDiligenceBtn.onclick = () => switchView('diligence');
+  if (viewBackpackBtn) viewBackpackBtn.onclick = () => switchView('backpack');
   if ($('railNavDiligence')) $('railNavDiligence').onclick = () => switchView('diligence');
 
   // AI Model Selector Handler
@@ -3823,6 +3853,332 @@ function renderProcessFlowTemplateSvg(stages) {
   `;
 }
 
+// =========================================================================
+// Strategy Backpack & Custom Flow Composer Engine
+// =========================================================================
+const BACKPACK_ITEMS_KEY = 'strategy_backpack_items_v1';
+const BACKPACK_DRAFT_KEY = 'strategy_backpack_draft_v1';
+
+let backpackItems = [];
+let backpackDraft = [];
+
+function loadBackpackState() {
+  try {
+    backpackItems = JSON.parse(localStorage.getItem(BACKPACK_ITEMS_KEY) || '[]');
+    if (!Array.isArray(backpackItems)) backpackItems = [];
+  } catch { backpackItems = []; }
+  try {
+    backpackDraft = JSON.parse(localStorage.getItem(BACKPACK_DRAFT_KEY) || '[]');
+    if (!Array.isArray(backpackDraft)) backpackDraft = [];
+  } catch { backpackDraft = []; }
+}
+
+function persistBackpackState() {
+  try {
+    localStorage.setItem(BACKPACK_ITEMS_KEY, JSON.stringify(backpackItems));
+    localStorage.setItem(BACKPACK_DRAFT_KEY, JSON.stringify(backpackDraft));
+  } catch {}
+  updateBackpackBadge();
+}
+
+function updateBackpackBadge() {
+  const badge = $('backpackCountBadge');
+  if (badge) {
+    badge.textContent = String(backpackItems.length);
+  }
+  const savedText = $('backpackSavedCountText');
+  if (savedText) {
+    savedText.textContent = `${backpackItems.length} connection${backpackItems.length === 1 ? '' : 's'} saved`;
+  }
+  const draftCount = $('backpackDraftCount');
+  if (draftCount) {
+    draftCount.textContent = String(backpackDraft.length);
+  }
+}
+
+function saveStageToBackpack(stageData) {
+  if (!stageData) return;
+  const comp = stageData.company || currentCompanyFlowData?.company || {
+    name: $('companyFlowSelect')?.selectedOptions?.[0]?.textContent?.split('(')[0]?.trim() || 'Company',
+    ticker: $('companyFlowSelect')?.value || 'SAAS'
+  };
+  const ticker = (comp.ticker || 'SAAS').toUpperCase();
+  const yearLabel = stageData.year || `Stage ${stageData.index || 1}`;
+  const title = stageData.phase_title || 'Strategy Stage';
+
+  // Avoid duplicate identical ticker + year + title
+  const exists = backpackItems.some(it => it.ticker === ticker && it.year === yearLabel && it.phase_title === title);
+  if (exists) {
+    toast.info('Already in Backpack', `${ticker} · ${yearLabel} is already saved in your Backpack.`);
+    return;
+  }
+
+  const item = {
+    uid: `bp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    companyName: comp.name || ticker,
+    ticker,
+    year: yearLabel,
+    phase_title: title,
+    phase_desc: stageData.phase_desc || stageData.strategic_why?.executive_summary || '',
+    revenue: stageData.revenue || 50e6,
+    revenue_formatted: stageData.revenue_formatted || stageData.financial_strategy?.revenue || '$50.0M',
+    growth: stageData.growth || 0.5,
+    growth_formatted: stageData.growth_formatted || stageData.financial_strategy?.revenue_growth || '+50%',
+    sales_marketing_ratio: stageData.sales_marketing_ratio || 0.4,
+    sales_marketing_formatted: stageData.sales_marketing_formatted || stageData.financial_strategy?.sales_marketing || '40.0%',
+    rd_ratio: stageData.rd_ratio || 0.25,
+    rd_formatted: stageData.rd_formatted || stageData.financial_strategy?.rd || '25.0%',
+    operating_margin: stageData.operating_margin || 0.0,
+    operating_margin_formatted: stageData.operating_margin_formatted || stageData.financial_strategy?.operating_margin || '0.0%',
+    rule_of_40: stageData.rule_of_40 ?? stageData.financial_strategy?.rule_of_40 ?? 50,
+    strategic_why: stageData.strategic_why || { executive_summary: stageData.phase_desc || '' },
+    frameworks: stageData.frameworks || {},
+    deltas: stageData.deltas || { sm_pp: 0, rd_pp: 0, growth_pp: 0 },
+    copy_payload: stageData.copy_payload || null
+  };
+
+  backpackItems.unshift(item);
+  persistBackpackState();
+  toast.success('Saved to Backpack 🎒', `${ticker} · ${yearLabel} added. Open Backpack to compose your flow.`);
+
+  if ($('backpackEditorView')?.style.display !== 'none') {
+    renderBackpackEditor();
+  }
+}
+
+function buildFlowFromBackpackDraft() {
+  const titleInput = $('backpackFlowTitleInput');
+  const flowTitle = (titleInput?.value || '').trim() || 'Custom Multi-Company Strategy Flow';
+
+  const stages = backpackDraft.map((item, idx) => {
+    const prev = idx > 0 ? backpackDraft[idx - 1] : null;
+    const smDelta = prev ? Math.round(((item.sales_marketing_ratio || 0.4) - (prev.sales_marketing_ratio || 0.4)) * 1000) / 10 : 0;
+    const rdDelta = prev ? Math.round(((item.rd_ratio || 0.25) - (prev.rd_ratio || 0.25)) * 1000) / 10 : 0;
+    const grDelta = prev ? Math.round(((item.growth || 0.5) - (prev.growth || 0.5)) * 1000) / 10 : 0;
+
+    return {
+      ...item,
+      id: `N_${idx + 1}`,
+      index: idx + 1,
+      year: `${item.ticker} · ${item.year}`,
+      company: { name: item.companyName, ticker: item.ticker },
+      is_branch: Boolean(item.is_branch),
+      deltas: { sm_pp: smDelta, rd_pp: rdDelta, growth_pp: grDelta }
+    };
+  });
+
+  const mLines = [
+    'flowchart LR',
+    '  classDef card fill:#111927,stroke:#334155,stroke-width:1.5px,color:#f8fafc,rx:8px;'
+  ];
+  stages.forEach((s, i) => {
+    const lbl = `"<b>${s.year} · ${s.phase_title}</b><br/>ARR: ${s.revenue_formatted} · Growth: ${s.growth_formatted}<br/><i>S&M: ${s.sales_marketing_formatted} | R&D: ${s.rd_formatted} | R40: ${s.rule_of_40}</i>"`;
+    mLines.push(`  ${s.id}[${lbl}]:::card`);
+    if (i > 0) {
+      const prev = stages[i - 1];
+      const arrow = s.is_branch ? '-.->' : '-->';
+      const sign = s.deltas.sm_pp >= 0 ? '+' : '';
+      mLines.push(`  ${prev.id} ${arrow}|"${sign}${s.deltas.sm_pp}pp S&M"| ${s.id}`);
+    }
+  });
+
+  return {
+    id: 'backpack-custom-flow',
+    title: flowTitle,
+    subtitle: `Custom ${stages.length}-stage flow composed from ${[...new Set(stages.map(s => s.ticker))].join(', ')}.`,
+    company: { name: flowTitle, ticker: 'CUSTOM' },
+    stages,
+    stages_count: stages.length,
+    mermaid_code: mLines.join('\n')
+  };
+}
+
+function renderBackpackEditor() {
+  updateBackpackBadge();
+  const listEl = $('backpackSavedList');
+  const seqEl = $('backpackSequenceStrip');
+  const previewEl = $('backpackFlowPreview');
+  if (!listEl || !seqEl || !previewEl) return;
+
+  // 1. Render Saved Items Library
+  if (!backpackItems.length) {
+    listEl.innerHTML = `
+      <div class="backpack-empty-state">
+        <div style="font-size:28px; margin-bottom:8px;">🎒</div>
+        <strong>Your Strategy Backpack is empty</strong>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:6px 0 0; line-height:1.5;">
+          Explore any company on the <b>Canvas</b>, hover or click a stage node, and hit <b>🎒 Save to Backpack</b> to collect strategic connections here.
+        </p>
+      </div>
+    `;
+  } else {
+    listEl.innerHTML = backpackItems.map(item => `
+      <div class="backpack-item-card" data-bp-uid="${esc(item.uid)}">
+        <div class="bp-card-top">
+          <span class="bp-ticker-pill">${esc(item.ticker)} · ${esc(item.year)}</span>
+          <button type="button" class="bp-delete-btn" data-bp-delete="${esc(item.uid)}" title="Remove from Backpack">×</button>
+        </div>
+        <div class="bp-card-title">${esc(item.phase_title)}</div>
+        <div class="bp-card-metrics">
+          <span>ARR <b>${esc(item.revenue_formatted)}</b></span>
+          <span>Growth <b class="text-emerald">${esc(item.growth_formatted)}</b></span>
+          <span>S&amp;M <b>${esc(item.sales_marketing_formatted)}</b></span>
+          <span>R40 <b>${esc(String(item.rule_of_40))}</b></span>
+        </div>
+        <button type="button" class="btn secondary bp-add-btn" data-bp-add="${esc(item.uid)}">
+          + Add to Flow Sequence
+        </button>
+      </div>
+    `).join('');
+
+    listEl.querySelectorAll('[data-bp-add]').forEach(btn => {
+      btn.onclick = () => {
+        const item = backpackItems.find(x => x.uid === btn.dataset.bpAdd);
+        if (item) {
+          backpackDraft.push({ ...item, draft_uid: `dr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, is_branch: false });
+          persistBackpackState();
+          renderBackpackEditor();
+        }
+      };
+    });
+
+    listEl.querySelectorAll('[data-bp-delete]').forEach(btn => {
+      btn.onclick = () => {
+        backpackItems = backpackItems.filter(x => x.uid !== btn.dataset.bpDelete);
+        persistBackpackState();
+        renderBackpackEditor();
+      };
+    });
+  }
+
+  // 2. Render Ordered Flow Sequence Strip
+  if (!backpackDraft.length) {
+    seqEl.innerHTML = `<span style="font-size:13px; color:var(--text-muted);">Click <b>+ Add to Flow Sequence</b> on any saved connection to start building your custom strategy flow.</span>`;
+    previewEl.innerHTML = `
+      <div class="backpack-preview-empty">
+        <div style="font-size:32px; margin-bottom:8px;">✨</div>
+        <div style="font-size:15px; font-weight:700;">Custom Flow Canvas Ready</div>
+        <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;">Add saved company stages from the left tray to visualize and connect your strategy.</p>
+      </div>
+    `;
+    return;
+  }
+
+  seqEl.innerHTML = backpackDraft.map((item, idx) => `
+    <div class="bp-seq-chip ${item.is_branch ? 'is-branch' : ''}">
+      <div class="bp-seq-chip-top">
+        <span class="bp-seq-num">${idx + 1}</span>
+        <strong>${esc(item.ticker)} · ${esc(item.year)}</strong>
+        <button type="button" class="bp-seq-remove" data-draft-remove="${idx}" title="Remove from sequence">×</button>
+      </div>
+      <div class="bp-seq-title">${esc(item.phase_title)}</div>
+      <div class="bp-seq-actions">
+        <button type="button" data-draft-left="${idx}" ${idx === 0 ? 'disabled' : ''} title="Move Left">←</button>
+        <button type="button" data-draft-right="${idx}" ${idx === backpackDraft.length - 1 ? 'disabled' : ''} title="Move Right">→</button>
+        <button type="button" data-draft-branch="${idx}" class="${item.is_branch ? 'active' : ''}" title="Toggle Branch">🌿 Branch</button>
+      </div>
+    </div>
+    ${idx < backpackDraft.length - 1 ? '<span class="bp-seq-arrow">→</span>' : ''}
+  `).join('');
+
+  seqEl.querySelectorAll('[data-draft-remove]').forEach(btn => {
+    btn.onclick = () => {
+      backpackDraft.splice(parseInt(btn.dataset.draftRemove, 10), 1);
+      persistBackpackState();
+      renderBackpackEditor();
+    };
+  });
+  seqEl.querySelectorAll('[data-draft-left]').forEach(btn => {
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.draftLeft, 10);
+      if (i > 0) {
+        [backpackDraft[i - 1], backpackDraft[i]] = [backpackDraft[i], backpackDraft[i - 1]];
+        persistBackpackState();
+        renderBackpackEditor();
+      }
+    };
+  });
+  seqEl.querySelectorAll('[data-draft-right]').forEach(btn => {
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.draftRight, 10);
+      if (i < backpackDraft.length - 1) {
+        [backpackDraft[i], backpackDraft[i + 1]] = [backpackDraft[i + 1], backpackDraft[i]];
+        persistBackpackState();
+        renderBackpackEditor();
+      }
+    };
+  });
+  seqEl.querySelectorAll('[data-draft-branch]').forEach(btn => {
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.draftBranch, 10);
+      if (backpackDraft[i]) {
+        backpackDraft[i].is_branch = !backpackDraft[i].is_branch;
+        persistBackpackState();
+        renderBackpackEditor();
+      }
+    };
+  });
+
+  // 3. Render Live Interactive SVG Flowchart Preview
+  const draftFlow = buildFlowFromBackpackDraft();
+  previewEl.innerHTML = renderClusteredCompanySvg(draftFlow.stages, draftFlow);
+  previewEl.querySelectorAll('.flow-svg-node').forEach((nodeEl, idx) => {
+    nodeEl.style.cursor = 'pointer';
+    nodeEl.onclick = () => {
+      if (draftFlow.stages[idx]) openExplodeModal(draftFlow.stages[idx]);
+    };
+  });
+}
+
+function initBackpack() {
+  loadBackpackState();
+  updateBackpackBadge();
+
+  const hoverSaveBtn = $('hoverPopoverSaveBackpackBtn');
+  if (hoverSaveBtn) {
+    hoverSaveBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (activeHoveredStage) {
+        saveStageToBackpack(activeHoveredStage);
+      }
+    };
+  }
+
+  const clearAllBtn = $('backpackClearAllBtn');
+  if (clearAllBtn) {
+    clearAllBtn.onclick = () => {
+      backpackItems = [];
+      persistBackpackState();
+      renderBackpackEditor();
+      toast.info('Backpack Cleared', 'All saved connections removed from your Backpack.');
+    };
+  }
+
+  const clearDraftBtn = $('backpackClearDraftBtn');
+  if (clearDraftBtn) {
+    clearDraftBtn.onclick = () => {
+      backpackDraft = [];
+      persistBackpackState();
+      renderBackpackEditor();
+    };
+  }
+
+  const loadToCanvasBtn = $('backpackLoadToCanvasBtn');
+  if (loadToCanvasBtn) {
+    loadToCanvasBtn.onclick = () => {
+      if (!backpackDraft.length) {
+        toast.info('Empty Flow', 'Add at least one saved stage to your flow sequence first.');
+        return;
+      }
+      const draftFlow = buildFlowFromBackpackDraft();
+      currentCompanyFlowData = draftFlow;
+      renderCompanyFlow(draftFlow);
+      if (window.switchStudioView) window.switchStudioView('canvas');
+      toast.success('Custom Flow Loaded', `Opened "${draftFlow.title}" on the Strategy Canvas.`);
+    };
+  }
+}
+
 // Initial boot
 try {
   const data = JSON.parse(localStorage.getItem('saas-strategy-flow-v1') || 'null');
@@ -3837,6 +4193,7 @@ initTheme();
 initSidebar();
 initEvidenceSheet();
 initCompanyFlow();
+initBackpack();
 updateLocalKPIs();
 run(false);
 
