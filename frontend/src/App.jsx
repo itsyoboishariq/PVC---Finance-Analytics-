@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import KPICards from './components/KPICards';
 import ChartsView from './components/ChartsView';
 import FinancialTableView from './components/FinancialTableView';
@@ -25,6 +25,29 @@ import {
   BarChart3,
   Table as TableIcon
 } from 'lucide-react';
+
+// Turns a FastAPI error response into one readable message. FastAPI returns
+// `detail` as a string for our own errors and as a list of field problems for
+// request validation errors (e.g. a churn rate above 100%).
+async function readErrorMessage(res) {
+  try {
+    const body = await res.json();
+    const detail = body?.detail;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+      return detail
+        .map((d) => {
+          const field = (d.loc || []).filter((p) => p !== 'body').join(' > ');
+          const msg = String(d.msg || 'Invalid value').replace(/^Value error, /, '');
+          return field ? `${field}: ${msg}` : msg;
+        })
+        .join(' ');
+    }
+  } catch {
+    // Response wasn't JSON; fall through to the status code.
+  }
+  return `Server error (${res.status})`;
+}
 
 export default function App() {
   // Application State
@@ -124,8 +147,15 @@ export default function App() {
   };
 
   // 2. Run Financial Calculation
+  // Every edit fires a new request, and responses can arrive out of order.
+  // Each request takes a number; only the newest one may update the screen,
+  // so a slow, older response can't overwrite newer results.
+  const latestCalcRequest = useRef(0);
+
   const runCalculation = async (newAssumptions = assumptions) => {
     if (!newAssumptions) return;
+    const requestId = ++latestCalcRequest.current;
+    const isLatest = () => requestId === latestCalcRequest.current;
     setCalculating(true);
     setErrorMessage(null);
     try {
@@ -136,18 +166,19 @@ export default function App() {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || `Server error (${res.status})`);
+        throw new Error(await readErrorMessage(res));
       }
 
       const calcData = await res.json();
+      if (!isLatest()) return;
       setCalculationResults(calcData);
       setServerOnline(true);
     } catch (err) {
+      if (!isLatest()) return;
       console.error('Calculation error:', err);
-      setErrorMessage(`Calculation error: ${err.message}`);
+      setErrorMessage(`Couldn't recalculate: ${err.message}`);
     } finally {
-      setCalculating(false);
+      if (isLatest()) setCalculating(false);
     }
   };
 
@@ -169,7 +200,9 @@ export default function App() {
   };
 
   // 5. Scenario Actions
+  // Returns true if the scenario was saved, false if it was refused.
   const handleSaveScenario = async (name, description) => {
+    setErrorMessage(null);
     const payload = {
       name,
       description,
@@ -185,8 +218,12 @@ export default function App() {
         const saved = await res.json();
         setActiveScenarioName(saved.name);
         fetchScenarios(savedScenarios[0]);
-        return;
+        return true;
       }
+      // The server answered but refused (e.g. tier shares don't add up to
+      // 100%). Show why instead of quietly saving a local copy.
+      setErrorMessage(await readErrorMessage(res));
+      return false;
     } catch (e) {
       console.warn('Backend save failed, saving to localStorage');
     }
@@ -203,6 +240,7 @@ export default function App() {
     setSavedScenarios(updated);
     localStorage.setItem('startup_models_scenarios', JSON.stringify(updated));
     setActiveScenarioName(name);
+    return true;
   };
 
   const handleLoadScenario = async (id) => {
@@ -237,50 +275,56 @@ export default function App() {
     }
   };
 
+  // Duplicates the scenario the user picked (not whatever is currently
+  // active) by reading its saved assumptions and saving them under a new name.
+  // The active scenario and the original are left untouched.
   const handleDuplicateScenario = async (id) => {
     const target = savedScenarios.find(s => s.id === id);
     if (!target) return;
+    setErrorMessage(null);
 
-    // Fetch full scenario data from backend (including assumptions)
-    let scenarioData = target; // fallback to local copy
+    let source = target.assumptions ? target : null; // local-only scenarios carry their assumptions
     try {
-      const res = await fetch(`/api/scenarios/${id}`);
+      const res = await fetch(`/api/scenarios/${encodeURIComponent(id)}`);
       if (res.ok) {
-        scenarioData = await res.json();
-      }
-    } catch (e) {
-      console.warn('Backend fetch for duplication failed, using local copy');
-    }
-
-    const dupName = `${scenarioData.name} (Copy)`;
-    // Directly POST a new scenario with the same assumptions
-    const payload = {
-      name: dupName,
-      description: scenarioData.description || '',
-      assumptions: scenarioData.assumptions || target.assumptions || {},
-    };
-    try {
-      const dupRes = await fetch('/api/scenarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (dupRes.ok) {
-        // Refresh the scenario list from backend
-        const listRes = await fetch('/api/scenarios');
-        if (listRes.ok) {
-          const list = await listRes.json();
-          setSavedScenarios(list);
-        }
+        source = await res.json();
+      } else if (!source) {
+        setErrorMessage(`Couldn't duplicate "${target.name}": ${await readErrorMessage(res)}`);
         return;
       }
     } catch (e) {
-      console.warn('Backend duplicate failed');
+      if (!source) {
+        setErrorMessage(`Couldn't duplicate "${target.name}": the server is unreachable.`);
+        return;
+      }
     }
-    // Fallback: use existing client-side save (may duplicate current assumptions)
-    handleSaveScenario(dupName, scenarioData.description || '');
-  };
 
+    const copy = {
+      name: `${source.name} (Copy)`,
+      description: source.description || '',
+      assumptions: source.assumptions,
+    };
+    try {
+      const res = await fetch('/api/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(copy),
+      });
+      if (res.ok) {
+        // Refresh the list, keeping the built-in baseline entry at the top.
+        await fetchScenarios(savedScenarios.find(s => s.id === 'baseline'));
+        return;
+      }
+      setErrorMessage(`Couldn't duplicate "${target.name}": ${await readErrorMessage(res)}`);
+      return;
+    } catch (e) {
+      // Server unreachable: keep the copy in this browser, like other scenario saves do.
+      const local = { ...copy, id: 'sc_' + Date.now(), summary_kpis: source.summary_kpis };
+      const updated = [local, ...savedScenarios];
+      setSavedScenarios(updated);
+      localStorage.setItem('startup_models_scenarios', JSON.stringify(updated));
+    }
+  };
 
   const handleDeleteScenario = async (id) => {
     if (id === 'baseline') return;
@@ -346,7 +390,7 @@ export default function App() {
               <TrendingUp size={18} color="#fff" />
             </div>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff' }}>
-              Startup Financial Models <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#60a5fa', background: 'rgba(59,130,246,0.12)', padding: '2px 8px', borderRadius: '4px', marginLeft: '6px', border: '1px solid rgba(59,130,246,0.3)' }}>Excel Parity 100%</span>
+              Startup Financial Models <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#60a5fa', background: 'rgba(59,130,246,0.12)', padding: '2px 8px', borderRadius: '4px', marginLeft: '6px', border: '1px solid rgba(59,130,246,0.3)' }}>Excel-based model</span>
             </h1>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
@@ -437,6 +481,7 @@ export default function App() {
         summaryKPIs={calculationResults?.summary_kpis}
         baselineKPIs={baselineResults?.summary_kpis}
         weightedArpu={calculationResults?.weighted_arpu}
+        baselineWeightedArpu={baselineResults?.weighted_arpu}
         onInspectCell={setInspectorCell}
       />
 
@@ -547,6 +592,8 @@ export default function App() {
         onDeleteScenario={handleDeleteScenario}
         onRenameScenario={handleRenameScenario}
         activeScenarioName={activeScenarioName}
+        errorMessage={errorMessage}
+        onDismissError={() => setErrorMessage(null)}
       />
 
       <FormulaMapModal

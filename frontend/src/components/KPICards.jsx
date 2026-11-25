@@ -12,10 +12,12 @@ import { DollarSign, Users, TrendingUp, Percent, ArrowUpRight, ArrowDownRight, L
  *   • Header, value and baseline comparison are separated into distinct sections.
  *   • Existing functionality (cell inspection, colour coding, baseline diff) remains unchanged.
  */
-export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, onInspectCell }) {
+export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, baselineWeightedArpu, onInspectCell }) {
   if (!summaryKPIs) return null;
 
-  const displayArpu = (weightedArpu === undefined || weightedArpu === null) ? 'N/A' : weightedArpu;
+  // A real ARPU of $0 is valid and must show as $0.00; only a missing or
+  // non-numeric value (null, undefined, NaN, Infinity) shows as N/A.
+  const arpuAvailable = Number.isFinite(weightedArpu);
 
   const cards = [
     {
@@ -40,7 +42,7 @@ export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, onIn
       color: '#10b981',
       cellRef: 'Financial Model !N4',
       formula: '=SUM(C28:Y28)',
-      description: 'Cumulative active customer‑months across all 23 periods.'
+      description: 'Each month\'s active customers added up across all 23 months (one customer active for 3 months counts as 3). This is not the number of unique customers.'
     },
     {
       title: 'Total EBIT',
@@ -52,14 +54,14 @@ export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, onIn
       color: summaryKPIs.total_ebit_sum >= 0 ? '#34d399' : '#fb7185',
       cellRef: 'Financial Model !S9',
       formula: '=SUM(C56:Y56)',
-      description: 'Cumulative operating earnings (EBIT) across the full 23‑month horizon.'
+      description: 'Cumulative operating earnings (EBIT) across the full 23-month horizon.'
     },
     {
       title: 'Weighted ARPU',
-      // Display N/A for missing/null/undefined, show formatted value otherwise (including zero)
-      value: typeof displayArpu === 'string' ? displayArpu : formatCurrency(displayArpu, 2),
-      rawVal: weightedArpu,
-      baseVal: 14.0,
+      value: arpuAvailable ? formatCurrency(weightedArpu, 2) : 'N/A',
+      rawVal: arpuAvailable ? weightedArpu : null,
+      // Compare against the workbook baseline's own ARPU rather than a hardcoded number.
+      baseVal: Number.isFinite(baselineWeightedArpu) ? baselineWeightedArpu : undefined,
       format: (v) => formatCurrency(v, 2),
       icon: Layers,
       color: '#8b5cf6',
@@ -150,7 +152,8 @@ export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, onIn
   return (
     <div style={gridStyle}>
       {cards.map((card, i) => {
-        const diff = card.baseVal !== undefined ? card.rawVal - card.baseVal : 0;
+        const hasValue = Number.isFinite(card.rawVal);
+        const diff = hasValue && card.baseVal !== undefined ? card.rawVal - card.baseVal : 0;
         const diffPct = card.baseVal ? (diff / card.baseVal) * 100 : 0;
         const isModified = Math.abs(diff) > 1e-4;
         return (
@@ -182,7 +185,9 @@ export default function KPICards({ summaryKPIs, baselineKPIs, weightedArpu, onIn
 
             {/* Delta vs baseline */}
             <div style={deltaStyle}>
-              {isModified ? (
+              {!hasValue ? (
+                <span style={{ color: '#9ca3af' }}>No value available</span>
+              ) : isModified ? (
                 <>
                   <span style={{ color: diff >= 0 ? '#34d399' : '#fb7185', display: 'inline-flex', alignItems: 'center', fontWeight: 600 }}>
                     {diff >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Copy, Trash2, Edit2, Check, FolderOpen } from 'lucide-react';
+import { X, Save, Copy, Trash2, Edit2, Check, FolderOpen, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ScenarioManagerModal({
@@ -11,7 +11,9 @@ export default function ScenarioManagerModal({
   onDuplicateScenario,
   onDeleteScenario,
   onRenameScenario,
-  activeScenarioName
+  activeScenarioName,
+  errorMessage,
+  onDismissError
 }) {
   const [newScenarioName, setNewScenarioName] = useState('');
   const [newScenarioDesc, setNewScenarioDesc] = useState('');
@@ -20,12 +22,15 @@ export default function ScenarioManagerModal({
 
   if (!isOpen) return null;
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!newScenarioName.trim()) return;
-    onSaveScenario(newScenarioName.trim(), newScenarioDesc.trim());
-    setNewScenarioName('');
-    setNewScenarioDesc('');
+    const saved = await onSaveScenario(newScenarioName.trim(), newScenarioDesc.trim());
+    // Keep what the user typed if the save was refused, so they can fix and retry.
+    if (saved) {
+      setNewScenarioName('');
+      setNewScenarioDesc('');
+    }
   };
 
   const handleStartRename = (sc) => {
@@ -58,6 +63,14 @@ export default function ScenarioManagerModal({
 
         {/* Body */}
         <div style={{ padding: '20px' }}>
+          {/* Errors from save/duplicate, shown here because the page banner sits behind this window */}
+          {errorMessage && (
+            <div role="alert" style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#fca5a5', fontSize: '0.85rem' }}>
+              <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div style={{ flex: 1 }}>{errorMessage}</div>
+              <button type="button" onClick={onDismissError} aria-label="Dismiss error" style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer' }}>✕</button>
+            </div>
+          )}
           {/* Create New Scenario Form */}
           <form onSubmit={handleSave} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#60a5fa', marginBottom: '10px' }}>
