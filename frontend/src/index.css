@@ -470,3 +470,9 @@ body {
   height: 2px;
   border-radius: 1px;
 }
+
+/* ---- Scenario comparison ---- */
+.compare-table td:first-child { font-weight: 500; color: var(--text-secondary); }
+.compare-table th { text-transform: none; letter-spacing: 0; font-size: 0.8rem; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

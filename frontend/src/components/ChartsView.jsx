@@ -163,7 +163,7 @@ function monthName(m) {
 /* Rendering                                                                 */
 /* ------------------------------------------------------------------------ */
 
-function Chart({ spec, months }) {
+export function Chart({ spec, months }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(900);
   const [hover, setHover] = useState(null);
@@ -356,7 +356,7 @@ function Tooltip({ spec, month, x, width }) {
   );
 }
 
-function Legend({ series }) {
+export function Legend({ series }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-2)', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
       {series.map(s => (

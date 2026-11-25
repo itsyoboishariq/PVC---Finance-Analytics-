@@ -566,6 +566,8 @@ export default function App() {
           baselineResults={baselineResults}
           activeAssumptions={assumptions}
           baselineAssumptions={baselineAssumptions}
+          activeScenarioName={activeScenarioName}
+          savedScenarios={savedScenarios}
         />
       )}
 
