@@ -1829,7 +1829,10 @@ async function initCompanyFlow() {
       viewCanvasBtn?.classList.remove('active');
       viewDashboardBtn?.classList.remove('active');
       viewDiligenceBtn?.classList.add('active');
-      if (breadcrumb) breadcrumb.textContent = 'Diligence & Cases (40/30/20/10)';
+      if (breadcrumb) breadcrumb.textContent = 'Commercial Diligence';
+      // Collapse main canvas sidebar so Diligence gets full screen
+      const appSidebar = $('appSidebar');
+      if (appSidebar) appSidebar.setAttribute('data-state', 'collapsed');
       initCommercialDiligence();
     } else {
       if (canvasCard) canvasCard.style.display = 'flex';
@@ -2301,20 +2304,47 @@ async function initCommercialDiligence() {
     };
   });
 
-  // Pillar Tab Navigation
+  // Pillar Tab Navigation (synced with Agent Advisor "What do you need?" sidebar)
+  function activateDiligencePillar(tabId) {
+    activePillarTab = tabId;
+    document.querySelectorAll('.diligence-pillar-btn').forEach(b => b.classList.toggle('active', b.dataset.pillarTab === tabId));
+    document.querySelectorAll('.advisor-need-btn').forEach(b => b.classList.toggle('active', b.dataset.advisorPillar === tabId));
+    document.querySelectorAll('.diligence-panel').forEach(p => {
+      p.style.display = p.id === tabId ? 'flex' : 'none';
+    });
+    if (tabId === 'pillar-pitchbook') {
+      executePitchbookQuery();
+    }
+  }
+
   document.querySelectorAll('.diligence-pillar-btn').forEach(btn => {
-    btn.onclick = () => {
-      const tabId = btn.dataset.pillarTab;
-      activePillarTab = tabId;
-      document.querySelectorAll('.diligence-pillar-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.diligence-panel').forEach(p => {
-        p.style.display = p.id === tabId ? 'flex' : 'none';
-      });
-      if (tabId === 'pillar-pitchbook') {
-        executePitchbookQuery();
-      }
-    };
+    btn.onclick = () => activateDiligencePillar(btn.dataset.pillarTab);
   });
+
+  document.querySelectorAll('.advisor-need-btn').forEach(btn => {
+    btn.onclick = () => activateDiligencePillar(btn.dataset.advisorPillar);
+  });
+
+  // Agent Advisor Sidebar Toggle
+  const advisorSidebar = $('diligenceAdvisorSidebar');
+  const toggleAdvisorBtn = $('toggleDiligenceAdvisorBtn');
+  const closeAdvisorBtn = $('closeDiligenceAdvisorBtn');
+
+  function setAdvisorOpen(isOpen) {
+    if (!advisorSidebar) return;
+    advisorSidebar.style.display = isOpen ? 'flex' : 'none';
+    if (toggleAdvisorBtn) toggleAdvisorBtn.classList.toggle('active', isOpen);
+  }
+
+  if (toggleAdvisorBtn) {
+    toggleAdvisorBtn.onclick = () => {
+      const isHidden = advisorSidebar && advisorSidebar.style.display === 'none';
+      setAdvisorOpen(isHidden);
+    };
+  }
+  if (closeAdvisorBtn) {
+    closeAdvisorBtn.onclick = () => setAdvisorOpen(false);
+  }
 
   // Slide Deck Navigation
   const prevBtn = $('deckPrevSlideBtn');

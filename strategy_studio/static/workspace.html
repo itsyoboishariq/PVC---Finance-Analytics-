@@ -718,78 +718,100 @@
                CORPORATE STRATEGY, MARKET SIZING & COMMERCIAL DILIGENCE STUDIO (40/30/20/10)
                ========================================================================== -->
           <section id="commercialDiligenceView" class="commercial-diligence-studio" style="display:none;">
-            <!-- Diligence Header Banner -->
+            <!-- Sleek Diligence Header Banner -->
             <div class="diligence-header-strip">
-              <div>
-                <div class="inspector-badge-strip" style="margin-bottom:6px;">
-                  <span class="inspector-phase-badge" style="background:#0f172a; color:#f8fafc;">VENTURE & CORP DEV OS</span>
-                  <span class="inspector-kpi-badge">Market Sizing 40%</span>
-                  <span class="inspector-kpi-badge">Screening 30%</span>
-                  <span class="inspector-kpi-badge">Financial Model 20%</span>
-                  <span class="inspector-kpi-badge badge-green">Slide Decks 10%</span>
-                </div>
-                <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; letter-spacing:-0.4px;">
-                  Commercial Diligence, Target Screening & Business Case Studio
+              <div class="diligence-header-title-block">
+                <div class="diligence-eyebrow">COMMERCIAL DILIGENCE &amp; INVESTMENT STUDIO</div>
+                <h2 class="diligence-main-title">
+                  Market Sizing, Target Screening &amp; Business Case
                 </h2>
-                <p style="font-size:12.5px; color:var(--text-muted); margin:0;" id="diligenceHeaderSub">
-                  Research TAM, evaluate regulatory moats, screen PitchBook targets, model 3–5 year Free Cash Flow, and generate presentation slide decks.
+                <p class="diligence-main-sub" id="diligenceHeaderSub">
+                  Research TAM, evaluate regulatory moats, screen PitchBook targets, and model 5-year Free Cash Flow.
                 </p>
               </div>
 
-              <!-- Quick Space Switcher Chips -->
-              <div class="diligence-spaces-chips">
-                <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">SPACES:</span>
-                <button type="button" class="diligence-space-chip active" data-space-id="prediction-markets">
-                  🎯 Prediction Markets
-                </button>
-                <button type="button" class="diligence-space-chip" data-space-id="retail-derivatives">
-                  📈 Retail Derivatives
-                </button>
-                <button type="button" class="diligence-space-chip" data-space-id="international-clearing">
-                  🌐 International Clearing
+              <!-- Quick Space Switcher Chips & Agent Advisor Toggle -->
+              <div class="diligence-header-controls">
+                <div class="diligence-spaces-chips">
+                  <button type="button" class="diligence-space-chip active" data-space-id="prediction-markets">
+                    🎯 Prediction Markets
+                  </button>
+                  <button type="button" class="diligence-space-chip" data-space-id="retail-derivatives">
+                    📈 Retail Derivatives
+                  </button>
+                  <button type="button" class="diligence-space-chip" data-space-id="international-clearing">
+                    🌐 International Clearing
+                  </button>
+                </div>
+                <button type="button" id="toggleDiligenceAdvisorBtn" class="btn diligence-advisor-toggle-btn active" title="Toggle Agent Advisor Sidebar">
+                  <span class="sparkle">✦</span>
+                  <span>Agent Advisor</span>
                 </button>
               </div>
             </div>
 
-            <!-- Two-Column Master Layout: Guiding Copilot (Left) + 4-Pillar Workspace (Right) -->
-            <div class="diligence-layout-split">
+            <!-- Master Layout: Full-Screen Workspace + Dedicated Agent Advisor Sidebar -->
+            <div class="diligence-layout-split" id="diligenceLayoutSplit">
               
-              <!-- LEFT COLUMN: STRATEGY & DILIGENCE GUIDING COPILOT -->
-              <div class="diligence-copilot-pane">
+              <!-- DEDICATED AGENT ADVISOR SIDEBAR -->
+              <aside class="diligence-copilot-pane" id="diligenceAdvisorSidebar">
                 <div class="copilot-card-header">
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="ai-sparkle-pill" style="padding:3px 8px;">
+                    <div class="ai-sparkle-pill" style="padding:4px 10px;">
                       <span class="sparkle">✦</span>
                       <span class="sparkle-text">Agent Advisor</span>
                     </div>
-                    <span style="font-size:13px; font-weight:700; color:var(--text-main);">Guiding Strategy Interview</span>
+                    <span class="copilot-status-dot" title="Agent Active"></span>
                   </div>
-                  <span class="copilot-status-dot" title="Agent Active"></span>
+                  <button type="button" id="closeDiligenceAdvisorBtn" class="icon-trigger-btn" title="Collapse Agent Advisor">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
                 </div>
 
-                <div class="copilot-instruction-box">
-                  <p style="font-size:12px; color:var(--text-muted); margin:0; line-height:1.45;">
-                    Answer the guiding questions below to calibrate the commercial thesis, PitchBook target screening criteria, and 5-year financial model based on your company type and available data.
-                  </p>
+                <!-- Quick "What do you need?" Selector -->
+                <div class="advisor-needs-section">
+                  <div class="advisor-section-label">WHAT DO YOU NEED?</div>
+                  <div class="advisor-needs-grid">
+                    <button type="button" class="advisor-need-btn active" data-advisor-pillar="pillar-tam">
+                      <span class="need-icon">🌐</span>
+                      <span>Market Sizing &amp; TAM</span>
+                    </button>
+                    <button type="button" class="advisor-need-btn" data-advisor-pillar="pillar-screening">
+                      <span class="need-icon">🎯</span>
+                      <span>Target &amp; M&amp;A Screening</span>
+                    </button>
+                    <button type="button" class="advisor-need-btn" data-advisor-pillar="pillar-model">
+                      <span class="need-icon">📊</span>
+                      <span>5-Yr FCF &amp; Financials</span>
+                    </button>
+                    <button type="button" class="advisor-need-btn" data-advisor-pillar="pillar-deck">
+                      <span class="need-icon">📑</span>
+                      <span>Executive Slide Deck</span>
+                    </button>
+                    <button type="button" class="advisor-need-btn" data-advisor-pillar="pillar-pitchbook">
+                      <span class="need-icon">🔌</span>
+                      <span>PitchBook Live Data</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Guided Questions Container (Dynamic) -->
-                <div class="copilot-questions-list" id="copilotQuestionsList">
-                  <!-- Loaded via JS -->
+                <div class="advisor-interview-wrap">
+                  <div class="advisor-section-label">CALIBRATE THESIS</div>
+                  <div class="copilot-questions-list" id="copilotQuestionsList">
+                    <!-- Loaded via JS -->
+                  </div>
                 </div>
 
                 <!-- Run Synthesis CTA -->
-                <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
-                  <button type="button" class="btn primary" id="runDiligenceSynthesisBtn" style="width:100%; font-size:13px; padding:10px; font-weight:700;">
-                    ⚡ Synthesize Full Business Case (40/30/20/10) →
+                <div class="advisor-footer-cta">
+                  <button type="button" class="btn primary" id="runDiligenceSynthesisBtn" style="width:100%; font-size:14px; padding:12px; font-weight:700;">
+                    ⚡ Synthesize Business Case →
                   </button>
-                  <p style="font-size:11px; color:var(--text-dim); text-align:center; margin:6px 0 0;">
-                    Recalculates TAM waterfall, PitchBook screening, 5-Yr FCF & Slide Deck
-                  </p>
                 </div>
-              </div>
+              </aside>
 
-              <!-- RIGHT COLUMN: 4-PILLAR WORKSPACE & PITCHBOOK EXPLORER -->
+              <!-- FULL-SCREEN READING WORKSPACE -->
               <div class="diligence-workspace-pane">
                 <!-- Pillar Tabs Navigation Strip -->
                 <div class="diligence-pillar-nav">
