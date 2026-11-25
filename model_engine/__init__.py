@@ -3,6 +3,7 @@ Model Engine Package
 """
 from .schema import (
     ModelAssumptions,
+    SavedScenarioAssumptions,
     PricingTierInput,
     PricingTiersInput,
     COGSInput,
@@ -18,6 +19,7 @@ from .defaults import get_default_assumptions, get_raw_defaults, get_periods_def
 
 __all__ = [
     "ModelAssumptions",
+    "SavedScenarioAssumptions",
     "PricingTierInput",
     "PricingTiersInput",
     "COGSInput",

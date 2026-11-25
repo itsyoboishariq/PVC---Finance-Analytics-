@@ -24,16 +24,14 @@ class PricingTiersInput(BaseModel):
     pro: PricingTierInput
     enterprise: PricingTierInput
 
-    @model_validator(mode="after")
-    def check_sum_pct(self):
-        # Ensure trial, pro, enterprise percentages sum to approx 1.0 (tolerance 0.001)
-        trial = self.trial.customer_pct
-        pro = self.pro.customer_pct
-        enterprise = self.enterprise.customer_pct
-        total = trial + pro + enterprise
-        if abs(total - 1.0) > 0.001:
-            raise ValueError(f"Pricing tier allocations must sum to 1.0 (100%); got {total:.4f}")
-        return self
+    def allocation_total(self) -> float:
+        return self.trial.customer_pct + self.pro.customer_pct + self.enterprise.customer_pct
+
+
+# The editor accepts tier shares in 0.1% steps, so any real mistake is off by
+# at least 0.001. Half a step absorbs floating-point noise (e.g. 0.6+0.3+0.1)
+# while still rejecting a sum of 99.9% or 100.1%.
+TIER_ALLOCATION_TOLERANCE = 0.0005
 
 
 class COGSInput(BaseModel):
@@ -78,6 +76,27 @@ class ModelAssumptions(BaseModel):
     opex: List[OPEXItemInput]
     monthly_leads: Dict[str, float] = Field(..., description="Map of column letter to lead count (C..Y)")
     leads_list: Optional[List[LeadItem]] = Field(default_factory=list)
+
+
+class SavedScenarioAssumptions(ModelAssumptions):
+    """
+    Stricter assumptions used when a scenario is saved.
+
+    Live calculations accept tier shares that don't add up to 100% so the
+    editor keeps working while the user rebalances them one field at a time
+    (it shows a warning instead). A saved scenario must be a complete
+    customer distribution, so it is checked here.
+    """
+
+    @model_validator(mode="after")
+    def check_tier_allocation(self):
+        total = self.pricing_tiers.allocation_total()
+        if abs(total - 1.0) > TIER_ALLOCATION_TOLERANCE:
+            raise ValueError(
+                f"Trial, Pro and Enterprise customer shares must add up to 100% "
+                f"(they currently add up to {total * 100:.1f}%)."
+            )
+        return self
 
 
 class MonthlyResult(BaseModel):

@@ -10,12 +10,6 @@ from typing import Dict, List, Any, Optional
 
 import re
 from fastapi import FastAPI, HTTPException, status
-
-def validate_scenario_id(scenario_id: str):
-    # Allow only standard UUID format (hex digits and hyphens)
-    if not re.fullmatch(r"[0-9a-fA-F-]{36}", scenario_id):
-        raise HTTPException(status_code=400, detail="Invalid scenario ID format")
-
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +17,7 @@ from pydantic import ValidationError
 
 from model_engine import (
     ModelAssumptions,
+    SavedScenarioAssumptions,
     ModelCalculationResponse,
     run_financial_model,
     get_default_assumptions,
@@ -48,6 +43,36 @@ BASE_DIR = Path(__file__).parent.parent
 SCENARIOS_DIR = BASE_DIR / "scenarios"
 SCENARIOS_DIR.mkdir(parents=True, exist_ok=True)
 FRONTEND_DIST_DIR = BASE_DIR / "frontend" / "dist"
+
+# Scenario IDs become file names, so only allow plain names: letters, digits,
+# "_" and "-". This covers generated UUIDs and the hand-named sample scenarios
+# (e.g. "conservative_bootstrapping") while ruling out "/", "\\", ".." etc.
+SCENARIO_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,64}")
+
+
+def scenario_file_path(scenario_id: str) -> Path:
+    """Returns the JSON file for a scenario ID, rejecting anything unsafe."""
+    if not isinstance(scenario_id, str) or not SCENARIO_ID_PATTERN.fullmatch(scenario_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid scenario ID. Use only letters, numbers, '_' and '-'.",
+        )
+    scenarios_root = SCENARIOS_DIR.resolve()
+    file_path = (scenarios_root / f"{scenario_id}.json").resolve()
+    # Belt and braces: the resolved file must still sit directly in the scenarios folder.
+    if file_path.parent != scenarios_root:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid scenario ID.")
+    return file_path
+
+
+def format_validation_errors(error: ValidationError) -> str:
+    """Turns Pydantic errors into one readable sentence per problem."""
+    messages = []
+    for err in error.errors():
+        msg = err.get("msg", "Invalid value").removeprefix("Value error, ")
+        field = " > ".join(str(part) for part in err.get("loc", ()) if part != "body")
+        messages.append(f"{field}: {msg}" if field else msg)
+    return " ".join(messages)
 
 
 # 1. Health Endpoint
@@ -131,7 +156,7 @@ def save_scenario(payload: Dict[str, Any]):
     """
     name = payload.get("name", "Untitled Scenario").strip()
     scenario_id = payload.get("id") or str(uuid.uuid4())
-    validate_scenario_id(scenario_id)
+    file_path = scenario_file_path(scenario_id)
     assumptions_dict = payload.get("assumptions")
     description = payload.get("description", "")
     
@@ -143,12 +168,12 @@ def save_scenario(payload: Dict[str, Any]):
         
     try:
         # Validate assumptions with engine schema
-        assumptions = ModelAssumptions(**assumptions_dict)
+        assumptions = SavedScenarioAssumptions(**assumptions_dict)
         results = run_financial_model(assumptions)
     except ValidationError as ve:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid assumption values: {ve.errors()}"
+            detail=f"Scenario not saved. {format_validation_errors(ve)}"
         )
     except Exception as e:
         raise HTTPException(
@@ -169,7 +194,6 @@ def save_scenario(payload: Dict[str, Any]):
         "summary_kpis": results.summary_kpis.model_dump()
     }
     
-    file_path = SCENARIOS_DIR / f"{scenario_id}.json"
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(scenario_data, f, indent=2)
         
@@ -178,9 +202,8 @@ def save_scenario(payload: Dict[str, Any]):
 
 @app.get("/api/scenarios/{scenario_id}")
 def get_scenario(scenario_id: str):
-    validate_scenario_id(scenario_id)
     """Retrieves full scenario details by ID."""
-    file_path = SCENARIOS_DIR / f"{scenario_id}.json"
+    file_path = scenario_file_path(scenario_id)
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found.")
     try:
@@ -193,8 +216,7 @@ def get_scenario(scenario_id: str):
 @app.delete("/api/scenarios/{scenario_id}")
 def delete_scenario(scenario_id: str):
     """Deletes a saved scenario."""
-    validate_scenario_id(scenario_id)
-    file_path = SCENARIOS_DIR / f"{scenario_id}.json"
+    file_path = scenario_file_path(scenario_id)
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found.")
     try:
