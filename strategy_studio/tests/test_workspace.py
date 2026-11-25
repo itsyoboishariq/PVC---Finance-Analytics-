@@ -22,3 +22,12 @@ class WorkspaceTests(unittest.TestCase):
   self.assertEqual(r2.status_code,200);d2=r2.json();self.assertTrue(any(s.get('is_branch') for s in d2['stages']))
   r3=c.post('/api/strategy/extend-flow',json={'action':'build','model_type':'rule_40_moat','company_ticker':'CRWD'})
   self.assertEqual(r3.status_code,200);d3=r3.json();self.assertTrue(len(d3['stages'])>=3)
+ def test_backpack_recommend_endpoint(self):
+  c=TestClient(app)
+  r=c.post('/api/strategy/backpack-recommend',json={'backpack_items':[],'objective':'rule40'})
+  self.assertEqual(r.status_code,200);d=r.json()
+  self.assertTrue(len(d['recommended_additions'])>=1)
+  self.assertTrue(len(d['assembled_sequence'])>=1)
+  self.assertGreater(d['benchmarks']['companies_count'],0)
+  r2=c.post('/api/strategy/backpack-recommend',json={'backpack_items':[{'ticker':'DDOG','year':'FY2019','revenue':362e6,'sales_marketing_ratio':0.40,'rd_ratio':0.30,'growth':0.83,'rule_of_40':77.6}],'objective':'growth'})
+  self.assertEqual(r2.status_code,200);self.assertTrue(len(r2.json()['diagnosis'])>=1)

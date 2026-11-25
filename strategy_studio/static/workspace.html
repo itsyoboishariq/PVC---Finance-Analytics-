@@ -1062,8 +1062,41 @@
                 </div>
               </aside>
 
-              <!-- Right Column: Custom Flow Sequence Composer & Live Preview -->
+              <!-- Right Column: Agent Assembly Assistant + Sequence Composer & Live Preview -->
               <div class="backpack-composer-pane">
+                <!-- Agent Assembly & Dataset Recommendations Panel -->
+                <div class="backpack-agent-panel" id="backpackAgentPanel">
+                  <div class="bp-agent-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="copilot-pulsing-dot"></span>
+                      <span style="font-size:13px; font-weight:800; letter-spacing:0.3px;">✦ AGENT FLOW ASSEMBLER &amp; DATASET RECOMMENDATIONS</span>
+                      <span class="badge-subtle" id="backpackDatasetBadge">99 Companies · 1,036 SEC Periods</span>
+                    </div>
+                    <div class="bp-agent-controls">
+                      <select id="backpackRecObjective" class="flowchart-select" style="font-size:12px; padding:5px 10px;">
+                        <option value="rule40" selected>🎯 Optimize: Balanced Rule of 40</option>
+                        <option value="growth">🚀 Optimize: Aggressive Growth</option>
+                        <option value="moat">🔬 Optimize: Tech Moat (R&amp;D)</option>
+                        <option value="fcf">💰 Optimize: FCF &amp; Margin Leverage</option>
+                      </select>
+                      <button type="button" id="backpackRecommendBtn" class="btn secondary" style="font-size:12px; padding:6px 12px; font-weight:700;">
+                        ↻ Analyze Backpack
+                      </button>
+                      <button type="button" id="backpackAutoAssembleBtn" class="btn primary" style="font-size:12px; padding:6px 14px; font-weight:700;">
+                        ⚡ Auto-Assemble Best Flow
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="bp-agent-diagnosis" id="backpackAgentDiagnosis">
+                    Analyzing your Backpack against SEC 10-K benchmarks...
+                  </div>
+
+                  <div class="bp-rec-cards-grid" id="backpackRecCardsGrid">
+                    <!-- Recommended next stages from existing SEC data -->
+                  </div>
+                </div>
+
                 <div class="backpack-composer-bar">
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                     <span style="font-size:12px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted);">

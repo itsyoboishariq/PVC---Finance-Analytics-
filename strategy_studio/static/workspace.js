@@ -1859,6 +1859,7 @@ async function initCompanyFlow() {
       const appSidebar = $('appSidebar');
       if (appSidebar) appSidebar.setAttribute('data-state', 'collapsed');
       renderBackpackEditor();
+      fetchBackpackRecommendations(false);
     } else {
       if (canvasCard) canvasCard.style.display = 'flex';
       if (dashView) dashView.style.display = 'none';
@@ -4130,9 +4131,100 @@ function renderBackpackEditor() {
   });
 }
 
+let latestBackpackRecommendation = null;
+
+async function fetchBackpackRecommendations(autoAssemble = false) {
+  const diagEl = $('backpackAgentDiagnosis');
+  const gridEl = $('backpackRecCardsGrid');
+  const objective = $('backpackRecObjective')?.value || 'rule40';
+  if (diagEl) diagEl.innerHTML = '<span>⏳ Analyzing Backpack against SEC 10-K dataset...</span>';
+
+  try {
+    const res = await fetch('/api/strategy/backpack-recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        backpack_items: backpackItems,
+        draft_items: backpackDraft,
+        objective
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    latestBackpackRecommendation = data;
+
+    if ($('backpackDatasetBadge') && data.benchmarks) {
+      $('backpackDatasetBadge').textContent = `${data.benchmarks.companies_count} Companies · Median R40 ${data.benchmarks.median_rule_of_40}`;
+    }
+
+    if (diagEl) {
+      diagEl.innerHTML = (data.diagnosis || []).map(p => `<div>• ${esc(p)}</div>`).join('');
+    }
+
+    if (gridEl) {
+      const recs = data.recommended_additions || [];
+      gridEl.innerHTML = recs.map((r, i) => `
+        <div class="bp-rec-card">
+          <div>
+            <div class="bp-rec-role">${esc(r.role_tag || 'RECOMMENDED STAGE')}</div>
+            <div class="bp-rec-title">${esc(r.ticker)} · ${esc(r.year)} (${esc(r.revenue_formatted)})</div>
+            <p class="bp-rec-reason">${esc(r.reason || r.phase_desc || '')}</p>
+          </div>
+          <button type="button" class="btn secondary bp-add-btn" data-rec-idx="${i}">
+            🎒 Save &amp; Add to Flow
+          </button>
+        </div>
+      `).join('');
+
+      gridEl.querySelectorAll('[data-rec-idx]').forEach(btn => {
+        btn.onclick = () => {
+          const rec = recs[parseInt(btn.dataset.recIdx, 10)];
+          if (!rec) return;
+          if (!backpackItems.some(x => x.ticker === rec.ticker && x.year === rec.year)) {
+            backpackItems.unshift({ ...rec, uid: `bp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` });
+          }
+          backpackDraft.push({ ...rec, draft_uid: `dr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, is_branch: false });
+          persistBackpackState();
+          renderBackpackEditor();
+          fetchBackpackRecommendations(false);
+          toast.success('Added Recommended Stage', `${rec.ticker} · ${rec.year} added to your flow.`);
+        };
+      });
+    }
+
+    if (autoAssemble && data.assembled_sequence && data.assembled_sequence.length) {
+      backpackDraft = data.assembled_sequence.map((item, idx) => ({
+        ...item,
+        draft_uid: `dr_auto_${Date.now()}_${idx}`,
+        is_branch: Boolean(item.is_branch)
+      }));
+      data.assembled_sequence.forEach(item => {
+        if (!backpackItems.some(x => x.ticker === item.ticker && x.year === item.year)) {
+          backpackItems.push({ ...item, uid: item.uid || `bp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` });
+        }
+      });
+      persistBackpackState();
+      renderBackpackEditor();
+      toast.success('Flow Auto-Assembled ⚡', `Built a ${backpackDraft.length}-stage trajectory grounded in your Backpack and SEC data.`);
+    }
+  } catch (err) {
+    console.error('Backpack recommendation failed:', err);
+    if (diagEl) diagEl.innerHTML = `<span style="color:var(--destructive);">Could not load recommendations: ${esc(err.message)}</span>`;
+  }
+}
+
 function initBackpack() {
   loadBackpackState();
   updateBackpackBadge();
+
+  const recBtn = $('backpackRecommendBtn');
+  if (recBtn) recBtn.onclick = () => fetchBackpackRecommendations(false);
+
+  const recObj = $('backpackRecObjective');
+  if (recObj) recObj.onchange = () => fetchBackpackRecommendations(false);
+
+  const autoBtn = $('backpackAutoAssembleBtn');
+  if (autoBtn) autoBtn.onclick = () => fetchBackpackRecommendations(true);
 
   const hoverSaveBtn = $('hoverPopoverSaveBackpackBtn');
   if (hoverSaveBtn) {

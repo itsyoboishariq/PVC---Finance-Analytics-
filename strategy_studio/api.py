@@ -322,6 +322,18 @@ def make_app(db_path=DB):
             db_path=db_path
         )
 
+    @app.post('/api/strategy/backpack-recommend')
+    def backpack_recommend(body: dict = None):
+        import ai_flow
+        payload = body or {}
+        return ai_flow.recommend_backpack_flow(
+            backpack_items=payload.get('backpack_items', []),
+            draft_items=payload.get('draft_items', []),
+            objective=payload.get('objective', 'rule40'),
+            use_ai=bool(payload.get('use_ai', False)),
+            db_path=db_path
+        )
+
     @app.get('/api/ai/model-config')
     def get_model_config():
         import ai_flow

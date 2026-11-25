@@ -736,3 +736,199 @@ def extend_strategy_flow(action: str = 'append', model_type: str = 'enterprise_s
         'action': action
     }
 
+
+def recommend_backpack_flow(backpack_items: list = None, draft_items: list = None,
+                            objective: str = 'rule40', use_ai: bool = False, db_path=DB):
+    """Analyze the user's Backpack + existing SEC 10-K dataset to recommend flow assembly and next stages."""
+    import sqlite3
+    import statistics
+
+    items = list(backpack_items or [])
+    draft = list(draft_items or [])
+    active_pool = draft if draft else items
+    obj = (objective or 'rule40').lower()
+
+    existing_keys = {(str(x.get('ticker', '')).upper(), str(x.get('year', ''))) for x in items + draft}
+
+    # Query SEC 10-K dataset for empirical benchmarks and candidate stages
+    candidates = []
+    company_count = 0
+    period_count = 0
+    r40_vals = []
+    sm_vals = []
+    rd_vals = []
+
+    try:
+        with sqlite3.connect(db_path) as con:
+            con.row_factory = sqlite3.Row
+            company_count = con.execute("SELECT COUNT(*) FROM companies").fetchone()[0]
+            rows = con.execute(
+                """
+                SELECT c.ticker, c.name, p.period_end, p.fields_json
+                FROM periods p
+                JOIN companies c ON c.company_id = p.company_id
+                WHERE c.ticker IS NOT NULL
+                ORDER BY p.period_end DESC
+                """
+            ).fetchall()
+            period_count = len(rows)
+            for r in rows:
+                f = json.loads(r['fields_json'] or '{}')
+                rev = f.get('revenue')
+                gr = f.get('revenue_growth')
+                sm = f.get('sales_marketing_ratio')
+                rd = f.get('rd_ratio')
+                opm = f.get('operating_margin')
+                if rev is None or gr is None or sm is None or rd is None or opm is None:
+                    continue
+                if rev <= 0 or abs(gr) > 5 or sm <= 0 or sm > 2:
+                    continue
+                r40 = round((gr + opm) * 100, 1)
+                r40_vals.append(r40)
+                sm_vals.append(sm)
+                rd_vals.append(rd)
+                yr = f"FY{r['period_end'][:4]}"
+                candidates.append({
+                    'ticker': r['ticker'].upper(),
+                    'companyName': r['name'],
+                    'year': yr,
+                    'revenue': rev,
+                    'growth': gr,
+                    'sales_marketing_ratio': sm,
+                    'rd_ratio': rd,
+                    'operating_margin': opm,
+                    'rule_of_40': r40
+                })
+    except Exception:
+        pass
+
+    med_r40 = round(statistics.median(r40_vals), 1) if r40_vals else 42.0
+    med_sm = round(statistics.median(sm_vals) * 100, 1) if sm_vals else 38.0
+    med_rd = round(statistics.median(rd_vals) * 100, 1) if rd_vals else 24.0
+
+    # Analyze current backpack / draft composition
+    revs = [float(x.get('revenue') or 0) for x in active_pool if x.get('revenue')]
+    has_early = any(r < 50e6 for r in revs)
+    has_mid = any(50e6 <= r < 300e6 for r in revs)
+    has_late = any(r >= 300e6 for r in revs)
+
+    avg_sm = round(sum(float(x.get('sales_marketing_ratio') or 0.4) for x in active_pool) / len(active_pool) * 100, 1) if active_pool else None
+    avg_rd = round(sum(float(x.get('rd_ratio') or 0.25) for x in active_pool) / len(active_pool) * 100, 1) if active_pool else None
+    avg_r40 = round(sum(float(x.get('rule_of_40') or 50) for x in active_pool) / len(active_pool), 1) if active_pool else None
+
+    diagnosis_points = []
+    if not active_pool:
+        diagnosis_points.append(
+            f"Your Backpack is currently empty. Across {company_count or 99} SaaS companies ({period_count or 1036} SEC periods), median Rule of 40 is {med_r40} with {med_sm}% S&M and {med_rd}% R&D."
+        )
+        diagnosis_points.append(
+            "Recommendation: Start by assembling a 3-stage arc—an early high-growth wedge (<$50M ARR), a mid-market GTM scale engine ($50M–$300M), and an enterprise Rule of 40 compounder ($300M+)."
+        )
+    else:
+        tickers_used = sorted({str(x.get('ticker', 'SAAS')).upper() for x in active_pool})
+        diagnosis_points.append(
+            f"Analyzing {len(active_pool)} saved stage(s) from {', '.join(tickers_used)}: Avg S&M is {avg_sm}% (vs {med_sm}% dataset median), Avg R&D is {avg_rd}% (vs {med_rd}% median), and Avg Rule of 40 is {avg_r40}."
+        )
+        if not has_early:
+            diagnosis_points.append("Gap detected: Missing an early-stage traction wedge (<$50M ARR) to anchor initial go-to-market unit economics.")
+        elif not has_mid:
+            diagnosis_points.append("Gap detected: Missing a mid-scale expansion phase ($50M–$300M ARR) bridging initial PMF to enterprise scale.")
+        elif not has_late:
+            diagnosis_points.append("Gap detected: Missing a mature operating-leverage / FCF compounding phase ($300M+ ARR) to prove long-term Rule of 40 durability.")
+        else:
+            diagnosis_points.append("Strong full-arc coverage from early wedge through mature scale. You can branch an alternative moat or optimize S&M efficiency.")
+
+        if avg_sm is not None and avg_sm > med_sm + 6:
+            diagnosis_points.append(f"Dataset signal: Your saved S&M intensity ({avg_sm}%) runs above the {med_sm}% SaaS median—pair with a lower-S&M expansion/retention stage to protect operating margin.")
+
+    # Select tailored recommended additions from real SEC 10-K candidates
+    def _score_candidate(c):
+        if (c['ticker'], c['year']) in existing_keys:
+            return -1e9
+        score = c['rule_of_40']
+        if obj == 'growth':
+            score += c['growth'] * 80
+        elif obj == 'fcf':
+            score += c['operating_margin'] * 120 - c['sales_marketing_ratio'] * 40
+        elif obj == 'moat':
+            score += c['rd_ratio'] * 140 + c['growth'] * 30
+        else:  # rule40 balanced
+            score += c['rule_of_40'] * 1.2
+        return score
+
+    def _to_stage_card(c, reason, role_tag):
+        return {
+            'uid': f"rec_{c['ticker']}_{c['year']}",
+            'companyName': c['companyName'],
+            'ticker': c['ticker'],
+            'year': c['year'],
+            'phase_title': f"{c['companyName']} · {role_tag}",
+            'phase_desc': reason,
+            'revenue': c['revenue'],
+            'revenue_formatted': _money(c['revenue']),
+            'growth': c['growth'],
+            'growth_formatted': _pct(c['growth']),
+            'sales_marketing_ratio': c['sales_marketing_ratio'],
+            'sales_marketing_formatted': _pct(c['sales_marketing_ratio']),
+            'rd_ratio': c['rd_ratio'],
+            'rd_formatted': _pct(c['rd_ratio']),
+            'operating_margin': c['operating_margin'],
+            'operating_margin_formatted': _pct(c['operating_margin']),
+            'rule_of_40': c['rule_of_40'],
+            'role_tag': role_tag,
+            'reason': reason,
+            'strategic_why': {
+                'executive_summary': reason,
+                'sm_why': f"Observed SEC 10-K S&M at {_pct(c['sales_marketing_ratio'])} delivering {_pct(c['growth'])} YoY revenue growth.",
+                'rd_why': f"Observed SEC 10-K R&D reinvestment at {_pct(c['rd_ratio'])} supporting durable moat."
+            }
+        }
+
+    recommended_additions = []
+    used_tickers = set()
+
+    buckets = [
+        ("Early Wedge (<$50M)", lambda c: c['revenue'] < 50e6 and c['growth'] > 0.35, not has_early),
+        ("Scale Engine ($50M–$300M)", lambda c: 50e6 <= c['revenue'] < 300e6 and c['rule_of_40'] >= 35, not has_mid),
+        ("Rule of 40 Moat ($300M+)", lambda c: c['revenue'] >= 300e6 and c['rule_of_40'] >= 40, not has_late),
+    ]
+
+    # Prioritize missing buckets first, then top overall matches
+    ordered_buckets = sorted(buckets, key=lambda b: not b[2])
+    for role_tag, pred, is_missing in ordered_buckets:
+        pool = [c for c in candidates if pred(c) and c['ticker'] not in used_tickers and (c['ticker'], c['year']) not in existing_keys]
+        if not pool:
+            pool = [c for c in candidates if c['ticker'] not in used_tickers and (c['ticker'], c['year']) not in existing_keys]
+        if pool:
+            best = max(pool, key=_score_candidate)
+            used_tickers.add(best['ticker'])
+            gap_note = "Fills missing stage in your arc. " if is_missing else "Strong dataset peer match. "
+            reason = (
+                f"{gap_note}{best['companyName']} ({best['ticker']} {best['year']}) achieved {_money(best['revenue'])} ARR "
+                f"with {_pct(best['growth'])} growth, {_pct(best['sales_marketing_ratio'])} S&M, and Rule of 40 of {best['rule_of_40']}."
+            )
+            recommended_additions.append(_to_stage_card(best, reason, role_tag))
+
+    # Build sorted auto-assembled sequence from existing backpack items + top missing stage(s)
+    sorted_existing = sorted(items, key=lambda x: float(x.get('revenue') or 0))
+    assembled_sequence = list(sorted_existing)
+    if len(assembled_sequence) < 3:
+        needed = 3 - len(assembled_sequence)
+        for rec in recommended_additions[:needed]:
+            assembled_sequence.append(rec)
+        assembled_sequence.sort(key=lambda x: float(x.get('revenue') or 0))
+
+    return {
+        'objective': obj,
+        'diagnosis': diagnosis_points,
+        'benchmarks': {
+            'companies_count': company_count,
+            'periods_count': period_count,
+            'median_rule_of_40': med_r40,
+            'median_sm_pct': med_sm,
+            'median_rd_pct': med_rd,
+        },
+        'recommended_additions': recommended_additions[:3],
+        'assembled_sequence': assembled_sequence,
+    }
+
