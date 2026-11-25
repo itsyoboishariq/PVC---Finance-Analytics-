@@ -172,7 +172,7 @@ export function Chart({ spec, months }) {
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(entries => setWidth(Math.max(320, entries[0].contentRect.width)));
+    const ro = new ResizeObserver(entries => setWidth(Math.max(260, entries[0].contentRect.width)));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
