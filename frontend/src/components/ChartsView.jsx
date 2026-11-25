@@ -1,63 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
-export default function ChartsView({ monthlyResults }) {
-  const [activeChart, setActiveChart] = useState('revenue');
-  const [hoveredIdx, setHoveredIdx] = useState(null);
+/*
+ * Forecast charts, drawn as plain SVG.
+ *
+ * Every chart shares one hover layer: a crosshair snaps to the nearest month
+ * and a tooltip beside it lists every series for that month. The same readout
+ * works from the keyboard (focus the chart, then use the arrow keys).
+ * Colours come from the validated palette tokens in index.css and follow the
+ * series (Pro is always blue, Enterprise always orange, ...), never their order.
+ */
 
+const CHARTS = [
+  { id: 'profitability', label: 'Profitability' },
+  { id: 'revenue', label: 'Revenue by plan' },
+  { id: 'customers', label: 'Customer growth' },
+  { id: 'funnel', label: 'Acquisition funnel' },
+];
+
+const HEIGHT = 320;
+const PAD = { top: 24, right: 20, bottom: 36, left: 64 };
+
+export default function ChartsView({ monthlyResults }) {
+  const [activeChart, setActiveChart] = useState('profitability');
   if (!monthlyResults || monthlyResults.length === 0) return null;
 
-  // Chart Dimensions
-  const width = 850;
-  const height = 300;
-  const padding = { top: 20, right: 30, bottom: 40, left: 60 };
-  const innerW = width - padding.left - padding.right;
-  const innerH = height - padding.top - padding.bottom;
-
-  // Periods
-  const count = monthlyResults.length;
-  const stepX = innerW / count;
-
-  // Helper for max
-  const maxRev = Math.max(...monthlyResults.map(m => m.total_mrr), 100);
-  const maxCust = Math.max(...monthlyResults.map(m => m.ending_active_customers), 20);
-  const minEbit = Math.min(...monthlyResults.map(m => m.ebit), -200);
-  const maxEbit = Math.max(...monthlyResults.map(m => m.ebit), 400);
+  const spec = buildSpec(activeChart, monthlyResults);
 
   return (
-    <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="glass-panel" style={{ padding: 'var(--space-5)', marginBottom: 'var(--space-5)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-            Financial Performance & Trajectory Visualizations
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Dynamic charts reflecting workbook assumptions across all 23 monthly periods
-          </p>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{spec.title}</h3>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{spec.subtitle}</p>
         </div>
-
-        {/* Chart Selector Tabs */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '8px', padding: '3px' }}>
-          {[
-            { id: 'revenue', label: 'Revenue Build (MRR)' },
-            { id: 'profitability', label: 'EBIT & Profitability' },
-            { id: 'customers', label: 'Customer Growth' },
-            { id: 'funnel', label: 'Acquisition Funnel' },
-          ].map(tab => (
+        <div role="tablist" aria-label="Choose chart" className="segmented">
+          {CHARTS.map(tab => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeChart === tab.id}
+              className="segmented-btn"
               onClick={() => setActiveChart(tab.id)}
-              style={{
-                background: activeChart === tab.id ? '#2563eb' : 'transparent',
-                color: activeChart === tab.id ? '#ffffff' : '#9ca3af',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '6px 14px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
             >
               {tab.label}
             </button>
@@ -65,238 +49,359 @@ export default function ChartsView({ monthlyResults }) {
         </div>
       </div>
 
-      {/* SVG Chart Container */}
-      <div style={{ overflowX: 'auto', width: '100%', position: 'relative' }}>
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', minWidth: '680px', height: 'auto', display: 'block' }}>
-          {/* Background Grid Lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
-            const y = padding.top + innerH * (1 - pct);
-            return (
-              <g key={i}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="rgba(255,255,255,0.07)" strokeDasharray="3 3" />
-                <text x={padding.left - 8} y={y + 4} fill="#6b7280" fontSize="10" textAnchor="end" fontFamily="var(--font-mono)">
-                  {activeChart === 'revenue' && formatCurrency(maxRev * pct, 0)}
-                  {activeChart === 'customers' && Math.round(maxCust * pct)}
-                  {activeChart === 'profitability' && formatCurrency(minEbit + (maxEbit - minEbit) * pct, 0)}
-                  {activeChart === 'funnel' && Math.round(Math.max(...monthlyResults.map(m => m.leads_generated)) * pct)}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Zero Axis for EBIT */}
-          {activeChart === 'profitability' && minEbit < 0 && (
-            <line
-              x1={padding.left}
-              y1={padding.top + innerH * (1 - (0 - minEbit) / (maxEbit - minEbit))}
-              x2={width - padding.right}
-              y2={padding.top + innerH * (1 - (0 - minEbit) / (maxEbit - minEbit))}
-              stroke="rgba(244, 63, 94, 0.5)"
-              strokeWidth="1.5"
-            />
-          )}
-
-          {/* Bars / Lines rendering */}
-          {activeChart === 'revenue' && (
-            monthlyResults.map((m, idx) => {
-              const x = padding.left + idx * stepX + stepX * 0.15;
-              const barW = stepX * 0.7;
-              const proH = (m.pro_plan_revenue / maxRev) * innerH;
-              const entH = (m.enterprise_plan_revenue / maxRev) * innerH;
-
-              const entY = padding.top + innerH - entH;
-              const proY = entY - proH;
-
-              return (
-                <g key={idx} onMouseEnter={() => setHoveredIdx(idx)} onMouseLeave={() => setHoveredIdx(null)}>
-                  {/* Enterprise Bar */}
-                  <rect x={x} y={entY} width={barW} height={Math.max(entH, 0)} fill="#3b82f6" rx="2" opacity={hoveredIdx === idx ? 1 : 0.85} />
-                  {/* Pro Bar */}
-                  <rect x={x} y={proY} width={barW} height={Math.max(proH, 0)} fill="#60a5fa" rx="2" opacity={hoveredIdx === idx ? 1 : 0.85} />
-                </g>
-              );
-            })
-          )}
-
-          {activeChart === 'customers' && (
-            <>
-              {/* Customer line */}
-              <polyline
-                fill="none"
-                stroke="#10b981"
-                strokeWidth="2.5"
-                points={monthlyResults.map((m, idx) => {
-                  const x = padding.left + idx * stepX + stepX * 0.5;
-                  const y = padding.top + innerH * (1 - m.ending_active_customers / maxCust);
-                  return `${x},${y}`;
-                }).join(' ')}
-              />
-              {monthlyResults.map((m, idx) => {
-                const x = padding.left + idx * stepX + stepX * 0.5;
-                const y = padding.top + innerH * (1 - m.ending_active_customers / maxCust);
-                return (
-                  <circle
-                    key={idx}
-                    cx={x}
-                    cy={y}
-                    r={hoveredIdx === idx ? 5 : 3.5}
-                    fill="#10b981"
-                    stroke="#111827"
-                    strokeWidth="1.5"
-                    onMouseEnter={() => setHoveredIdx(idx)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                  />
-                );
-              })}
-            </>
-          )}
-
-          {activeChart === 'profitability' && (
-            <>
-              {/* Area for EBIT */}
-              <polygon
-                fill="rgba(52, 211, 153, 0.12)"
-                points={`
-                  ${padding.left + stepX * 0.5},${padding.top + innerH * (1 - (0 - minEbit) / (maxEbit - minEbit))}
-                  ${monthlyResults.map((m, idx) => {
-                    const x = padding.left + idx * stepX + stepX * 0.5;
-                    const y = padding.top + innerH * (1 - (m.ebit - minEbit) / (maxEbit - minEbit));
-                    return `${x},${y}`;
-                  }).join(' ')}
-                  ${padding.left + (count - 1) * stepX + stepX * 0.5},${padding.top + innerH * (1 - (0 - minEbit) / (maxEbit - minEbit))}
-                `}
-              />
-              <polyline
-                fill="none"
-                stroke="#34d399"
-                strokeWidth="2.5"
-                points={monthlyResults.map((m, idx) => {
-                  const x = padding.left + idx * stepX + stepX * 0.5;
-                  const y = padding.top + innerH * (1 - (m.ebit - minEbit) / (maxEbit - minEbit));
-                  return `${x},${y}`;
-                }).join(' ')}
-              />
-              {monthlyResults.map((m, idx) => {
-                const x = padding.left + idx * stepX + stepX * 0.5;
-                const y = padding.top + innerH * (1 - (m.ebit - minEbit) / (maxEbit - minEbit));
-                return (
-                  <circle
-                    key={idx}
-                    cx={x}
-                    cy={y}
-                    r={hoveredIdx === idx ? 5 : 3.5}
-                    fill={m.ebit >= 0 ? '#34d399' : '#fb7185'}
-                    stroke="#111827"
-                    strokeWidth="1.5"
-                    onMouseEnter={() => setHoveredIdx(idx)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                  />
-                );
-              })}
-            </>
-          )}
-
-          {activeChart === 'funnel' && (
-            monthlyResults.map((m, idx) => {
-              const maxL = Math.max(...monthlyResults.map(x => x.leads_generated), 100);
-              const x = padding.left + idx * stepX + stepX * 0.15;
-              const barW = stepX * 0.7;
-              const h = (m.leads_generated / maxL) * innerH;
-              const y = padding.top + innerH - h;
-              return (
-                <rect
-                  key={idx}
-                  x={x}
-                  y={y}
-                  width={barW}
-                  height={Math.max(h, 0)}
-                  fill="#8b5cf6"
-                  rx="2"
-                  opacity={hoveredIdx === idx ? 1 : 0.8}
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                />
-              );
-            })
-          )}
-
-          {/* Month Labels along bottom */}
-          {monthlyResults.map((m, idx) => {
-            const x = padding.left + idx * stepX + stepX * 0.5;
-            return (
-              <text
-                key={idx}
-                x={x}
-                y={height - 12}
-                fill={hoveredIdx === idx ? '#3b82f6' : '#6b7280'}
-                fontSize="9"
-                fontWeight={hoveredIdx === idx ? 'bold' : 'normal'}
-                textAnchor="middle"
-                fontFamily="var(--font-mono)"
-              >
-                M{idx + 1}
-              </text>
-            );
-          })}
-        </svg>
-
-        {/* Hover Tooltip */}
-        {hoveredIdx !== null && monthlyResults[hoveredIdx] && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '12px',
-              right: '20px',
-              background: 'rgba(17, 24, 39, 0.95)',
-              border: '1px solid #3b82f6',
-              borderRadius: '8px',
-              padding: '10px 14px',
-              pointerEvents: 'none',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
-              fontSize: '0.8rem',
-              zIndex: 10
-            }}
-          >
-            <div style={{ fontWeight: 700, color: '#3b82f6', marginBottom: '4px' }}>
-              {monthlyResults[hoveredIdx].label} ({monthlyResults[hoveredIdx].column})
+      {spec.summary && (
+        <div style={{ display: 'flex', gap: 'var(--space-5)', flexWrap: 'wrap', marginBottom: 'var(--space-3)', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+          {spec.summary.map(s => (
+            <div key={s.label}>
+              {s.label}: <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{s.value}</strong>
             </div>
-            <div>MRR: <span className="num-val" style={{ fontWeight: 600 }}>{formatCurrency(monthlyResults[hoveredIdx].total_mrr, 0)}</span></div>
-            <div>EBIT: <span className="num-val" style={{ fontWeight: 600, color: monthlyResults[hoveredIdx].ebit >= 0 ? '#34d399' : '#fb7185' }}>{formatCurrency(monthlyResults[hoveredIdx].ebit, 0)}</span></div>
-            <div>Ending Customers: <span className="num-val" style={{ fontWeight: 600 }}>{monthlyResults[hoveredIdx].ending_active_customers}</span></div>
-            <div>Leads Generated: <span className="num-val" style={{ fontWeight: 600 }}>{monthlyResults[hoveredIdx].leads_generated}</span></div>
-            <div>New Paid Customers: <span className="num-val" style={{ fontWeight: 600 }}>{monthlyResults[hoveredIdx].new_paid_customers}</span></div>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '14px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-        {activeChart === 'revenue' && (
-          <>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', background: '#60a5fa', borderRadius: '2px' }}></span> Pro Plan ($20/mo)
-            </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', background: '#3b82f6', borderRadius: '2px' }}></span> Enterprise Plan ($80/mo)
-            </span>
-          </>
-        )}
-        {activeChart === 'customers' && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '50%' }}></span> Ending Active Customers
-          </span>
-        )}
-        {activeChart === 'profitability' && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', background: '#34d399', borderRadius: '50%' }}></span> Monthly EBIT (Earnings Before Interest & Taxes)
-          </span>
-        )}
-        {activeChart === 'funnel' && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', background: '#8b5cf6', borderRadius: '2px' }}></span> Top of Funnel Leads
-          </span>
-        )}
-      </div>
+      {spec.series.length > 1 && <Legend series={spec.series} />}
+
+      <Chart spec={spec} months={monthlyResults} />
     </div>
   );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Chart definitions                                                         */
+/* ------------------------------------------------------------------------ */
+
+function buildSpec(id, months) {
+  const money = v => formatCurrency(v, 0);
+  const count = v => formatNumber(v, 0);
+
+  if (id === 'revenue') {
+    const has = key => months.some(m => (m[key] || 0) > 0);
+    const series = [
+      { key: 'pro_plan_revenue', label: 'Pro plan', color: 'var(--series-1)', type: 'stack' },
+      { key: 'enterprise_plan_revenue', label: 'Enterprise plan', color: 'var(--series-2)', type: 'stack' },
+      has('basic_plan_revenue') && { key: 'basic_plan_revenue', label: 'Trial plan', color: 'var(--series-3)', type: 'stack' },
+      has('custom_revenue') && { key: 'custom_revenue', label: 'Custom revenue', color: 'var(--series-4)', type: 'stack' },
+    ].filter(Boolean);
+    const peak = months.reduce((best, m) => (m.total_mrr > best.total_mrr ? m : best), months[0]);
+    return {
+      title: 'Monthly revenue by plan',
+      subtitle: 'Stacked by where the revenue comes from. Hover or use the arrow keys for each month.',
+      series,
+      format: money,
+      totalRow: { label: 'Total revenue', key: 'total_mrr' },
+      summary: [
+        { label: 'Peak month', value: `${money(peak.total_mrr)} in ${monthName(peak)}` },
+        { label: 'Final month', value: money(months[months.length - 1].total_mrr) },
+      ],
+    };
+  }
+
+  if (id === 'customers') {
+    const last = months[months.length - 1];
+    return {
+      title: 'Active customers',
+      subtitle: 'Paying customers at the end of each month.',
+      series: [{ key: 'ending_active_customers', label: 'Active customers', color: 'var(--series-1)', type: 'line' }],
+      format: count,
+      extraRows: [
+        { label: 'New paid', get: m => count(m.new_paid_customers) },
+        { label: 'Churned', get: m => count(m.churned_customers) },
+      ],
+      summary: [
+        { label: 'Start', value: count(months[0].beginning_active_customers) },
+        { label: 'End (M23)', value: count(last.ending_active_customers) },
+        { label: 'Total new paid', value: count(months.reduce((a, m) => a + m.new_paid_customers, 0)) },
+      ],
+    };
+  }
+
+  if (id === 'funnel') {
+    return {
+      title: 'Leads per month',
+      subtitle: 'Top of the funnel. The tooltip shows how many become trials and paying customers.',
+      series: [{ key: 'leads_generated', label: 'Leads', color: 'var(--series-1)', type: 'bar' }],
+      format: count,
+      extraRows: [
+        { label: 'Trials started', get: m => formatNumber(m.trials_started, 1) },
+        { label: 'New paid customers', get: m => count(m.new_paid_customers) },
+      ],
+      summary: [
+        { label: 'Total leads', value: count(months.reduce((a, m) => a + m.leads_generated, 0)) },
+        { label: 'Total new paid', value: count(months.reduce((a, m) => a + m.new_paid_customers, 0)) },
+      ],
+    };
+  }
+
+  // Profitability (default)
+  const firstProfitIdx = months.findIndex(m => m.ebit >= 0);
+  const totalEbit = months.reduce((a, m) => a + m.ebit, 0);
+  return {
+    title: 'Revenue, costs and profit',
+    subtitle: 'Bars show each month’s profit (green, above zero) or loss (red, below). Lines compare revenue with total costs.',
+    series: [
+      { key: 'ebit', label: 'Profit / loss (EBIT)', color: 'var(--delta-good)', negColor: 'var(--delta-bad)', type: 'polarityBar' },
+      { key: 'total_mrr', label: 'Revenue', color: 'var(--series-1)', type: 'line' },
+      { key: '_total_costs', label: 'Total costs (COGS + OPEX)', color: 'var(--series-2)', type: 'line', get: m => m.total_cogs + m.total_opex },
+    ],
+    format: money,
+    marker: firstProfitIdx >= 0 ? { index: firstProfitIdx, label: `Break-even M${firstProfitIdx + 1}` } : null,
+    summary: [
+      { label: 'First profitable month', value: firstProfitIdx >= 0 ? `M${firstProfitIdx + 1} (${monthName(months[firstProfitIdx])})` : 'None in forecast' },
+      { label: 'Cumulative EBIT', value: money(totalEbit) },
+    ],
+  };
+}
+
+const valueOf = (s, m) => (s.get ? s.get(m) : m[s.key]) || 0;
+
+function monthName(m) {
+  const match = (m.label || '').match(/\(([^)]+)\)/);
+  return match ? match[1] : m.label;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Rendering                                                                 */
+/* ------------------------------------------------------------------------ */
+
+function Chart({ spec, months }) {
+  const wrapRef = useRef(null);
+  const [width, setWidth] = useState(900);
+  const [hover, setHover] = useState(null);
+
+  // Draw at the real pixel width so text never gets stretched.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => setWidth(Math.max(320, entries[0].contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => setHover(null), [spec.title]);
+
+  const n = months.length;
+  const innerW = width - PAD.left - PAD.right;
+  const innerH = HEIGHT - PAD.top - PAD.bottom;
+  const slot = innerW / n;
+  const cx = i => PAD.left + slot * i + slot / 2;
+
+  // Y range: stacks add up; everything else uses its own values. Zero always included.
+  const stackSeries = spec.series.filter(s => s.type === 'stack');
+  const totals = months.map(m => stackSeries.reduce((a, s) => a + valueOf(s, m), 0));
+  const all = [
+    ...totals,
+    ...spec.series.filter(s => s.type !== 'stack').flatMap(s => months.map(m => valueOf(s, m))),
+    0,
+  ];
+  const { min, max, ticks } = niceScale(Math.min(...all), Math.max(...all));
+  const y = v => PAD.top + innerH * (1 - (v - min) / (max - min || 1));
+  const zeroY = y(0);
+
+  const barW = Math.max(4, Math.min(28, slot - 6));
+  const handleMove = e => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - rect.left) / rect.width) * width;
+    const i = Math.floor((px - PAD.left) / slot);
+    setHover(i >= 0 && i < n ? i : null);
+  };
+  const handleKey = e => {
+    if (e.key === 'ArrowRight') { setHover(h => Math.min(n - 1, (h ?? -1) + 1)); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { setHover(h => Math.max(0, (h ?? n) - 1)); e.preventDefault(); }
+    if (e.key === 'Escape') setHover(null);
+  };
+
+  const showEvery = width < 700 ? 3 : width < 1000 ? 2 : 1;
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
+      <svg
+        width={width}
+        height={HEIGHT}
+        role="img"
+        aria-label={`${spec.title}. Focus and use the left and right arrow keys to read each month.`}
+        tabIndex={0}
+        onPointerMove={handleMove}
+        onPointerLeave={() => setHover(null)}
+        onKeyDown={handleKey}
+        onBlur={() => setHover(null)}
+        className="chart-svg"
+        style={{ display: 'block', touchAction: 'pan-y' }}
+      >
+        {/* Grid + y ticks */}
+        {ticks.map(t => (
+          <g key={t}>
+            <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke={t === 0 ? 'var(--viz-axis)' : 'var(--viz-grid)'} strokeWidth="1" />
+            <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="var(--viz-muted-ink)" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {spec.format(t)}
+            </text>
+          </g>
+        ))}
+
+        {/* Hover column wash */}
+        {hover !== null && (
+          <rect x={PAD.left + slot * hover} y={PAD.top} width={slot} height={innerH} fill="rgba(255,255,255,0.04)" />
+        )}
+
+        {/* Break-even marker */}
+        {spec.marker && (
+          <g>
+            <line x1={cx(spec.marker.index)} x2={cx(spec.marker.index)} y1={PAD.top} y2={PAD.top + innerH} stroke="var(--text-secondary)" strokeDasharray="4 4" strokeWidth="1" />
+            <text x={cx(spec.marker.index) + 6} y={PAD.top + 12} fontSize="11" fill="var(--text-secondary)">{spec.marker.label}</text>
+          </g>
+        )}
+
+        {/* Stacked bars */}
+        {stackSeries.length > 0 && months.map((m, i) => {
+          let base = 0;
+          const segs = stackSeries.map(s => {
+            const v = valueOf(s, m);
+            const seg = { s, y0: base, y1: base + v };
+            base += v;
+            return seg;
+          }).filter(seg => seg.y1 > seg.y0);
+          return segs.map((seg, k) => {
+            const top = y(seg.y1);
+            const bottom = y(seg.y0) - (k > 0 ? 2 : 0); // 2px surface gap between segments
+            const h = Math.max(0, bottom - top);
+            const isTop = k === segs.length - 1;
+            return (
+              <path key={`${i}-${seg.s.key}`} d={barPath(cx(i) - barW / 2, top, barW, h, isTop ? 4 : 0, 'up')} fill={seg.s.color} opacity={hover === null || hover === i ? 1 : 0.55} />
+            );
+          });
+        })}
+
+        {/* Single-series bars and profit/loss bars */}
+        {spec.series.filter(s => s.type === 'bar' || s.type === 'polarityBar').map(s => months.map((m, i) => {
+          const v = valueOf(s, m);
+          const yv = y(v);
+          const up = v >= 0;
+          const top = up ? yv : zeroY;
+          const h = Math.max(1, Math.abs(yv - zeroY));
+          const color = s.type === 'polarityBar' && !up ? s.negColor : s.color;
+          return <path key={`${s.key}-${i}`} d={barPath(cx(i) - barW / 2, top, barW, h, 4, up ? 'up' : 'down')} fill={color} opacity={hover === null || hover === i ? 0.9 : 0.45} />;
+        }))}
+
+        {/* Lines */}
+        {spec.series.filter(s => s.type === 'line').map(s => (
+          <g key={s.key}>
+            <polyline
+              points={months.map((m, i) => `${cx(i)},${y(valueOf(s, m))}`).join(' ')}
+              fill="none"
+              stroke={s.color}
+              strokeWidth="2"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+            {hover !== null && (
+              <circle cx={cx(hover)} cy={y(valueOf(s, months[hover]))} r="4.5" fill={s.color} stroke="var(--bg-secondary)" strokeWidth="2" />
+            )}
+          </g>
+        ))}
+
+        {/* Crosshair */}
+        {hover !== null && (
+          <line x1={cx(hover)} x2={cx(hover)} y1={PAD.top} y2={PAD.top + innerH} stroke="var(--text-muted)" strokeWidth="1" pointerEvents="none" />
+        )}
+
+        {/* X labels */}
+        {months.map((m, i) => (i % showEvery === 0 || i === hover) && (
+          <text
+            key={m.column}
+            x={cx(i)}
+            y={HEIGHT - 14}
+            textAnchor="middle"
+            fontSize="11"
+            fill={i === hover ? 'var(--text-primary)' : 'var(--viz-muted-ink)'}
+            fontWeight={i === hover ? 600 : 400}
+          >
+            M{i + 1}
+          </text>
+        ))}
+      </svg>
+
+      {hover !== null && <Tooltip spec={spec} month={months[hover]} x={cx(hover)} width={width} />}
+    </div>
+  );
+}
+
+function Tooltip({ spec, month, x, width }) {
+  const boxW = 260;
+  const left = x + 14 + boxW > width ? x - 14 - boxW : x + 14;
+  const rows = spec.series.map(s => ({ label: s.label, value: spec.format(valueOf(s, month)), color: s.type === 'polarityBar' && valueOf(s, month) < 0 ? s.negColor : s.color }));
+  return (
+    <div className="chart-tooltip" style={{ left, top: PAD.top, width: boxW }} role="status" aria-live="polite">
+      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>{month.label}</div>
+      {rows.map(r => (
+        <div key={r.label} className="chart-tooltip-row">
+          <span className="chart-tooltip-key" style={{ background: r.color }} aria-hidden="true" />
+          <strong>{r.value}</strong>
+          <span>{r.label}</span>
+        </div>
+      ))}
+      {spec.totalRow && (
+        <div className="chart-tooltip-row" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '4px', marginTop: '4px' }}>
+          <span className="chart-tooltip-key" style={{ background: 'transparent' }} aria-hidden="true" />
+          <strong>{spec.format(month[spec.totalRow.key])}</strong>
+          <span>{spec.totalRow.label}</span>
+        </div>
+      )}
+      {(spec.extraRows || []).map(r => (
+        <div key={r.label} className="chart-tooltip-row">
+          <span className="chart-tooltip-key" style={{ background: 'transparent' }} aria-hidden="true" />
+          <strong>{r.get(month)}</strong>
+          <span>{r.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Legend({ series }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-2)', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+      {series.map(s => (
+        <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          {s.type === 'line' ? (
+            <span style={{ width: '14px', height: '2px', background: s.color, borderRadius: '1px' }} aria-hidden="true" />
+          ) : s.type === 'polarityBar' ? (
+            <span style={{ display: 'inline-flex', gap: '2px' }} aria-hidden="true">
+              <span style={{ width: '8px', height: '10px', background: s.color, borderRadius: '2px' }} />
+              <span style={{ width: '8px', height: '10px', background: s.negColor, borderRadius: '2px' }} />
+            </span>
+          ) : (
+            <span style={{ width: '10px', height: '10px', background: s.color, borderRadius: '2px' }} aria-hidden="true" />
+          )}
+          {s.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Helpers                                                                   */
+/* ------------------------------------------------------------------------ */
+
+// Bar with its far end rounded (radius r) and the baseline end square.
+function barPath(x, top, w, h, r, dir) {
+  if (h <= 0) return '';
+  const rr = Math.min(r, w / 2, h);
+  if (dir === 'up') {
+    return `M${x},${top + h} V${top + rr} Q${x},${top} ${x + rr},${top} H${x + w - rr} Q${x + w},${top} ${x + w},${top + rr} V${top + h} Z`;
+  }
+  const bottom = top + h;
+  return `M${x},${top} V${bottom - rr} Q${x},${bottom} ${x + rr},${bottom} H${x + w - rr} Q${x + w},${bottom} ${x + w},${bottom - rr} V${top} Z`;
+}
+
+// Round axis ticks: 1, 2, 2.5 or 5 times a power of ten.
+function niceScale(lo, hi, target = 5) {
+  if (lo === hi) { hi = lo + 1; }
+  const rawStep = (hi - lo) / target;
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(rawStep))));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(s => s >= rawStep) || 10 * mag;
+  const min = Math.floor(lo / step) * step;
+  const max = Math.ceil(hi / step) * step;
+  const ticks = [];
+  for (let t = min; t <= max + step / 2; t += step) ticks.push(Math.round(t * 1e6) / 1e6);
+  return { min, max, ticks };
 }
