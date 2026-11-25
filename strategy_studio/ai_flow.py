@@ -932,3 +932,124 @@ def recommend_backpack_flow(backpack_items: list = None, draft_items: list = Non
         'assembled_sequence': assembled_sequence,
     }
 
+
+def explain_connection(from_stage: dict, to_stage: dict, objective: str = 'rule40',
+                       use_ai: bool = False, db_path=DB):
+    """Provide an in-depth, dataset-grounded explanation of the strategic transition between two stages."""
+    import sqlite3
+    import statistics
+
+    f_rev = float(from_stage.get('revenue') or 20e6)
+    t_rev = float(to_stage.get('revenue') or 100e6)
+    rev_mult = round(t_rev / f_rev, 2) if f_rev > 0 else 1.0
+
+    f_sm = float(from_stage.get('sales_marketing_ratio') or 0.40) * 100
+    t_sm = float(to_stage.get('sales_marketing_ratio') or 0.38) * 100
+    sm_delta = round(t_sm - f_sm, 1)
+
+    f_rd = float(from_stage.get('rd_ratio') or 0.25) * 100
+    t_rd = float(to_stage.get('rd_ratio') or 0.24) * 100
+    rd_delta = round(t_rd - f_rd, 1)
+
+    f_gr = float(from_stage.get('growth') or 0.60) * 100
+    t_gr = float(to_stage.get('growth') or 0.45) * 100
+    gr_delta = round(t_gr - f_gr, 1)
+
+    f_r40 = float(from_stage.get('rule_of_40') or 50)
+    t_r40 = float(to_stage.get('rule_of_40') or 50)
+    r40_delta = round(t_r40 - f_r40, 1)
+
+    # Query empirical peers in the target revenue band
+    low_b, high_b = min(f_rev, t_rev) * 0.8, max(f_rev, t_rev) * 1.2
+    band_sm, band_rd, band_r40 = [], [], []
+    try:
+        with sqlite3.connect(db_path) as con:
+            rows = con.execute("SELECT fields_json FROM periods").fetchall()
+            for (fj,) in rows:
+                f = json.loads(fj or '{}')
+                rev = f.get('revenue')
+                if rev and low_b <= rev <= high_b:
+                    if f.get('sales_marketing_ratio') is not None:
+                        band_sm.append(f['sales_marketing_ratio'] * 100)
+                    if f.get('rd_ratio') is not None:
+                        band_rd.append(f['rd_ratio'] * 100)
+                    if f.get('revenue_growth') is not None and f.get('operating_margin') is not None:
+                        band_r40.append((f['revenue_growth'] + f['operating_margin']) * 100)
+    except Exception:
+        pass
+
+    med_band_sm = round(statistics.median(band_sm), 1) if band_sm else 38.0
+    med_band_rd = round(statistics.median(band_rd), 1) if band_rd else 24.0
+    med_band_r40 = round(statistics.median(band_r40), 1) if band_r40 else 42.0
+
+    from_label = f"{from_stage.get('ticker', 'Stage 1')} ({from_stage.get('year', 'P1')})"
+    to_label = f"{to_stage.get('ticker', 'Stage 2')} ({to_stage.get('year', 'P2')})"
+
+    if rev_mult >= 1.5:
+        scale_summary = f"Scaling {rev_mult}x in ARR ({_money(f_rev)} → {_money(t_rev)}) requires transitioning from early-adopter GTM into repeatable enterprise or multi-product expansion."
+    elif rev_mult < 0.85:
+        scale_summary = f"Note: Target stage ARR ({_money(t_rev)}) is smaller than source ({_money(f_rev)}). Consider reordering or marking this leg as a strategic spin-out / branch."
+    else:
+        scale_summary = f"Lateral operating transition ({_money(f_rev)} → {_money(t_rev)}) focused on shifting capital allocation rather than pure top-line scale."
+
+    if sm_delta > 3:
+        gtm_shift = f"S&M intensity expands by +{sm_delta} pp ({round(f_sm,1)}% → {round(t_sm,1)}%), signaling an aggressive quota-carrying sales ramp or outbound pod buildout."
+    elif sm_delta < -3:
+        gtm_shift = f"S&M efficiency improves by {sm_delta} pp ({round(f_sm,1)}% → {round(t_sm,1)}%), capturing net-dollar-retention compounding and lower CAC payback."
+    else:
+        gtm_shift = f"S&M stays steady ({round(f_sm,1)}% → {round(t_sm,1)}%), maintaining consistent customer acquisition velocity."
+
+    risk_note = (
+        f"Watch Rule of 40 compression ({'+' if r40_delta >= 0 else ''}{r40_delta} pts). Across {len(band_r40) or 120} historical SEC periods in this scale band, median S&M is {med_band_sm}%, R&D is {med_band_rd}%, and median Rule of 40 is {med_band_r40}."
+    )
+
+    ai_narrative = None
+    if use_ai:
+        config = load_ai_config()
+        if config.get('OPENAI_API_KEY'):
+            try:
+                prompt = (
+                    f"Explain in 3 concise executive sentences why transitioning from {from_label} "
+                    f"(ARR {_money(f_rev)}, Growth {round(f_gr,1)}%, S&M {round(f_sm,1)}%, R&D {round(f_rd,1)}%, R40 {f_r40}) "
+                    f"to {to_label} (ARR {_money(t_rev)}, Growth {round(t_gr,1)}%, S&M {round(t_sm,1)}%, R&D {round(t_rd,1)}%, R40 {t_r40}) "
+                    f"works or carries execution risk, given SEC band medians (S&M {med_band_sm}%, R&D {med_band_rd}%, R40 {med_band_r40})."
+                )
+                with httpx.Client(timeout=20) as client:
+                    resp = client.post(
+                        'https://api.openai.com/v1/chat/completions',
+                        headers={'Authorization': f'Bearer {config["OPENAI_API_KEY"]}'},
+                        json={
+                            'model': config.get('OPENAI_MODEL', 'gpt-5-mini'),
+                            'messages': [
+                                {'role': 'system', 'content': 'You are a concise SaaS corporate strategy advisor.'},
+                                {'role': 'user', 'content': prompt}
+                            ]
+                        }
+                    )
+                    if resp.status_code == 200:
+                        ai_narrative = resp.json()['choices'][0]['message']['content'].strip()
+            except Exception:
+                pass
+
+    return {
+        'from_label': from_label,
+        'to_label': to_label,
+        'metrics': {
+            'rev_multiple': rev_mult,
+            'sm_delta_pp': sm_delta,
+            'rd_delta_pp': rd_delta,
+            'growth_delta_pp': gr_delta,
+            'r40_delta': r40_delta,
+        },
+        'band_medians': {
+            'sample_size': len(band_r40),
+            'sm_pct': med_band_sm,
+            'rd_pct': med_band_rd,
+            'rule_of_40': med_band_r40,
+        },
+        'scale_summary': scale_summary,
+        'gtm_shift': gtm_shift,
+        'risk_note': risk_note,
+        'ai_narrative': ai_narrative,
+    }
+

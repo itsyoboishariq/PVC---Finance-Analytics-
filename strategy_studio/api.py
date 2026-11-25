@@ -334,6 +334,18 @@ def make_app(db_path=DB):
             db_path=db_path
         )
 
+    @app.post('/api/strategy/explain-connection')
+    def explain_connection_route(body: dict = None):
+        import ai_flow
+        payload = body or {}
+        return ai_flow.explain_connection(
+            from_stage=payload.get('from_stage') or {},
+            to_stage=payload.get('to_stage') or {},
+            objective=payload.get('objective', 'rule40'),
+            use_ai=bool(payload.get('use_ai', False)),
+            db_path=db_path
+        )
+
     @app.get('/api/ai/model-config')
     def get_model_config():
         import ai_flow

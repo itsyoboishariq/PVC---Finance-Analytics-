@@ -4079,8 +4079,15 @@ function renderBackpackEditor() {
         <button type="button" data-draft-branch="${idx}" class="${item.is_branch ? 'active' : ''}" title="Toggle Branch">🌿 Branch</button>
       </div>
     </div>
-    ${idx < backpackDraft.length - 1 ? '<span class="bp-seq-arrow">→</span>' : ''}
+    ${idx < backpackDraft.length - 1 ? `<button type="button" class="bp-seq-conn-btn" data-conn-idx="${idx}" title="Click for in-depth connection explanation">🔗 Why?</button>` : ''}
   `).join('');
+
+  seqEl.querySelectorAll('[data-conn-idx]').forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.connIdx, 10);
+      explainBackpackConnection(idx, false);
+    };
+  });
 
   seqEl.querySelectorAll('[data-draft-remove]').forEach(btn => {
     btn.onclick = () => {
@@ -4206,6 +4213,9 @@ async function fetchBackpackRecommendations(autoAssemble = false) {
       persistBackpackState();
       renderBackpackEditor();
       toast.success('Flow Auto-Assembled ⚡', `Built a ${backpackDraft.length}-stage trajectory grounded in your Backpack and SEC data.`);
+      if (backpackDraft.length >= 2) {
+        explainBackpackConnection(0, false);
+      }
     }
   } catch (err) {
     console.error('Backpack recommendation failed:', err);
@@ -4213,9 +4223,193 @@ async function fetchBackpackRecommendations(autoAssemble = false) {
   }
 }
 
+let walkthroughSteps = [];
+let walkthroughIndex = 0;
+let activeCoachConnIdx = null;
+
+function highlightBackpackPreviewNode(stageIdx) {
+  const previewEl = $('backpackFlowPreview');
+  if (!previewEl) return;
+  previewEl.querySelectorAll('.flow-svg-node').forEach((el, idx) => {
+    el.classList.toggle('active-stage', idx === stageIdx);
+  });
+}
+
+async function explainBackpackConnection(connIdx, useAi = false) {
+  if (!backpackDraft[connIdx] || !backpackDraft[connIdx + 1]) return;
+  activeCoachConnIdx = connIdx;
+  const fromSt = backpackDraft[connIdx];
+  const toSt = backpackDraft[connIdx + 1];
+
+  const coach = $('backpackFloatingCoach');
+  const kicker = $('bpCoachKicker');
+  const title = $('bpCoachTitle');
+  const metrics = $('bpCoachMetrics');
+  const body = $('bpCoachBody');
+  const aiBox = $('bpCoachAiBox');
+  const askBtn = $('bpCoachAskAiBtn');
+  if (!coach) return;
+
+  coach.style.display = 'flex';
+  if (kicker) kicker.textContent = `🔗 CONNECTION ${connIdx + 1} → ${connIdx + 2}`;
+  if (title) title.textContent = `${fromSt.ticker} (${fromSt.year}) → ${toSt.ticker} (${toSt.year})`;
+  if (body) body.innerHTML = '<span>⏳ Analyzing transition economics against SEC dataset...</span>';
+  if (aiBox && !useAi) aiBox.style.display = 'none';
+  if (askBtn) askBtn.style.display = 'inline-flex';
+  highlightBackpackPreviewNode(connIdx + 1);
+
+  try {
+    const res = await fetch('/api/strategy/explain-connection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from_stage: fromSt,
+        to_stage: toSt,
+        objective: $('backpackRecObjective')?.value || 'rule40',
+        use_ai: useAi
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const m = d.metrics || {};
+
+    if (metrics) {
+      metrics.innerHTML = `
+        <span>Scale <b>${m.rev_multiple}x</b></span>
+        <span>S&amp;M <b>${m.sm_delta_pp >= 0 ? '+' : ''}${m.sm_delta_pp}pp</b></span>
+        <span>R&amp;D <b>${m.rd_delta_pp >= 0 ? '+' : ''}${m.rd_delta_pp}pp</b></span>
+        <span>R40 <b>${m.r40_delta >= 0 ? '+' : ''}${m.r40_delta}</b></span>
+      `;
+    }
+    if (body) {
+      body.innerHTML = `
+        <div><b>Scale Bridge:</b> ${esc(d.scale_summary)}</div>
+        <div><b>GTM Shift:</b> ${esc(d.gtm_shift)}</div>
+        <div style="color:var(--text-muted); font-size:11.5px;">${esc(d.risk_note)}</div>
+      `;
+    }
+    if (aiBox && d.ai_narrative) {
+      aiBox.style.display = 'block';
+      aiBox.innerHTML = `<strong>✦ AI Strategy Verdict:</strong> ${esc(d.ai_narrative)}`;
+    }
+  } catch (err) {
+    if (body) body.innerHTML = `<span style="color:var(--destructive);">Could not explain connection: ${esc(err.message)}</span>`;
+  }
+}
+
+function showWalkthroughStage(stageIdx) {
+  const st = backpackDraft[stageIdx];
+  const coach = $('backpackFloatingCoach');
+  if (!st || !coach) return;
+  activeCoachConnIdx = null;
+  coach.style.display = 'flex';
+  if ($('bpCoachKicker')) $('bpCoachKicker').textContent = `📍 STAGE ${stageIdx + 1} OF ${backpackDraft.length}`;
+  if ($('bpCoachTitle')) $('bpCoachTitle').textContent = `${st.ticker} · ${st.year} — ${st.phase_title}`;
+  if ($('bpCoachMetrics')) {
+    $('bpCoachMetrics').innerHTML = `
+      <span>ARR <b>${esc(st.revenue_formatted)}</b></span>
+      <span>Growth <b class="text-emerald">${esc(st.growth_formatted)}</b></span>
+      <span>S&amp;M <b>${esc(st.sales_marketing_formatted)}</b></span>
+      <span>R40 <b>${esc(String(st.rule_of_40))}</b></span>
+    `;
+  }
+  if ($('bpCoachBody')) {
+    $('bpCoachBody').innerHTML = `<div>${esc(st.strategic_why?.executive_summary || st.phase_desc || 'Saved strategic stage.')}</div>`;
+  }
+  if ($('bpCoachAiBox')) $('bpCoachAiBox').style.display = 'none';
+  if ($('bpCoachAskAiBtn')) $('bpCoachAskAiBtn').style.display = 'none';
+  highlightBackpackPreviewNode(stageIdx);
+}
+
+function renderWalkthroughStep() {
+  if (!walkthroughSteps.length) return;
+  const step = walkthroughSteps[walkthroughIndex];
+  if ($('bpCoachPrevBtn')) $('bpCoachPrevBtn').disabled = walkthroughIndex === 0;
+  if ($('bpCoachNextBtn')) $('bpCoachNextBtn').disabled = walkthroughIndex >= walkthroughSteps.length - 1;
+  if (step.type === 'stage') {
+    showWalkthroughStage(step.idx);
+  } else {
+    explainBackpackConnection(step.idx, false);
+  }
+}
+
+function startBackpackWalkthrough() {
+  if (!backpackDraft.length) {
+    toast.info('Add Stages First', 'Add stages or click ⚡ Auto-Assemble to start a Guided Walkthrough.');
+    return;
+  }
+  walkthroughSteps = [];
+  backpackDraft.forEach((_, idx) => {
+    walkthroughSteps.push({ type: 'stage', idx });
+    if (idx < backpackDraft.length - 1) {
+      walkthroughSteps.push({ type: 'conn', idx });
+    }
+  });
+  walkthroughIndex = 0;
+  renderWalkthroughStep();
+}
+
 function initBackpack() {
   loadBackpackState();
   updateBackpackBadge();
+
+  const toggleRecsBtn = $('backpackToggleRecsBtn');
+  const closeRecsBtn = $('backpackCloseRecsBtn');
+  const recDrawer = $('backpackRecDrawer');
+  if (toggleRecsBtn && recDrawer) {
+    toggleRecsBtn.onclick = () => {
+      const open = recDrawer.style.display === 'none';
+      recDrawer.style.display = open ? 'block' : 'none';
+      if (open) fetchBackpackRecommendations(false);
+    };
+  }
+  if (closeRecsBtn && recDrawer) {
+    closeRecsBtn.onclick = () => { recDrawer.style.display = 'none'; };
+  }
+
+  const exploreBtn = $('backpackExplorePeersBtn');
+  if (exploreBtn) {
+    exploreBtn.onclick = () => {
+      if (window.switchStudioView) window.switchStudioView('canvas');
+    };
+  }
+
+  const walkBtn = $('backpackWalkthroughBtn');
+  if (walkBtn) walkBtn.onclick = startBackpackWalkthrough;
+
+  if ($('bpCoachCloseBtn')) {
+    $('bpCoachCloseBtn').onclick = () => {
+      if ($('backpackFloatingCoach')) $('backpackFloatingCoach').style.display = 'none';
+      highlightBackpackPreviewNode(-1);
+    };
+  }
+  if ($('bpCoachPrevBtn')) {
+    $('bpCoachPrevBtn').onclick = () => {
+      if (walkthroughSteps.length && walkthroughIndex > 0) {
+        walkthroughIndex--;
+        renderWalkthroughStep();
+      }
+    };
+  }
+  if ($('bpCoachNextBtn')) {
+    $('bpCoachNextBtn').onclick = () => {
+      if (walkthroughSteps.length && walkthroughIndex < walkthroughSteps.length - 1) {
+        walkthroughIndex++;
+        renderWalkthroughStep();
+      }
+    };
+  }
+  if ($('bpCoachAskAiBtn')) {
+    $('bpCoachAskAiBtn').onclick = () => {
+      if (activeCoachConnIdx !== null) {
+        if ($('bpCoachAiBox')) {
+          $('bpCoachAiBox').style.display = 'block';
+          $('bpCoachAiBox').innerHTML = '⏳ Generating AI deep-dive...';
+        }
+        explainBackpackConnection(activeCoachConnIdx, true);
+      }
+    };
+  }
 
   const recBtn = $('backpackRecommendBtn');
   if (recBtn) recBtn.onclick = () => fetchBackpackRecommendations(false);
@@ -4286,6 +4480,7 @@ initSidebar();
 initEvidenceSheet();
 initCompanyFlow();
 initBackpack();
+if (window.switchStudioView) window.switchStudioView('backpack');
 updateLocalKPIs();
 run(false);
 

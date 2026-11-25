@@ -5336,7 +5336,144 @@ main {
   min-height: 360px;
 }
 
-/* Backpack Agent Assembler & Recommendations Panel */
+/* Backpack Agent Toolbar, Collapsible Drawer & Floating Coach Popup */
+.backpack-agent-toolbar {
+  background: var(--surface);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.backpack-rec-drawer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-md);
+}
+
+.bp-seq-conn-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--sky);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.bp-seq-conn-btn:hover {
+  background: var(--sky);
+  color: #ffffff;
+}
+
+.backpack-preview-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.bp-floating-coach {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 390px;
+  max-width: calc(100% - 36px);
+  background: var(--surface);
+  border: 1px solid rgba(2, 132, 199, 0.4);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 40;
+  animation: popoverFadeIn 0.18s ease forwards;
+}
+
+.bp-coach-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bp-coach-kicker {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--sky);
+}
+
+.bp-coach-close {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.bp-coach-title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.bp-coach-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.bp-coach-body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bp-coach-ai-box {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: 6px;
+  color: var(--text-main);
+}
+
+.bp-coach-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
 .backpack-agent-panel {
   background: var(--surface);
   border: 1px solid rgba(6, 182, 212, 0.35);

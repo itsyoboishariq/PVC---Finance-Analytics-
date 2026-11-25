@@ -13,7 +13,7 @@
   <div class="shadcn-layout" id="shadcnApp">
     
     <!-- Shadcn Left Sidebar with ChatGPT Icon Rail (Collapsible: 54px Rail <-> 380px Expanded) -->
-    <aside id="appSidebar" class="shadcn-sidebar" data-state="expanded">
+    <aside id="appSidebar" class="shadcn-sidebar" data-state="collapsed">
       <!-- Icon Rail (Always docked on the left) -->
       <div class="sidebar-rail" id="sidebarRail">
         <div class="rail-top">
@@ -425,11 +425,15 @@
             <span style="font-size:13px; font-weight:700; color:var(--text-muted);" id="currentTopBreadcrumb">Decision OS</span>
           </div>
 
-          <!-- View Mode Switcher: Canvas vs Dashboard vs Diligence -->
+          <!-- View Mode Switcher: Flow Builder (Centerpiece) vs Explore Peers vs Dashboard vs Diligence -->
           <div class="view-mode-switcher">
-            <button id="viewCanvasBtn" type="button" class="view-switch-btn active" title="Interactive Strategy Flowchart Canvas">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span>Canvas</span>
+            <button id="viewBackpackBtn" type="button" class="view-switch-btn active" title="Main Strategy Flow Builder & Backpack">
+              <span>🎒 Flow Builder</span>
+              <span id="backpackCountBadge" class="backpack-count-badge">0</span>
+            </button>
+            <button id="viewCanvasBtn" type="button" class="view-switch-btn" title="Explore Existing Company Strategy Flows & Save to Backpack">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Explore Peers</span>
             </button>
             <button id="viewDashboardBtn" type="button" class="view-switch-btn" title="Executive Strategy Bento Dashboard">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
@@ -438,10 +442,6 @@
             <button id="viewDiligenceBtn" type="button" class="view-switch-btn" title="Corporate Strategy, Market Sizing & PitchBook Diligence">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
               <span>Diligence</span>
-            </button>
-            <button id="viewBackpackBtn" type="button" class="view-switch-btn" title="Open Strategy Backpack & Custom Flow Editor">
-              <span>🎒 Backpack</span>
-              <span id="backpackCountBadge" class="backpack-count-badge">0</span>
             </button>
           </div>
         </div>
@@ -485,8 +485,8 @@
       <div class="shadcn-body flush-fullscreen-body">
         <main class="mermaid-centric-workspace full-view-layout">
           
-          <!-- HERO CENTERPIECE: THE FULL-VIEW MULTI-YEAR STRATEGY FLOWCHART -->
-          <section class="flowchart-hero-card full-view-card flush-canvas-card">
+          <!-- EXPLORE PEER FLOWS (BYPRODUCT WORKSPACE) -->
+          <section class="flowchart-hero-card full-view-card flush-canvas-card" style="display:none;">
 
             <!-- Floating Stage Header Badge (Top-Left overlay) -->
             <div class="canvas-floating-badge" id="canvasFloatingBadge">
@@ -1029,19 +1029,22 @@
           </section>
 
           <!-- ==========================================================================
-               STRATEGY BACKPACK & SEPARATE CUSTOM FLOW EDITOR
+               CENTERPIECE: STRATEGY BACKPACK & INTERACTIVE FLOW BUILDER
                ========================================================================== -->
-          <section id="backpackEditorView" class="backpack-editor-studio" style="display:none;">
+          <section id="backpackEditorView" class="backpack-editor-studio" style="display:flex;">
             <div class="backpack-header-strip">
               <div>
-                <div class="diligence-eyebrow">STRATEGY BACKPACK &amp; FLOW COMPOSER</div>
-                <h2 class="diligence-main-title" style="margin-bottom:4px;">Assemble Your Custom Strategy Flow</h2>
-                <p class="diligence-main-sub">Combine saved stages and connections from any company into a custom multi-stage strategy flow.</p>
+                <div class="diligence-eyebrow">STRATEGY STUDIO · INTERACTIVE FLOW BUILDER</div>
+                <h2 class="diligence-main-title" style="margin-bottom:2px;">Build &amp; Understand Your Strategy Flow</h2>
+                <p class="diligence-main-sub">Assemble saved company connections, let the agent auto-complete gaps, and click any connection to see why it works.</p>
               </div>
               <div class="backpack-header-actions">
                 <input id="backpackFlowTitleInput" type="text" class="builder-input backpack-title-input" value="Custom Multi-Company Strategy Flow" placeholder="Name your strategy flow..." />
-                <button type="button" id="backpackLoadToCanvasBtn" class="btn primary" style="padding:10px 18px; font-size:13.5px; font-weight:700;">
-                  ✦ Open in Main Canvas →
+                <button type="button" id="backpackExplorePeersBtn" class="btn secondary" style="padding:9px 14px; font-size:13px; font-weight:700;" title="Browse Datadog, Snowflake, MongoDB, etc. to grab stages">
+                  🔍 Explore Peers →
+                </button>
+                <button type="button" id="backpackLoadToCanvasBtn" class="btn primary" style="padding:9px 16px; font-size:13px; font-weight:700;">
+                  ✦ Present Flow
                 </button>
               </div>
             </div>
@@ -1051,8 +1054,8 @@
               <aside class="backpack-library-pane">
                 <div class="backpack-pane-header">
                   <div>
-                    <h3 style="margin:0; font-size:15px; font-weight:800;">🎒 Saved Connections</h3>
-                    <span id="backpackSavedCountText" style="font-size:12px; color:var(--text-muted);">0 items saved</span>
+                    <h3 style="margin:0; font-size:15px; font-weight:800;">🎒 Saved Backpack</h3>
+                    <span id="backpackSavedCountText" style="font-size:12px; color:var(--text-muted);">0 connections saved</span>
                   </div>
                   <button type="button" id="backpackClearAllBtn" class="btn ghost" style="font-size:11.5px; padding:5px 10px;">Clear All</button>
                 </div>
@@ -1062,57 +1065,94 @@
                 </div>
               </aside>
 
-              <!-- Right Column: Agent Assembly Assistant + Sequence Composer & Live Preview -->
+              <!-- Right Column: Compact Agent Toolbar + Sequence Strip + Spacious Live Canvas -->
               <div class="backpack-composer-pane">
-                <!-- Agent Assembly & Dataset Recommendations Panel -->
-                <div class="backpack-agent-panel" id="backpackAgentPanel">
-                  <div class="bp-agent-header">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span class="copilot-pulsing-dot"></span>
-                      <span style="font-size:13px; font-weight:800; letter-spacing:0.3px;">✦ AGENT FLOW ASSEMBLER &amp; DATASET RECOMMENDATIONS</span>
-                      <span class="badge-subtle" id="backpackDatasetBadge">99 Companies · 1,036 SEC Periods</span>
-                    </div>
-                    <div class="bp-agent-controls">
-                      <select id="backpackRecObjective" class="flowchart-select" style="font-size:12px; padding:5px 10px;">
-                        <option value="rule40" selected>🎯 Optimize: Balanced Rule of 40</option>
-                        <option value="growth">🚀 Optimize: Aggressive Growth</option>
-                        <option value="moat">🔬 Optimize: Tech Moat (R&amp;D)</option>
-                        <option value="fcf">💰 Optimize: FCF &amp; Margin Leverage</option>
-                      </select>
-                      <button type="button" id="backpackRecommendBtn" class="btn secondary" style="font-size:12px; padding:6px 12px; font-weight:700;">
-                        ↻ Analyze Backpack
-                      </button>
-                      <button type="button" id="backpackAutoAssembleBtn" class="btn primary" style="font-size:12px; padding:6px 14px; font-weight:700;">
-                        ⚡ Auto-Assemble Best Flow
-                      </button>
+                <!-- Sleek Single-Row Agent Bar (Never crowds the diagram) -->
+                <div class="backpack-agent-toolbar" id="backpackAgentPanel">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="copilot-pulsing-dot"></span>
+                    <span style="font-size:12.5px; font-weight:800;">✦ Strategy Agent</span>
+                    <span class="badge-subtle" id="backpackDatasetBadge">116 Companies · SEC 10-K</span>
+                  </div>
+                  <div class="bp-agent-controls">
+                    <select id="backpackRecObjective" class="flowchart-select" style="font-size:12px; padding:5px 10px;">
+                      <option value="rule40" selected>🎯 Goal: Balanced Rule of 40</option>
+                      <option value="growth">🚀 Goal: Aggressive Growth</option>
+                      <option value="moat">🔬 Goal: Tech Moat (R&amp;D)</option>
+                      <option value="fcf">💰 Goal: FCF &amp; Leverage</option>
+                    </select>
+                    <button type="button" id="backpackToggleRecsBtn" class="btn secondary" style="font-size:12px; padding:6px 12px; font-weight:700;">
+                      💡 Agent Picks (<span id="backpackRecCountBadge">3</span>)
+                    </button>
+                    <button type="button" id="backpackAutoAssembleBtn" class="btn primary" style="font-size:12px; padding:6px 13px; font-weight:700;">
+                      ⚡ Auto-Assemble
+                    </button>
+                    <button type="button" id="backpackWalkthroughBtn" class="btn secondary" style="font-size:12px; padding:6px 12px; font-weight:700;" title="Start automatic step-by-step agent tour of your flow and connections">
+                      ▶ Guided Walkthrough
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Collapsible Agent Picks & Diagnosis Drawer (Hidden by default so canvas stays open) -->
+                <div class="backpack-rec-drawer" id="backpackRecDrawer" style="display:none;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; color:var(--sky); letter-spacing:0.5px;">
+                      AGENT BACKPACK DIAGNOSIS &amp; RECOMMENDED ADDITIONS
+                    </span>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                      <button type="button" id="backpackRecommendBtn" class="btn ghost" style="font-size:11px; padding:3px 8px;">↻ Refresh</button>
+                      <button type="button" id="backpackCloseRecsBtn" class="btn ghost" style="font-size:13px; padding:2px 7px;">✕</button>
                     </div>
                   </div>
-
                   <div class="bp-agent-diagnosis" id="backpackAgentDiagnosis">
                     Analyzing your Backpack against SEC 10-K benchmarks...
                   </div>
-
                   <div class="bp-rec-cards-grid" id="backpackRecCardsGrid">
                     <!-- Recommended next stages from existing SEC data -->
                   </div>
                 </div>
 
+                <!-- Compact Sequence Strip with Interactive Connection Pills -->
                 <div class="backpack-composer-bar">
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                    <span style="font-size:12px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted);">
-                      FLOW SEQUENCE (<span id="backpackDraftCount">0</span> STAGES)
+                    <span style="font-size:11.5px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted);">
+                      FLOW SEQUENCE (<span id="backpackDraftCount">0</span> STAGES) · <span style="color:var(--sky); font-weight:700;">Click any 🔗 Connection to explain why it works</span>
                     </span>
-                    <button type="button" id="backpackClearDraftBtn" class="btn ghost" style="font-size:12px; padding:5px 10px;">
+                    <button type="button" id="backpackClearDraftBtn" class="btn ghost" style="font-size:11.5px; padding:4px 9px;">
                       ↺ Reset Sequence
                     </button>
                   </div>
                   <div class="backpack-sequence-strip" id="backpackSequenceStrip">
-                    <!-- Ordered stage chips with reorder / branch / remove -->
+                    <!-- Ordered stage chips + clickable connection pills -->
                   </div>
                 </div>
 
-                <div class="backpack-preview-canvas" id="backpackFlowPreview">
-                  <!-- Live interactive SVG flowchart of the assembled backpack sequence -->
+                <!-- Spacious Live Flowchart Canvas + Non-Crowding Floating Agent Popup -->
+                <div class="backpack-preview-wrap">
+                  <div class="backpack-preview-canvas" id="backpackFlowPreview">
+                    <!-- Live interactive SVG flowchart of the assembled backpack sequence -->
+                  </div>
+
+                  <!-- Automatic / Interactive Floating Agent Coach Popup (Single focused card, zero overcrowding) -->
+                  <div id="backpackFloatingCoach" class="bp-floating-coach" style="display:none;">
+                    <div class="bp-coach-top">
+                      <span class="bp-coach-kicker" id="bpCoachKicker">🔗 CONNECTION INSIGHT</span>
+                      <button type="button" id="bpCoachCloseBtn" class="bp-coach-close" title="Dismiss">✕</button>
+                    </div>
+                    <h4 class="bp-coach-title" id="bpCoachTitle">UPLD FY2013 → FROG FY2021</h4>
+                    <div class="bp-coach-metrics" id="bpCoachMetrics"></div>
+                    <div class="bp-coach-body" id="bpCoachBody"></div>
+                    <div class="bp-coach-ai-box" id="bpCoachAiBox" style="display:none;"></div>
+                    <div class="bp-coach-footer">
+                      <div style="display:flex; gap:6px;" id="bpCoachNavBtns">
+                        <button type="button" id="bpCoachPrevBtn" class="btn ghost" style="font-size:11.5px; padding:4px 9px;">← Prev</button>
+                        <button type="button" id="bpCoachNextBtn" class="btn primary" style="font-size:11.5px; padding:4px 10px;">Next →</button>
+                      </div>
+                      <button type="button" id="bpCoachAskAiBtn" class="btn secondary" style="font-size:11.5px; padding:4px 10px; font-weight:700;">
+                        ✦ Ask AI Deeper
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

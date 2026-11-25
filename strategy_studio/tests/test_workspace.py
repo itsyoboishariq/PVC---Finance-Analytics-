@@ -31,3 +31,11 @@ class WorkspaceTests(unittest.TestCase):
   self.assertGreater(d['benchmarks']['companies_count'],0)
   r2=c.post('/api/strategy/backpack-recommend',json={'backpack_items':[{'ticker':'DDOG','year':'FY2019','revenue':362e6,'sales_marketing_ratio':0.40,'rd_ratio':0.30,'growth':0.83,'rule_of_40':77.6}],'objective':'growth'})
   self.assertEqual(r2.status_code,200);self.assertTrue(len(r2.json()['diagnosis'])>=1)
+ def test_explain_connection_endpoint(self):
+  c=TestClient(app)
+  r=c.post('/api/strategy/explain-connection',json={
+   'from_stage':{'ticker':'UPLD','year':'FY2013','revenue':41.2e6,'sales_marketing_ratio':0.258,'rd_ratio':0.15,'growth':0.81,'rule_of_40':69.8},
+   'to_stage':{'ticker':'FROG','year':'FY2021','revenue':206.7e6,'sales_marketing_ratio':0.40,'rd_ratio':0.25,'growth':0.37,'rule_of_40':4.0}
+  })
+  self.assertEqual(r.status_code,200);d=r.json()
+  self.assertIn('scale_summary',d);self.assertIn('gtm_shift',d);self.assertEqual(d['metrics']['sm_delta_pp'],14.2)
