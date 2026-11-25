@@ -56,6 +56,9 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
     opex_dict = {item.name: item.value for item in assumptions.opex}
     total_monthly_opex = sum(item.value for item in assumptions.opex)
     
+    custom_items = assumptions.custom_items
+    monthly_opex_all = []
+
     prev_ending_customers = None
     
     ending_cust_all = []
@@ -136,6 +139,29 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
         ent_rev = float(Decimal(str(ent_tier.price_per_month)) * Decimal(str(ent_cust)))
         # Row 35: Total MRR (=SUM(C32:C34))
         total_mrr = float(Decimal(str(basic_rev)) + Decimal(str(pro_rev)) + Decimal(str(ent_rev)))
+
+        # User-added line items (not in the workbook). Each is either a flat
+        # monthly amount or an amount per ending active customer, and only
+        # applies from its start month onward. With no custom items, every
+        # total below is computed exactly as before (Excel parity).
+        custom_breakdown = {}
+        custom_totals = {"revenue": Decimal("0"), "direct_cost": Decimal("0"), "expense": Decimal("0")}
+        for item in custom_items:
+            if idx + 1 < item.start_month:
+                amount = Decimal("0")
+            elif item.basis == "per_customer":
+                amount = Decimal(str(item.amount)) * Decimal(str(ending_cust))
+            else:
+                amount = Decimal(str(item.amount))
+            custom_totals[item.kind] += amount
+            custom_breakdown[item.id] = round(float(amount), 4)
+        custom_revenue = float(custom_totals["revenue"])
+        custom_direct_costs = float(custom_totals["direct_cost"])
+        custom_expenses = float(custom_totals["expense"])
+
+        # Custom revenue counts toward total revenue (and so toward payment processing).
+        if custom_revenue:
+            total_mrr = float(Decimal(str(total_mrr)) + custom_totals["revenue"])
         total_mrr_all.append(total_mrr)
         
         # 5. COGS
@@ -149,6 +175,8 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
         other_direct = float(Decimal(str(assumptions.cogs.other_direct_per_trial)) * Decimal(str(trial_cust)))
         # Row 41: Total COGS (=SUM(C37:C40))
         total_cogs = float(Decimal(str(cloud_host)) + Decimal(str(payment_proc)) + Decimal(str(api_costs)) + Decimal(str(other_direct)))
+        if custom_direct_costs:
+            total_cogs = float(Decimal(str(total_cogs)) + custom_totals["direct_cost"])
         total_cogs_all.append(total_cogs)
         
         gross_profit = total_mrr - total_cogs
@@ -156,6 +184,9 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
         
         # 6. OPEX (Row 53: =SUM(C42:C52))
         total_opex = total_monthly_opex
+        if custom_expenses:
+            total_opex = float(Decimal(str(total_opex)) + custom_totals["expense"])
+        monthly_opex_all.append(total_opex)
         
         # 7. EBIT (Row 56: =C35-C41-C53)
         ebit = float(Decimal(str(total_mrr)) - Decimal(str(total_cogs)) - Decimal(str(total_opex)))
@@ -219,6 +250,10 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
             gross_margin_pct=round(gross_margin_pct, 2),
             opex_breakdown=opex_dict,
             total_opex=round(total_opex, 2),
+            custom_revenue=round(custom_revenue, 4),
+            custom_direct_costs=round(custom_direct_costs, 4),
+            custom_expenses=round(custom_expenses, 4),
+            custom_items_breakdown=custom_breakdown,
             ebit=round(ebit, 4),
             ebit_margin_pct=round(ebit_margin_pct, 2),
             metadata=meta
@@ -232,7 +267,8 @@ def run_financial_model(assumptions: ModelAssumptions) -> ModelCalculationRespon
     # Excel S9: =SUM(C56:Y56)
     sum_total_ebit = sum(ebit_all)
     sum_total_cogs = sum(total_cogs_all)
-    sum_total_opex = total_monthly_opex * len(periods)
+    # Workbook OPEX is the same every month; custom expenses can start later, so sum month by month.
+    sum_total_opex = total_monthly_opex * len(periods) if not custom_items else sum(monthly_opex_all)
     sum_leads = sum(leads_all)
     sum_new_paid = sum(new_paid_all)
     final_customers = ending_cust_all[-1] if ending_cust_all else 0.0

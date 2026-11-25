@@ -1,7 +1,7 @@
 """
 Pydantic Schemas for Financial Model Engine
 """
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -49,6 +49,25 @@ class OPEXItemInput(BaseModel):
     source: Optional[str] = None
 
 
+class CustomLineItem(BaseModel):
+    """
+    A user-added assumption that isn't in the original workbook, e.g. a new
+    hire, a marketing campaign, or a consulting revenue stream.
+
+    - kind "expense" is added to operating expenses (OPEX)
+    - kind "direct_cost" is added to cost of goods sold (COGS)
+    - kind "revenue" is added to total monthly revenue
+    - basis "per_month" is a flat dollar amount each month; "per_customer"
+      is multiplied by that month's ending active customers
+    """
+    id: str = Field(..., min_length=1, max_length=64)
+    name: str = Field(..., min_length=1, max_length=80)
+    kind: Literal["expense", "direct_cost", "revenue"]
+    basis: Literal["per_month", "per_customer"] = "per_month"
+    amount: float = Field(..., ge=0, description="Dollars per month, or per active customer per month")
+    start_month: int = Field(default=1, ge=1, le=23, description="First forecast month (1-23) the item applies")
+
+
 class LeadItem(BaseModel):
     row: int
     customer_name: str
@@ -76,6 +95,17 @@ class ModelAssumptions(BaseModel):
     opex: List[OPEXItemInput]
     monthly_leads: Dict[str, float] = Field(..., description="Map of column letter to lead count (C..Y)")
     leads_list: Optional[List[LeadItem]] = Field(default_factory=list)
+    custom_items: List[CustomLineItem] = Field(
+        default_factory=list,
+        description="User-added expenses, direct costs or revenue lines on top of the workbook",
+    )
+
+    @model_validator(mode="after")
+    def check_custom_item_ids_unique(self):
+        ids = [item.id for item in self.custom_items]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Each custom line item needs a unique id.")
+        return self
 
 
 class SavedScenarioAssumptions(ModelAssumptions):
@@ -141,6 +171,12 @@ class MonthlyResult(BaseModel):
     # OPEX
     opex_breakdown: Dict[str, float]
     total_opex: float
+
+    # User-added line items (already included in total_mrr / total_cogs / total_opex)
+    custom_revenue: float = 0.0
+    custom_direct_costs: float = 0.0
+    custom_expenses: float = 0.0
+    custom_items_breakdown: Dict[str, float] = Field(default_factory=dict, description="Custom item id -> amount this month")
     
     # Profitability
     ebit: float
