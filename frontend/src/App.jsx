@@ -483,6 +483,7 @@ export default function App() {
         baselineKPIs={baselineResults?.summary_kpis}
         weightedArpu={calculationResults?.weighted_arpu}
         baselineWeightedArpu={baselineResults?.weighted_arpu}
+        monthlyResults={calculationResults?.monthly_results}
         onInspectCell={setInspectorCell}
       />
 
