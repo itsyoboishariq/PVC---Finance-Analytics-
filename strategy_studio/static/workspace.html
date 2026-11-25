@@ -97,14 +97,6 @@
           </button>
         </div>
 
-        <!-- Quick Section Category Navigator -->
-        <div class="sidebar-category-nav">
-          <button type="button" class="sidebar-cat-pill active" data-target-sec="secVisualizer">⚡ Visualizer</button>
-          <button type="button" class="sidebar-cat-pill" data-target-sec="secComps">📊 Peer Flows</button>
-          <button type="button" class="sidebar-cat-pill" data-target-sec="secDiligence">💼 Diligence</button>
-          <button type="button" class="sidebar-cat-pill" data-target-sec="secAnalyst">🤖 Analyst</button>
-        </div>
-
         <div class="sidebar-content" id="sidebarContent" style="padding:14px;">
           <!-- Section 1: ⚡ Strategy Visualizer & Flow Architect -->
           <div id="secVisualizer" class="sidebar-feature-section">
@@ -329,59 +321,37 @@
                   <span class="ctrl-btn-symbol">&lt;/&gt;</span>
                   <span>Mermaid</span>
                 </button>
-                <button id="toggleInspectorBtn" class="ctrl-btn active" type="button" title="Inspect Node Financials">
-                  <span class="ctrl-btn-symbol">👁️</span>
-                  <span>Node Intel</span>
-                </button>
               </div>
             </div>
           </div>
 
-          <!-- Section 2: 📊 Peer Benchmark Flows -->
-          <div id="secComps" class="sidebar-feature-section" style="margin-top:16px;">
-            <div class="panel-section-title">2 · Peer Benchmark Flows</div>
-            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px;">Visualize actual historical scale paths from SEC filings:</p>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;">
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('DDOG')">Datadog (DDOG) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('SNOW')">Snowflake (SNOW) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('CRWD')">CrowdStrike (CRWD) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('HUBS')">HubSpot (HUBS) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('MDB')">MongoDB (MDB) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('ZI')">ZoomInfo (ZI) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('JAMF')">Jamf (JAMF) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('CFLT')">Confluent (CFLT) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('ESTC')">Elastic (ESTC) ↗</button>
-              <button type="button" class="sidebar-peer-pill" onclick="if(window.selectCompany)window.selectCompany('BILL')">Bill Holdings (BILL) ↗</button>
-            </div>
-            <div style="margin-top:12px;">
-              <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">
-                Macro Regime Filter
-              </label>
-              <select id="context" class="flowchart-select" style="width:100%;">
-                <option value="all" selected>All Historical SaaS Periods</option>
-                <option value="rates">Interest-Rate Tightening (2022–2024)</option>
-                <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
-                <option value="ai">AI-Era Calibrated Periods</option>
-              </select>
-              <select id="objective" style="display:none;">
-                <option value="growth" selected>Accelerate Revenue Growth</option>
-                <option value="profitability">Improve Operating Profitability / Runway</option>
-              </select>
-            </div>
+          <!-- Section 2: 📊 Macro Regime Filter -->
+          <div id="secComps" class="sidebar-feature-section" style="margin-top:14px;">
+            <div class="panel-section-title">2 · Macro Regime Filter</div>
+            <select id="context" class="flowchart-select" style="width:100%;">
+              <option value="all" selected>All Historical SaaS Periods</option>
+              <option value="rates">Interest-Rate Tightening (2022–2024)</option>
+              <option value="pandemic">Pandemic SaaS Acceleration (2020–2021)</option>
+              <option value="ai">AI-Era Calibrated Periods</option>
+            </select>
+            <select id="objective" style="display:none;">
+              <option value="growth" selected>Accelerate Revenue Growth</option>
+              <option value="profitability">Improve Operating Profitability / Runway</option>
+            </select>
           </div>
 
-          <!-- Section 3: 💼 Commercial Diligence & PitchBook -->
-          <div id="secDiligence" class="sidebar-feature-section" style="margin-top:16px;">
-            <div class="panel-section-title">3 · Diligence &amp; Cases (40/30/20/10)</div>
-            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px;">Market sizing, competitor target screening via PitchBook Direct API, and 5-yr cash flow modeling.</p>
-            <button id="sidebarOpenDiligenceBtn" type="button" class="btn primary" style="width:100%; font-size:12px; font-weight:700;">
-              💼 Open Diligence &amp; Cases Engine →
-            </button>
-          </div>
-
-          <!-- Section 4: 🤖 AI Strategy Analyst -->
-          <div id="secAnalyst" class="sidebar-feature-section" style="margin-top:16px;">
-            <div class="panel-section-title">4 · AI Strategy Analyst</div>
+          <!-- Section 3: 🤖 AI Strategy Analyst -->
+          <div id="secAnalyst" class="sidebar-feature-section" style="margin-top:14px;">
+            <div class="panel-section-title">3 · AI Strategy Analyst</div>
+            <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">
+              Active Model
+            </label>
+            <select id="aiModelSelect" class="flowchart-select model-select" style="width:100%; margin-bottom:8px;">
+              <option value="gpt-5" selected>🧠 GPT-5 (Strong Strategy)</option>
+              <option value="o3-mini">🔬 o3-mini (Reasoning)</option>
+              <option value="gpt-4o">🎨 GPT-4o (Creative)</option>
+              <option value="gpt-5-mini">⚡ GPT-5 Mini (Fast)</option>
+            </select>
             <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">
               Ask OpenAI Strategy Model
             </label>
@@ -455,36 +425,25 @@
             <span style="font-size:13px; font-weight:700; color:var(--text-muted);" id="currentTopBreadcrumb">Decision OS</span>
           </div>
 
-          <!-- View Mode Switcher: Canvas vs Executive Dashboard -->
+          <!-- View Mode Switcher: Canvas vs Dashboard vs Diligence -->
           <div class="view-mode-switcher">
             <button id="viewCanvasBtn" type="button" class="view-switch-btn active" title="Interactive Strategy Flowchart Canvas">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span>Strategy Canvas</span>
+              <span>Canvas</span>
             </button>
             <button id="viewDashboardBtn" type="button" class="view-switch-btn" title="Executive Strategy Bento Dashboard">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-              <span>Executive Dashboard</span>
+              <span>Dashboard</span>
             </button>
-            <button id="viewDiligenceBtn" type="button" class="view-switch-btn" title="Corporate Strategy, Market Sizing & PitchBook Diligence (40/30/20/10)">
+            <button id="viewDiligenceBtn" type="button" class="view-switch-btn" title="Corporate Strategy, Market Sizing & PitchBook Diligence">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-              <span>Diligence & Cases (40/30/20/10)</span>
+              <span>Diligence</span>
             </button>
           </div>
         </div>
 
         <div class="topbar-right">
-          <!-- AI Model Switcher -->
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Model:</span>
-            <select id="aiModelSelect" class="flowchart-select model-select">
-              <option value="gpt-5" selected>🧠 GPT-5 (Strong Strategy)</option>
-              <option value="o3-mini">🔬 o3-mini (Reasoning)</option>
-              <option value="gpt-4o">🎨 GPT-4o (Creative)</option>
-              <option value="gpt-5-mini">⚡ GPT-5 Mini (Fast)</option>
-            </select>
-          </div>
-
-          <!-- Select Company Dropdown -->
+          <!-- Select Company Dropdown (Single unified company selector) -->
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Company:</span>
             <select id="companyFlowSelect" class="flowchart-select">
@@ -501,20 +460,7 @@
             </select>
           </div>
 
-          <!-- Quick Chips -->
-          <div class="flowchart-chips" id="flowQuickChips">
-            <button type="button" class="flowchart-chip active" data-flow-ticker="DDOG">Datadog</button>
-            <button type="button" class="flowchart-chip" data-flow-ticker="SNOW">Snowflake</button>
-            <button type="button" class="flowchart-chip" data-flow-ticker="CRWD">CrowdStrike</button>
-            <button type="button" class="flowchart-chip" data-flow-ticker="HUBS">HubSpot</button>
-            <button type="button" class="flowchart-chip" data-flow-ticker="MDB">MongoDB</button>
-            <button type="button" class="flowchart-chip" data-flow-ticker="ZI">ZoomInfo</button>
-          </div>
-
           <!-- Actions -->
-          <button id="askAnalyst" type="button" class="btn ai-btn" style="font-size:12px;" title="Run AI synthesis with configured OpenAI Model">
-            ✦ Ask AI: Why?
-          </button>
           <button type="button" id="toggleMermaidCodeBtnTopbar" class="btn toggle-mermaid-btn" style="font-size:12px;">
             Syntax
           </button>
