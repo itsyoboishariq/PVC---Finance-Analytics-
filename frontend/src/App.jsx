@@ -8,6 +8,7 @@ import ScenarioComparisonView from './components/ScenarioComparisonView';
 import ExcelInspectorModal from './components/ExcelInspectorModal';
 import ScenarioManagerModal from './components/ScenarioManagerModal';
 import FormulaMapModal from './components/FormulaMapModal';
+import LiveResultsBar from './components/LiveResultsBar';
 import { exportToJson, exportFinancialTableToCsv } from './utils/export';
 
 import {
@@ -66,7 +67,8 @@ export default function App() {
   const [periods, setPeriods] = useState([]);
 
   // Active Navigation Tab
-  const [activeTab, setActiveTab] = useState('table'); // 'table' | 'charts' | 'assumptions' | 'leads' | 'compare'
+  const [activeTab, setActiveTab] = useState('table'); // 'table' | 'charts' | 'leads' | 'compare'
+  const resultsRef = useRef(null);
 
   // Modals
   const [inspectorCell, setInspectorCell] = useState(null);
@@ -477,7 +479,18 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Executive KPI Cards */}
+      {/* Inputs come first: users start by entering their assumptions */}
+      <AssumptionsEditorView
+        assumptions={assumptions}
+        onChange={handleAssumptionsChange}
+        onResetDefaults={handleResetDefaults}
+        onInspectCell={setInspectorCell}
+        baselineAssumptions={baselineAssumptions}
+        periods={periods}
+      />
+
+      {/* Results */}
+      <div ref={resultsRef} style={{ scrollMarginTop: '16px' }}>
       <KPICards
         summaryKPIs={calculationResults?.summary_kpis}
         baselineKPIs={baselineResults?.summary_kpis}
@@ -486,13 +499,13 @@ export default function App() {
         monthlyResults={calculationResults?.monthly_results}
         onInspectCell={setInspectorCell}
       />
+      </div>
 
       {/* Navigation Tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '20px', overflowX: 'auto' }}>
         {[
           { id: 'table', label: 'Financial Model Statements', icon: TableIcon },
           { id: 'charts', label: 'Charts & Trajectory', icon: BarChart3 },
-          { id: 'assumptions', label: 'Assumptions Editor', icon: Sliders },
           { id: 'leads', label: 'Lead Generation Database (66)', icon: Database },
           { id: 'compare', label: 'Scenario Comparison', icon: GitCompare },
         ].map(tab => {
@@ -542,17 +555,6 @@ export default function App() {
         />
       )}
 
-      {activeTab === 'assumptions' && (
-        <AssumptionsEditorView
-          assumptions={assumptions}
-          onChange={handleAssumptionsChange}
-          onResetDefaults={handleResetDefaults}
-          onInspectCell={setInspectorCell}
-          baselineAssumptions={baselineAssumptions}
-          periods={periods}
-        />
-      )}
-
       {activeTab === 'leads' && (
         <LeadsDatabaseView
           leadsList={leadsList}
@@ -570,6 +572,14 @@ export default function App() {
           savedScenarios={savedScenarios}
         />
       )}
+
+      <LiveResultsBar
+        targetRef={resultsRef}
+        summaryKPIs={calculationResults?.summary_kpis}
+        baselineKPIs={baselineResults?.summary_kpis}
+        monthlyResults={calculationResults?.monthly_results}
+        calculating={calculating}
+      />
 
       {/* Footer Info */}
       <footer style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>

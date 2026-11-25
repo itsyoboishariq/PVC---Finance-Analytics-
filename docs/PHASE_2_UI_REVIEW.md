@@ -71,3 +71,11 @@ Branch: `feature/phase-1-financial-reliability`. Frontend only: no change to the
 - The Lead Generation Database tab was out of scope and is unchanged.
 - The header and toolbar at the top weren't redesigned. On phones the header buttons wrap onto three rows.
 - No frontend test framework exists. These changes were checked by building and running the app in a browser.
+
+## Follow-up: inputs first
+
+The assumptions editor now sits at the top of the page, above the results, and is no longer a tab. Users start by entering their numbers. The results (KPIs, then the statement, chart, lead and comparison tabs) follow below.
+
+So the effect of each edit is still visible, a slim **Live results** bar (`LiveResultsBar.jsx`) is pinned to the bottom of the screen whenever the KPI section is off screen. It shows cumulative EBIT, revenue, customers at M23 and the break-even month, each with its change from the workbook, plus a "See full results" button. The bar hides itself once the KPI section is back in view.
+
+Checked in the browser: raising marketing spend from $100 to $300 updated the bar immediately (EBIT −$4,600, break-even M13 → M14). "See full results" scrolls to the KPIs and the bar disappears. At 375px the bar wraps to two lines and nothing overflows the page.
