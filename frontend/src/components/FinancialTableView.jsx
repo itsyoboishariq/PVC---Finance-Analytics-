@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, createContext, useContext } from 'react';
 import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters';
-import { ChevronDown, ChevronRight, HelpCircle, Calendar, Table as TableIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, HelpCircle, Calendar, Table as TableIcon, ChevronsDownUp, ChevronsUpDown, ListFilter, FileSpreadsheet } from 'lucide-react';
+
+// Table-wide display options shared with every row.
+const TableOptions = createContext({ keyRowsOnly: false });
+const YEAR_2_START = 12; // M13 (Jul 2027) begins forecast year 2
 
 export default function FinancialTableView({ monthlyResults, annualRollups, summaryKPIs, customItems = [], onInspectCell }) {
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' | 'annual'
@@ -14,8 +18,27 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
     ebit: true
   });
 
+  const [keyRowsOnly, setKeyRowsOnly] = useState(false);
+  const [showRefs, setShowRefs] = useState(true);
+  const scrollRef = useRef(null);
+
   const toggleSection = (sec) => {
     setExpandedSections(prev => ({ ...prev, [sec]: !prev[sec] }));
+  };
+  const setAllSections = (open) => {
+    setExpandedSections(prev => Object.fromEntries(Object.keys(prev).map(k => [k, open])));
+  };
+
+  // Scroll the table sideways so month `idx` sits just right of the sticky columns.
+  const jumpToMonth = (idx) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const th = container.querySelector(`th[data-month-index="${idx}"]`);
+    const sticky = container.querySelector('thead th:first-child'); // only the line-item column is pinned
+    if (!th || !sticky) return;
+    // Measure on screen so borders and padding can't throw the position off.
+    const offset = th.getBoundingClientRect().left - sticky.getBoundingClientRect().right;
+    container.scrollTo({ left: Math.max(0, container.scrollLeft + offset), behavior: 'smooth' });
   };
 
   if (!monthlyResults || monthlyResults.length === 0) return null;
@@ -98,15 +121,53 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
         </div>
       </div>
 
+      {viewMode === 'monthly' && (() => {
+        const firstProfitableIdx = monthlyResults.findIndex(m => m.ebit >= 0);
+        return (
+          <div className="table-toolbar" role="toolbar" aria-label="Table navigation">
+            <div className="table-toolbar-group">
+              <span className="table-toolbar-label">Jump to</span>
+              <button className="chip-btn" onClick={() => jumpToMonth(0)}>Year 1</button>
+              <button className="chip-btn" onClick={() => jumpToMonth(YEAR_2_START)}>Year 2</button>
+              {firstProfitableIdx >= 0 && (
+                <button className="chip-btn" onClick={() => jumpToMonth(firstProfitableIdx)} title="First month with positive EBIT">
+                  Break-even (M{firstProfitableIdx + 1})
+                </button>
+              )}
+              <select
+                className="form-input table-month-select"
+                aria-label="Jump to month"
+                value=""
+                onChange={e => e.target.value !== '' && jumpToMonth(Number(e.target.value))}
+              >
+                <option value="">Month…</option>
+                {monthlyResults.map((m, i) => <option key={m.column} value={i}>{m.label}</option>)}
+              </select>
+            </div>
+            <div className="table-toolbar-group">
+              <button className="chip-btn" onClick={() => setAllSections(true)}><ChevronsUpDown size={13} /> Expand all</button>
+              <button className="chip-btn" onClick={() => setAllSections(false)}><ChevronsDownUp size={13} /> Collapse all</button>
+              <button className="chip-btn" aria-pressed={keyRowsOnly} onClick={() => setKeyRowsOnly(v => !v)} title="Show only totals and headline rows">
+                <ListFilter size={13} /> Key rows only
+              </button>
+              <button className="chip-btn" aria-pressed={showRefs} onClick={() => setShowRefs(v => !v)} title="Show the Excel row each line comes from">
+                <FileSpreadsheet size={13} /> Excel refs
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {viewMode === 'monthly' ? (
-        <div className="model-table-container">
-          <table className="model-table">
+        <TableOptions.Provider value={{ keyRowsOnly }}>
+        <div className="model-table-container model-table-scroll" ref={scrollRef}>
+          <table className={`model-table${showRefs ? '' : ' hide-refs'}`}>
             <thead>
               <tr>
                 <th>Line Item</th>
-                <th style={{ textAlign: 'center', minWidth: '90px' }}>Ref / Formula</th>
-                {monthlyResults.map((m) => (
-                  <th key={m.column}>
+                <th className="ref-col" style={{ textAlign: 'center', minWidth: '90px' }}>Ref / Formula</th>
+                {monthlyResults.map((m, i) => (
+                  <th key={m.column} data-month-index={i} className={i === YEAR_2_START ? 'year-start' : undefined}>
                     <div>{m.label}</div>
                     <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: 'normal' }}>Col {m.column}</div>
                   </th>
@@ -457,7 +518,7 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
                 <td style={{ fontWeight: 700, color: '#34d399', fontSize: '0.95rem' }}>
                   EBIT (Operating Profit)
                 </td>
-                <td style={{ textAlign: 'center' }}>
+                <td className="ref-col" style={{ textAlign: 'center' }}>
                   <button
                     className="cell-badge"
                     onClick={() => onInspectCell({
@@ -470,8 +531,8 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
                     Row 56
                   </button>
                 </td>
-                {monthlyResults.map((m) => (
-                  <td key={m.column} className="num-val" style={{ fontWeight: 700, color: m.ebit >= 0 ? '#34d399' : '#fb7185' }}>
+                {monthlyResults.map((m, i) => (
+                  <td key={m.column} className={`num-val${i === YEAR_2_START ? ' year-start' : ''}`} style={{ fontWeight: 700, color: m.ebit >= 0 ? '#34d399' : '#fb7185' }}>
                     {formatCurrency(m.ebit, 2)}
                   </td>
                 ))}
@@ -482,6 +543,7 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
             </tbody>
           </table>
         </div>
+        </TableOptions.Provider>
       ) : (
         /* ANNUAL & PERIOD ROLLUP VIEW */
         <div className="model-table-container">
@@ -530,12 +592,15 @@ export default function FinancialTableView({ monthlyResults, annualRollups, summ
 }
 
 function ModelRow({ title, cellRef, formula, values, format, totalVal, highlight, isBold, onInspectCell, metaKey, monthlyResults }) {
+  const { keyRowsOnly } = useContext(TableOptions);
+  // "Key rows" are the totals and headline rows (bold or highlighted).
+  if (keyRowsOnly && !(highlight || isBold)) return null;
   return (
     <tr style={{ background: highlight ? 'rgba(255, 255, 255, 0.02)' : 'transparent' }}>
       <td style={{ fontWeight: isBold ? 700 : 500, color: isBold ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
         {title}
       </td>
-      <td style={{ textAlign: 'center' }}>
+      <td className="ref-col" style={{ textAlign: 'center' }}>
         <button
           className="cell-badge"
           onClick={() => {
@@ -553,7 +618,7 @@ function ModelRow({ title, cellRef, formula, values, format, totalVal, highlight
         </button>
       </td>
       {values.map((v, i) => (
-        <td key={i} className="num-val" style={{ fontWeight: isBold ? 700 : 'normal' }}>
+        <td key={i} className={`num-val${i === YEAR_2_START ? ' year-start' : ''}`} style={{ fontWeight: isBold ? 700 : 'normal' }}>
           {format(v)}
         </td>
       ))}
