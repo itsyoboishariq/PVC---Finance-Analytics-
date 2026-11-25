@@ -55,7 +55,12 @@ export default function ScenarioComparisonView({
         const results = await calc.json();
         if (!cancelled) setOther({ name: scenario.name, results, assumptions: scenario.assumptions });
       } catch (e) {
-        if (!cancelled) { setOther(null); setError(e.message); }
+        if (!cancelled) {
+          setOther(null);
+          setError(e instanceof TypeError
+            ? "Can't reach the calculation server, so saved scenarios can't be loaded. Start the server and reload the page."
+            : e.message);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

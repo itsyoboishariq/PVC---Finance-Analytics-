@@ -30,6 +30,10 @@ import {
 // Turns a FastAPI error response into one readable message. FastAPI returns
 // `detail` as a string for our own errors and as a list of field problems for
 // request validation errors (e.g. a churn rate above 100%).
+export const SERVER_DOWN_MESSAGE =
+  "Can't reach the calculation server, so nothing can be recalculated or loaded. " +
+  'Start it again (for example: .venv/bin/python -m uvicorn backend.main:app --port 8000) and reload this page.';
+
 async function readErrorMessage(res) {
   try {
     const body = await res.json();
@@ -178,7 +182,13 @@ export default function App() {
     } catch (err) {
       if (!isLatest()) return;
       console.error('Calculation error:', err);
-      setErrorMessage(`Couldn't recalculate: ${err.message}`);
+      if (err instanceof TypeError) {
+        // fetch() throws TypeError when it can't reach the server at all.
+        setServerOnline(false);
+        setErrorMessage(SERVER_DOWN_MESSAGE);
+      } else {
+        setErrorMessage(`Couldn't recalculate: ${err.message}`);
+      }
     } finally {
       if (isLatest()) setCalculating(false);
     }
@@ -584,8 +594,17 @@ export default function App() {
       {/* Footer Info */}
       <footer style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle2 size={14} color="#10b981" />
-          <span>Local Financial Model Demo active on <code>http://127.0.0.1:8000</code></span>
+          {serverOnline ? (
+            <>
+              <CheckCircle2 size={14} color="#10b981" aria-hidden="true" />
+              <span>Calculation server connected</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle size={14} color="#fb7185" aria-hidden="true" />
+              <span style={{ color: '#fca5a5' }}>Calculation server not reachable</span>
+            </>
+          )}
         </div>
         <div>
           <span>Preserved source: <code>Startup_Financial_Models.xlsx</code> | Pure Python calculation engine</span>
